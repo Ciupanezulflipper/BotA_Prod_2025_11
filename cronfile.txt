@@ -1,0 +1,25 @@
+# === Bot-A schedule (UTC) ===
+
+# Every 30m: cron heartbeat/tick (keeps auto_loop alive)
+*/30 * * * * bash -lc 'export $(grep -v "^#" ~/.env | xargs) && $HOME/bot-a/tools/cron_tick.sh >> $HOME/bot-a/auto_run.log 2>&1'
+
+# Every 30m: collect raw news -> logs/news-YYYYMMDD.csv
+*/30 * * * * export $(grep -v "^#" ~/.env | xargs) && PYTHONPATH="$HOME/bot-a" python $HOME/bot-a/tools/news_log.py >/dev/null 2>&1
+
+# 00:00 sanitize yesterday’s CSVs (one run is enough)
+0 0 * * * export $(grep -v "^#" ~/.env | xargs) && PYTHONPATH="$HOME/bot-a" python $HOME/bot-a/tools/sanitize_csv.py >/dev/null 2>&1
+
+# 00:05 post-trade audit of last 3 signals (12h lookahead)
+5 0 * * * export $(grep -v "^#" ~/.env | xargs) && PYTHONPATH="$HOME/bot-a" python $HOME/bot-a/tools/audit.py --n 3 --lookahead 12 --write >/dev/null 2>&1
+
+# 00:10 daily collector (merge + summary CSVs, tries Telegram if env present)
+10 0 * * * export $(grep -v "^#" ~/.env | xargs) && PYTHONPATH="$HOME/bot-a" python $HOME/bot-a/tools/daily_collect.py --telegram >/dev/null 2>&1
+
+# 00:12 Telegram summary (nicely formatted recap)
+12 0 * * * export $(grep -v "^#" ~/.env | xargs) && PYTHONPATH="$HOME/bot-a" python $HOME/bot-a/tools/telegram_summary.py >/dev/null 2>&1
+
+# News digests (once per hour, deduped)
+6 * * * * export $(grep -v "^#" ~/.env | xargs) && PYTHONPATH="$HOME/bot-a" python $HOME/bot-a/tools/news_sentiment.py --limit 60 >/dev/null 2>&1
+
+# News -> trade signals (every 15m, stricter rules)
+*/15 * * * * export $(grep -v "^#" ~/.env | xargs) && PYTHONPATH="$HOME/bot-a" python $HOME/bot-a/tools/news_signals.py --since-min 120 --send >/dev/null 2>&1

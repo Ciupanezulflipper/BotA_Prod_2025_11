@@ -1,0 +1,18 @@
+{
+  "symbol": "EURUSD",
+  "entry": 1.1853,
+  "sl": 1.1862,
+  "tp1": 1.1838,
+  "tp2": 1.1825,
+  "tech_points": {"m5":2,"m15":3,"h1":3,"h5":2,"h4":4,"d1":2},
+  "tf_bias": {
+    "m5": "SELL",
+    "m15": "SELL",
+    "h1": "SELL",
+    "h5": "SELL",
+    "h4": "BUY",
+    "d1": "BUY"
+  },
+  "sent_score": 4,
+  "reasons": ["Resistance rejection at 1.1860","Volume spike","RSI easing"]
+}

@@ -1,0 +1,9 @@
+SHELL=/data/data/com.termux/files/usr/bin/bash
+PATH=/data/data/com.termux/files/usr/bin:/data/data/com.termux/files/usr/bin/applets:/system/bin:/system/xbin:/usr/bin
+MAILTO=""
+
+*/15 * * * *  cd ~/BotA && export $(grep -v ^# .env | xargs) ; \
+python -m BotA.tools.runner_confluence --pair EURUSD --tf M15 --dry-run=false --force >> ~/BotA/logs/bot.log 2>&1
+
+0 * * * *     cd ~/BotA && export $(grep -v ^# .env | xargs) ; \
+python -m BotA.tools.status_cmd --heartbeat reason=cron >> ~/BotA/logs/statusd.log 2>&1

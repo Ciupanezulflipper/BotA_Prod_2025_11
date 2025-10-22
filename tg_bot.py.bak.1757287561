@@ -1,0 +1,116 @@
+#!/usr/bin/env python3
+import os, logging, time, subprocess, csv, sys
+from datetime import datetime
+from dotenv import load_dotenv
+from telegram import Bot
+from telegram.ext import Updater, CommandHandler
+
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger("tg-bot")
+
+load_dotenv()
+TOKEN  = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "").strip()
+if not TOKEN or not CHAT_ID:
+    raise SystemExit("Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID")
+
+# Paths
+CWD = os.path.abspath(os.getcwd())
+SIGNALS_CSV = os.path.join(CWD, "signals.csv")
+BOOT_SCRIPT = os.path.expanduser("~/.termux/boot/01-bot-a.sh")
+
+def _tmux_ok() -> bool:
+    try:
+        r = subprocess.run(["tmux","has-session","-t","botA"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return r.returncode == 0
+    except Exception:
+        return False
+
+def _watchdog_ok() -> bool:
+    try:
+        out = subprocess.check_output(["crontab","-l"], stderr=subprocess.DEVNULL).decode("utf-8", "ignore")
+        return "watchdog.sh" in out
+    except Exception:
+        return False
+
+def _boot_ok() -> bool:
+    return os.path.exists(BOOT_SCRIPT)
+
+def _last_signal():
+    """Return dict with last signal info or None."""
+    if not os.path.exists(SIGNALS_CSV):
+        return None
+    last = None
+    try:
+        with open(SIGNALS_CSV, newline="") as f:
+            reader = csv.reader(f)
+            for row in reader:
+                if not row or "timestamp" in row[0].lower():
+                    continue
+                last = row
+        if last:
+            # expected: timestamp,pair,action,entry,sl,tp,rr,mode,reason
+            ts, pair, action = last[0], last[1], last[2]
+            return {"ts": ts, "pair": pair, "action": action}
+    except Exception:
+        pass
+    return None
+
+# ===== Handlers =====
+def cmd_start(update, context):
+    update.message.reply_text(
+        "✅ Bot-A is online.\nCommands: /menu /status /ping /signal /mode /id /help /health"
+    )
+
+def cmd_menu(update, context):
+    update.message.reply_text(
+        "📺 Menu (placeholder)\n"
+        "• Deal of the Day\n• History\n• Did You Know?\n• Settings\n\n"
+        "📊 Bot health: use /health"
+    )
+
+def cmd_status(update, context):
+    msg = [
+        "🤖 Status: running",
+        f"🕒 Time (UTC): {time.strftime('%Y-%m-%d %H:%M:%SZ', time.gmtime())}",
+        "🧠 Mode: normal",
+        "🧪 Signals: EMA/RSI",
+        "📜 Log: signals.csv",
+        "🩺 Try: /health",
+    ]
+    update.message.reply_text("\n".join(msg))
+
+def cmd_ping(update, context):
+    update.message.reply_text("pong")
+
+def cmd_health(update, context):
+    last = _last_signal()
+    tmux_ok = _tmux_ok()
+    wd_ok = _watchdog_ok()
+    boot_ok = _boot_ok()
+
+    parts = ["🩺 Bot-A health"]
+    parts.append(f"• tmux session: {'✅' if tmux_ok else '❌'} (name: botA)")
+    parts.append(f"• watchdog (cron): {'✅' if wd_ok else '❌'} (/10m restart if needed)")
+    parts.append(f"• Termux:Boot: {'✅' if boot_ok else '❌'} (~/.termux/boot/01-bot-a.sh)")
+    if last:
+        parts.append(f"• Last signal: {last['pair']} {last['action']} @ {last['ts']}")
+    else:
+        parts.append("• Last signal: none yet")
+    update.message.reply_text("\n".join(parts))
+
+def main():
+    updater = Updater(token=TOKEN, use_context=True)
+    dp = updater.dispatcher
+    dp.add_handler(CommandHandler("start",  cmd_start))
+    dp.add_handler(CommandHandler("menu",   cmd_menu))
+    dp.add_handler(CommandHandler("status", cmd_status))
+    dp.add_handler(CommandHandler("ping",   cmd_ping))
+    dp.add_handler(CommandHandler("health", cmd_health))
+
+    log.info("TG command bot started.")
+    updater.start_polling()
+    updater.idle()
+
+if __name__ == "__main__":
+    main()

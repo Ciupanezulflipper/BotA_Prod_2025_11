@@ -1,0 +1,16 @@
+run_id,time_utc,symbol,tf,type,score,bias,side,entry,stop,target,why,cadence,watchlist,engine
+1ce71c9b,2025-09-09 22:14:53Z,-,5min,heartbeat,,,,,,,alive |  | 30,,EURUSD,v2b
+1ce71c9b,2025-09-09 22:14:53Z,EURUSD,5min,error,,,,,,,engine module 'data.providers' has no attribute 'fetch_price' |  | 0 | 30,,EURUSD,v2b
+62203a8e,2025-09-09 22:17:14Z,-,5min,heartbeat,,,,,,,alive |  | 30,,EURUSD,v2b
+62203a8e,2025-09-09 22:17:14Z,EURUSD,5min,skip,0,,,,,,score<55 | 0 | 30,,EURUSD,v2b
+74727bd9,2025-09-09 22:44:34Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+74727bd9,2025-09-09 22:44:34Z,EURUSD,5min,error,,,,,,,"engine The truth value of a DataFrame is ambiguous. Use a.empty, a.bool(), a.item(), a.any() or a.all(). |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+74727bd9,2025-09-09 22:44:34Z,XAUUSD,5min,skip,0,,,,,,score<25 | 0 | 30,,"EURUSD,XAUUSD",v2b
+9f9d902c,2025-09-09 21:47:38Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+9f9d902c,2025-09-09 21:47:38Z,EURUSD,5min,error,,,,,,,"engine The truth value of a DataFrame is ambiguous. Use a.empty, a.bool(), a.item(), a.any() or a.all(). |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+9f9d902c,2025-09-09 21:47:38Z,XAUUSD,5min,skip,0,,,,,,score<25 | 0 | 30,,"EURUSD,XAUUSD",v2b
+365af996,2025-09-09 21:48:06Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+9746a9bc,2025-09-09 22:18:07Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+35508d40,2025-09-09 22:48:08Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+137fff8b,2025-09-09 23:18:10Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+5638b54a,2025-09-09 23:48:11Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b

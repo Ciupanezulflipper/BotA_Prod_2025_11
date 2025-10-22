@@ -1,0 +1,95 @@
+import os
+import pandas as pd
+
+try:
+    from .indicators_ext import analyze_indicators as _upstream
+    _import_err = None
+except Exception as e:
+    _upstream = None
+    _import_err = e
+
+DEBUG = os.getenv("DEBUG_INDICATORS","0") not in ("0","false","False","")
+
+def _as_short(df: pd.DataFrame) -> pd.DataFrame:
+    d = df.copy()
+    # ensure no time index ambiguity
+    if isinstance(d.index, pd.DatetimeIndex):
+        d = d.reset_index(drop=True)
+    d = d.rename(columns={c: c.lower() for c in d.columns})
+    # map long -> short
+    if {'open','high','low','close'}.issubset(d.columns):
+        d = d.rename(columns={'open':'o','high':'h','low':'l','close':'c'})
+    # derive 't'
+    if 't' not in d.columns:
+        if 'time' in d.columns:
+            d['time'] = pd.to_datetime(d['time'], utc=True, errors='coerce')
+            d['t'] = (d['time'].view('int64') // 10**9)
+        else:
+            d['t'] = pd.NaT  # will drop below
+    # numeric coercion
+    for c in ['o','h','l','c']:
+        if c in d.columns:
+            d[c] = pd.to_numeric(d[c], errors='coerce')
+    d = d.dropna(subset=['t','o','h','l','c'])
+    d['t'] = pd.to_numeric(d['t'], errors='coerce').astype('int64')
+    out = d[['t','o','h','l','c']].copy()
+    out = out.sort_values('t').drop_duplicates(subset='t', keep='last').reset_index(drop=True)
+    return out
+
+def _as_long(df: pd.DataFrame) -> pd.DataFrame:
+    d = df.copy()
+    # ensure no time index ambiguity
+    if isinstance(d.index, pd.DatetimeIndex):
+        d = d.reset_index(drop=True)
+    d = d.rename(columns={c: c.lower() for c in d.columns})
+    # derive time
+    if 'time' not in d.columns:
+        if 't' in d.columns:
+            d['time'] = pd.to_datetime(d['t'], unit='s', utc=True, errors='coerce')
+        else:
+            d['time'] = pd.NaT
+    # map short -> long
+    if {'o','h','l','c'}.issubset(d.columns):
+        d = d.rename(columns={'o':'open','h':'high','l':'low','c':'close'})
+    # numeric coercion
+    for c in ['open','high','low','close']:
+        if c in d.columns:
+            d[c] = pd.to_numeric(d[c], errors='coerce')
+    d['time'] = pd.to_datetime(d['time'], utc=True, errors='coerce')
+    d = d.dropna(subset=['time','open','high','low','close'])
+    out = d[['time','open','high','low','close']].copy()
+    out = out.sort_values('time').drop_duplicates(subset='time', keep='last').reset_index(drop=True)
+    return out
+
+def _try_call(schema_df, pair):
+    if DEBUG:
+        print(f"[indicators_adapter] sending columns: {list(schema_df.columns)} rows={len(schema_df)}", flush=True)
+    return _upstream(schema_df, pair)
+
+def analyze_indicators(df: pd.DataFrame, pair: str):
+    if _upstream is None:
+        return {"action":"WAIT","score16":0,"score6":0,
+                "reason":f"indicators_ext unavailable: {_import_err}"}
+    # try short schema first
+    try:
+        d_short = _as_short(df)
+        if len(d_short) >= 10:
+            return _try_call(d_short, pair)
+    except Exception as e_short:
+        short_err = str(e_short)
+    else:
+        short_err = "not enough rows for short schema"
+
+    # fallback: long schema
+    try:
+        d_long = _as_long(df)
+        if len(d_long) >= 10:
+            return _try_call(d_long, pair)
+    except Exception as e_long:
+        long_err = str(e_long)
+    else:
+        long_err = "not enough rows for long schema"
+
+    return {"action":"WAIT","score16":0,"score6":0,
+            "reason":f"indicators_ext error: short[{short_err}] long[{long_err}]"}
+

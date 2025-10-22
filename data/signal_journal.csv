@@ -1,0 +1,9 @@
+ts_utc,event,pair,tf,score,conf,reason,signal_id,source,log_line_no
+2025-09-21T20:42:03Z,TEST,EURUSD,M15,0,0.0,append-test,test-204203,signal_journal.py,0
+2025-09-21T22:26:08Z,TEST_SENT,EURUSD,M15,0.95,9.0,test-send,TEST-1758493568,send_test_signal.py,0
+2025-09-21T22:30:21Z,TEST,EURUSD,M15,0,0.0,append-test,test-223021,signal_journal.py,0
+2025-09-21T22:31:02Z,TEST_SENT,EURUSD,M15,0.95,9.0,test-send,TEST-1758493862,send_test_signal.py,0
+2025-09-21T22:31:03Z,TEST,EURUSD,M15,0,0.0,append-test,test-223103,signal_journal.py,0
+2025-09-21T22:33:41Z,TEST_SENT,EURUSD,M15,0.95,9.0,test-send,TEST-1758494021,send_test_signal.py,0
+2025-09-21T22:33:42Z,TEST,EURUSD,M15,0,0.0,append-test,test-223342,signal_journal.py,0
+2025-09-22T06:05:07Z,BLOCK,EURUSD,M15,0,0.0,BLOCK spread-block: BLOCK spread>2.0 pips (got 3.2),tight_loader.py,0

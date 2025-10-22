@@ -1,0 +1,24 @@
+max_signals:
+  per_hour: 6
+  per_day: 40
+
+dedup:
+  cool_down_min: 20      # prevent repeat on same pair/direction
+
+filters:
+  spread_max_points: 35
+  news_block_window_min: 10    # block around high-impact release
+  volatility_guard:
+    atr_multiple_max: 2.8
+  min_confidence: 3.0
+
+blocks_reason_order:
+  - weekend
+  - holiday
+  - throttle
+  - dedup
+  - low_confidence
+  - low_score
+  - spread
+  - volatility
+  - news_block

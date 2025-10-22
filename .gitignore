@@ -1,0 +1,15 @@
+# secrets
+TomaMobileForexBot/.env
+**/.env
+
+# logs / pids
+bot-a/logs/*
+*.log
+*.pid
+
+# data
+bot-a/tools/eurusd_m15.csv
+
+# python cache
+__pycache__/
+*.pyc

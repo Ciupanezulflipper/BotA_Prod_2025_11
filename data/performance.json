@@ -1,0 +1,87 @@
+{
+  "trades": [
+    {
+      "pair": "EURUSD",
+      "action": "BUY",
+      "entry": 1.085,
+      "exit": 1.09,
+      "sl": 1.083,
+      "tp": 1.09,
+      "result": "WIN",
+      "profit_pips": 50.0,
+      "profit_usd": 50.0,
+      "size": 0.01,
+      "signal_score": 2.5,
+      "closed_at": "2025-10-19T15:08:55.510626+00:00"
+    },
+    {
+      "pair": "GBPUSD",
+      "action": "SELL",
+      "entry": 1.265,
+      "exit": 1.263,
+      "sl": 1.267,
+      "tp": 1.26,
+      "result": "LOSS",
+      "profit_pips": -20.0,
+      "profit_usd": -20.0,
+      "size": 0.01,
+      "signal_score": 2.0,
+      "closed_at": "2025-10-19T15:08:55.511142+00:00"
+    },
+    {
+      "pair": "EURUSD",
+      "action": "BUY",
+      "entry": 1.085,
+      "exit": 1.09,
+      "size": 0.01,
+      "result": "WIN",
+      "profit_pips": 50.0,
+      "profit_usd": 50.0,
+      "opened_at": "2025-10-19T23:27:38.464394+00:00",
+      "closed_at": "2025-10-19T23:27:38.464495+00:00",
+      "comment": "Manual trade via logger"
+    }
+  ],
+  "daily_stats": {
+    "2025-10-19": {
+      "trades": 3,
+      "wins": 2,
+      "losses": 1,
+      "profit": 80.0
+    }
+  },
+  "total_trades": 3,
+  "winning_trades": 2,
+  "losing_trades": 1,
+  "total_profit": 100.0,
+  "total_loss": 20.0,
+  "best_trade": {
+    "pair": "EURUSD",
+    "action": "BUY",
+    "entry": 1.085,
+    "exit": 1.09,
+    "sl": 1.083,
+    "tp": 1.09,
+    "result": "WIN",
+    "profit_pips": 50.0,
+    "profit_usd": 50.0,
+    "size": 0.01,
+    "signal_score": 2.5,
+    "closed_at": "2025-10-19T15:08:55.510626+00:00"
+  },
+  "worst_trade": {
+    "pair": "GBPUSD",
+    "action": "SELL",
+    "entry": 1.265,
+    "exit": 1.263,
+    "sl": 1.267,
+    "tp": 1.26,
+    "result": "LOSS",
+    "profit_pips": -20.0,
+    "profit_usd": -20.0,
+    "size": 0.01,
+    "signal_score": 2.0,
+    "closed_at": "2025-10-19T15:08:55.511142+00:00"
+  },
+  "created_at": "2025-10-19T15:08:55.510506+00:00"
+}

@@ -1,0 +1,1 @@
+/data/data/com.termux/files/usr/bin/bash: line 16: /data/data/com.termux/files/usr/bin/python3: Permission denied

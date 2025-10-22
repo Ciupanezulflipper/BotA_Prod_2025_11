@@ -1,0 +1,500 @@
+=== BotA H1 Auto-Loop START ===
+[2025-10-13 08:11:00] PID=14101  CWD=/data/data/com.termux/files/home/bot-a  LOG=/data/data/com.termux/files/home/bot-a/logs/auto_h1.log
+[2025-10-13 08:11:00] Env loaded from .env.botA (BOT_TOKEN masked, CHAT_ID present=yes)
+/data/data/com.termux/files/home/bot-a/tools/auto_h1.sh: line 45: trap: %H:%M:%S)] INFO: stopping auto_h1"; exit 0: invalid signal specification
+=== BotA H1 Auto-Loop START ===
+[2025-10-13 08:11:24] PID=14462  CWD=/data/data/com.termux/files/home/bot-a  LOG=/data/data/com.termux/files/home/bot-a/logs/auto_h1.log
+[2025-10-13 08:11:24] Env loaded from .env.botA (BOT_TOKEN masked, CHAT_ID present=yes)
+/data/data/com.termux/files/home/bot-a/tools/auto_h1.sh: line 45: trap: %H:%M:%S)] INFO: stopping auto_h1"; exit 0: invalid signal specification
+=== BotA H1 Auto-Loop START ===
+[2025-10-13 08:11:59] PID=14781  CWD=/data/data/com.termux/files/home/bot-a  LOG=/data/data/com.termux/files/home/bot-a/logs/auto_h1.log
+[2025-10-13 08:11:59] Env loaded from .env.botA (BOT_TOKEN masked, CHAT_ID present=yes)
+/data/data/com.termux/files/home/bot-a/tools/auto_h1.sh: line 45: trap: %H:%M:%S)] INFO: stopping auto_h1"; exit 0: invalid signal specification
+=== BotA H1 Auto-Loop START ===
+[2025-10-13 08:12:39] PID=15128  CWD=/data/data/com.termux/files/home/bot-a  LOG=/data/data/com.termux/files/home/bot-a/logs/auto_h1.log
+[2025-10-13 08:12:39] Env loaded from .env.botA (BOT_TOKEN masked, CHAT_ID present=yes)
+/data/data/com.termux/files/home/bot-a/tools/auto_h1.sh: line 45: trap: %H:%M:%S)] INFO: stopping auto_h1"; exit 0: invalid signal specification
+=== BotA H1 Auto-Loop START ===
+[2025-10-13 08:13:19] PID=15249  CWD=/data/data/com.termux/files/home/bot-a  LOG=/data/data/com.termux/files/home/bot-a/logs/auto_h1.log
+[2025-10-13 08:13:19] Env loaded from .env.botA (BOT_TOKEN masked, CHAT_ID present=yes)
+/data/data/com.termux/files/home/bot-a/tools/auto_h1.sh: line 45: trap: %H:%M:%S)] INFO: stopping auto_h1"; exit 0: invalid signal specification
+=== BotA H1 Auto-Loop START ===
+[2025-10-13 08:13:59] PID=15470  CWD=/data/data/com.termux/files/home/bot-a  LOG=/data/data/com.termux/files/home/bot-a/logs/auto_h1.log
+[2025-10-13 08:13:59] Env loaded from .env.botA (BOT_TOKEN masked, CHAT_ID present=yes)
+/data/data/com.termux/files/home/bot-a/tools/auto_h1.sh: line 45: trap: %H:%M:%S)] INFO: stopping auto_h1"; exit 0: invalid signal specification
+=== BotA H1 Auto-Loop START ===
+[2025-10-13 08:14:40] PID=15539  CWD=/data/data/com.termux/files/home/bot-a  LOG=/data/data/com.termux/files/home/bot-a/logs/auto_h1.log
+[2025-10-13 08:14:40] Env loaded from .env.botA (BOT_TOKEN masked, CHAT_ID present=yes)
+/data/data/com.termux/files/home/bot-a/tools/auto_h1.sh: line 45: trap: %H:%M:%S)] INFO: stopping auto_h1"; exit 0: invalid signal specification
+=== BotA H1 Auto-Loop START ===
+[2025-10-13 08:15:20] PID=15604  CWD=/data/data/com.termux/files/home/bot-a  LOG=/data/data/com.termux/files/home/bot-a/logs/auto_h1.log
+[2025-10-13 08:15:20] Env loaded from .env.botA (BOT_TOKEN masked, CHAT_ID present=yes)
+/data/data/com.termux/files/home/bot-a/tools/auto_h1.sh: line 45: trap: %H:%M:%S)] INFO: stopping auto_h1"; exit 0: invalid signal specification
+=== BotA H1 Auto-Loop START ===
+[2025-10-13 08:16:00] PID=15697  CWD=/data/data/com.termux/files/home/bot-a  LOG=/data/data/com.termux/files/home/bot-a/logs/auto_h1.log
+[2025-10-13 08:16:00] Env loaded from .env.botA (BOT_TOKEN masked, CHAT_ID present=yes)
+/data/data/com.termux/files/home/bot-a/tools/auto_h1.sh: line 45: trap: %H:%M:%S)] INFO: stopping auto_h1"; exit 0: invalid signal specification
+=== BotA H1 Auto-Loop START ===
+[2025-10-13 08:16:40] PID=15997  CWD=/data/data/com.termux/files/home/bot-a  LOG=/data/data/com.termux/files/home/bot-a/logs/auto_h1.log
+[2025-10-13 08:16:40] Env loaded from .env.botA (BOT_TOKEN masked, CHAT_ID present=yes)
+/data/data/com.termux/files/home/bot-a/tools/auto_h1.sh: line 45: trap: %H:%M:%S)] INFO: stopping auto_h1"; exit 0: invalid signal specification
+=== BotA H1 Auto-Loop START ===
+[2025-10-13 08:17:19] PID=16137  CWD=/data/data/com.termux/files/home/bot-a  LOG=/data/data/com.termux/files/home/bot-a/logs/auto_h1.log
+[2025-10-13 08:17:19] Env loaded from .env.botA (BOT_TOKEN masked, CHAT_ID present=yes)
+/data/data/com.termux/files/home/bot-a/tools/auto_h1.sh: line 45: trap: %H:%M:%S)] INFO: stopping auto_h1"; exit 0: invalid signal specification
+=== BotA H1 Auto-Loop START ===
+[2025-10-13 08:18:00] PID=16216  CWD=/data/data/com.termux/files/home/bot-a  LOG=/data/data/com.termux/files/home/bot-a/logs/auto_h1.log
+[2025-10-13 08:18:00] Env loaded from .env.botA (BOT_TOKEN masked, CHAT_ID present=yes)
+/data/data/com.termux/files/home/bot-a/tools/auto_h1.sh: line 45: trap: %H:%M:%S)] INFO: stopping auto_h1"; exit 0: invalid signal specification
+=== BotA H1 Auto-Loop START ===
+[2025-10-13 08:18:40] PID=16440  CWD=/data/data/com.termux/files/home/bot-a  LOG=/data/data/com.termux/files/home/bot-a/logs/auto_h1.log
+[2025-10-13 08:18:40] Env loaded from .env.botA (BOT_TOKEN masked, CHAT_ID present=yes)
+[2025-10-13 08:18:40] Entering hourly loop… (EURUSD H1)
+
+--- Iteration start: 2025-10-13 08:18:40 ---
+📊 EURUSD (H1)
+🕒 2025-10-13 08:18 UTC
+📈 Action: WAIT
+📊 Score: -0.12
+🧠 Reason: near SMA20
+Price source: close
+Source: twelvedata
+[2025-10-13 08:18:42] ✓ run ok
+[2025-10-13 08:18:42] Sleeping 3600s
+=== BotA H1 Auto-Loop START ===
+[2025-10-13 08:19:05] PID=16769  CWD=/data/data/com.termux/files/home/bot-a  LOG=/data/data/com.termux/files/home/bot-a/logs/auto_h1.log
+[2025-10-13 08:19:05] Env loaded from .env.botA (BOT_TOKEN masked, CHAT_ID present=yes)
+[2025-10-13 08:19:05] Entering hourly loop… (EURUSD H1)
+
+--- Iteration start: 2025-10-13 08:19:05 ---
+📊 EURUSD (H1)
+🕒 2025-10-13 08:19 UTC
+📈 Action: WAIT
+📊 Score: -0.12
+🧠 Reason: near SMA20
+Price source: close
+Source: twelvedata
+[2025-10-13 08:19:07] ✓ run ok
+[2025-10-13 08:19:07] Sleeping 3600s
+=== BotA H1 Auto-Loop START ===
+[2025-10-13 08:22:12] PID=17702  CWD=/data/data/com.termux/files/home/bot-a  LOG=/data/data/com.termux/files/home/bot-a/logs/auto_h1.log
+[2025-10-13 08:22:12] Env loaded from .env.botA (BOT_TOKEN masked, CHAT_ID present=yes)
+[2025-10-13 08:22:12] Entering hourly loop… (EURUSD H1)
+
+--- Iteration start: 2025-10-13 08:22:12 ---
+📊 EURUSD (H1)
+🕒 2025-10-13 08:22 UTC
+📈 Action: SELL
+📊 Score: -0.16
+🧠 Reason: last < SMA20 by >0.15%
+Price source: close
+Source: twelvedata
+[2025-10-13 08:22:14] ✓ run ok
+[2025-10-13 08:22:14] Sleeping 3600s
+
+--- Iteration start: 2025-10-13 09:55:48 ---
+📊 EURUSD (H1)
+🕒 2025-10-13 09:55 UTC
+📈 Action: SELL
+📊 Score: -0.32
+🧠 Reason: last < SMA20 by >0.15%
+Price source: close
+Source: twelvedata
+[2025-10-13 09:55:50] ✓ run ok
+[2025-10-13 09:55:50] Sleeping 3600s
+
+--- Iteration start: 2025-10-13 11:33:17 ---
+📊 EURUSD (H1)
+🕒 2025-10-13 11:33 UTC
+📈 Action: SELL
+📊 Score: -0.31
+🧠 Reason: last < SMA20 by >0.15%
+Price source: close
+Source: twelvedata
+[2025-10-13 11:33:21] ✓ run ok
+[2025-10-13 11:33:21] Sleeping 3600s
+
+--- Iteration start: 2025-10-13 12:33:22 ---
+📊 EURUSD (H1)
+🕒 2025-10-13 12:33 UTC
+📈 Action: SELL
+📊 Score: -0.22
+🧠 Reason: last < SMA20 by >0.15%
+Price source: close
+Source: twelvedata
+[2025-10-13 12:33:24] ✓ run ok
+[2025-10-13 12:33:24] Sleeping 3600s
+
+--- Iteration start: 2025-10-13 13:34:06 ---
+📊 EURUSD (H1)
+🕒 2025-10-13 13:34 UTC
+📈 Action: SELL
+📊 Score: -0.22
+🧠 Reason: last < SMA20 by >0.15%
+Price source: close
+Source: twelvedata
+[2025-10-13 13:34:07] ✓ run ok
+[2025-10-13 13:34:07] Sleeping 3600s
+
+--- Iteration start: 2025-10-13 14:34:07 ---
+📊 EURUSD (H1)
+🕒 2025-10-13 14:34 UTC
+📈 Action: SELL
+📊 Score: -0.15
+🧠 Reason: last < SMA20 by >0.15%
+Price source: close
+Source: twelvedata
+[2025-10-13 14:34:09] ✓ run ok
+[2025-10-13 14:34:09] Sleeping 3600s
+
+--- Iteration start: 2025-10-13 15:34:09 ---
+📊 EURUSD (H1)
+🕒 2025-10-13 15:34 UTC
+📈 Action: SELL
+📊 Score: -0.16
+🧠 Reason: last < SMA20 by >0.15%
+Price source: close
+Source: twelvedata
+[2025-10-13 15:34:12] ✓ run ok
+[2025-10-13 15:34:12] Sleeping 3600s
+
+--- Iteration start: 2025-10-13 16:34:12 ---
+📊 EURUSD (H1)
+🕒 2025-10-13 16:34 UTC
+📈 Action: SELL
+📊 Score: -0.17
+🧠 Reason: last < SMA20 by >0.15%
+Price source: close
+Source: twelvedata
+[2025-10-13 16:34:14] ✓ run ok
+[2025-10-13 16:34:14] Sleeping 3600s
+
+--- Iteration start: 2025-10-13 17:34:14 ---
+📊 EURUSD (H1)
+🕒 2025-10-13 17:34 UTC
+📈 Action: SELL
+📊 Score: -0.18
+🧠 Reason: last < SMA20 by >0.15%
+Price source: close
+Source: twelvedata
+[2025-10-13 17:34:15] ✓ run ok
+[2025-10-13 17:34:15] Sleeping 3600s
+
+--- Iteration start: 2025-10-13 18:34:15 ---
+📊 EURUSD (H1)
+🕒 2025-10-13 18:34 UTC
+📈 Action: WAIT
+📊 Score: -0.13
+🧠 Reason: near SMA20
+Price source: close
+Source: twelvedata
+[2025-10-13 18:34:17] ✓ run ok
+[2025-10-13 18:34:17] Sleeping 3600s
+
+--- Iteration start: 2025-10-13 19:51:37 ---
+✗ Data quality failed: empty dataframe
+[2025-10-13 19:51:39] ✗ run failed rc=2
+[2025-10-13 19:51:39] Sleeping 3600s
+
+--- Iteration start: 2025-10-13 20:56:49 ---
+📊 EURUSD (H1)
+🕒 2025-10-13 20:56 UTC
+📈 Action: WAIT
+📊 Score: -0.13
+🧠 Reason: near SMA20
+Price source: close
+Source: twelvedata
+[2025-10-13 20:56:52] ✓ run ok
+[2025-10-13 20:56:52] Sleeping 3600s
+
+--- Iteration start: 2025-10-13 22:10:55 ---
+📊 EURUSD (H1)
+🕒 2025-10-13 22:10 UTC
+📈 Action: WAIT
+📊 Score: -0.09
+🧠 Reason: near SMA20
+Price source: close
+Source: twelvedata
+[2025-10-13 22:10:59] ✓ run ok
+[2025-10-13 22:10:59] Sleeping 3600s
+
+--- Iteration start: 2025-10-13 23:27:50 ---
+📊 EURUSD (H1)
+🕒 2025-10-13 23:27 UTC
+📈 Action: WAIT
+📊 Score: -0.02
+🧠 Reason: near SMA20
+Price source: close
+Source: twelvedata
+[2025-10-13 23:27:52] ✓ run ok
+[2025-10-13 23:27:52] Sleeping 3600s
+
+--- Iteration start: 2025-10-14 00:27:52 ---
+📊 EURUSD (H1)
+🕒 2025-10-14 00:27 UTC
+📈 Action: WAIT
+📊 Score: 0.03
+🧠 Reason: near SMA20
+Price source: close
+Source: twelvedata
+[2025-10-14 00:27:54] ✓ run ok
+[2025-10-14 00:27:54] Sleeping 3600s
+
+--- Iteration start: 2025-10-14 01:27:54 ---
+📊 EURUSD (H1)
+🕒 2025-10-14 01:27 UTC
+📈 Action: WAIT
+📊 Score: 0.12
+🧠 Reason: near SMA20
+Price source: close
+Source: twelvedata
+[2025-10-14 01:27:56] ✓ run ok
+[2025-10-14 01:27:56] Sleeping 3600s
+
+--- Iteration start: 2025-10-14 02:35:02 ---
+📊 EURUSD (H1)
+🕒 2025-10-14 02:35 UTC
+📈 Action: WAIT
+📊 Score: 0.14
+🧠 Reason: near SMA20
+Price source: close
+Source: twelvedata
+[2025-10-14 02:35:04] ✓ run ok
+[2025-10-14 02:35:04] Sleeping 3600s
+
+--- Iteration start: 2025-10-14 05:22:29 ---
+📊 EURUSD (H1)
+🕒 2025-10-14 05:22 UTC
+📈 Action: WAIT
+📊 Score: -0.13
+🧠 Reason: near SMA20
+Price source: close
+Source: twelvedata
+[2025-10-14 05:22:32] ✓ run ok
+[2025-10-14 05:22:32] Sleeping 3600s
+
+--- Iteration start: 2025-10-14 07:18:15 ---
+📊 EURUSD (H1)
+🕒 2025-10-14 07:18 UTC
+📈 Action: WAIT
+📊 Score: -0.12
+🧠 Reason: near SMA20
+Price source: close
+Source: twelvedata
+[2025-10-14 07:18:23] ✓ run ok
+[2025-10-14 07:18:23] Sleeping 3600s
+
+--- Iteration start: 2025-10-14 08:28:03 ---
+📊 EURUSD (H1)
+🕒 2025-10-14 08:28 UTC
+📈 Action: WAIT
+📊 Score: -0.11
+🧠 Reason: near SMA20
+Price source: close
+Source: twelvedata
+[2025-10-14 08:28:06] ✓ run ok
+[2025-10-14 08:28:06] Sleeping 3600s
+
+--- Iteration start: 2025-10-14 09:31:18 ---
+📊 EURUSD (H1)
+🕒 2025-10-14 09:31 UTC
+📈 Action: WAIT
+📊 Score: -0.07
+🧠 Reason: near SMA20
+Price source: close
+Source: twelvedata
+[2025-10-14 09:31:30] ✓ run ok
+[2025-10-14 09:31:30] Sleeping 3600s
+=== BotA H1 Auto-Loop START ===
+[2025-10-14 10:36:03] PID=25044  CWD=/data/data/com.termux/files/home/bot-a  LOG=/data/data/com.termux/files/home/bot-a/logs/auto_h1.log
+[2025-10-14 10:36:03] Env loaded from .env.botA (BOT_TOKEN masked, CHAT_ID present=yes)
+[2025-10-14 10:36:03] Entering hourly loop… (EURUSD H1)
+
+--- Iteration start: 2025-10-14 10:36:03 ---
+✗ Data quality failed: empty dataframe
+[2025-10-14 10:36:05] ✗ run failed rc=2
+[2025-10-14 10:36:05] Sleeping 3600s
+
+--- Iteration start: 2025-10-14 11:36:05 ---
+📊 EURUSD (H1)
+🕒 2025-10-14 11:36 UTC
+📈 Action: BUY
+📊 Score: 0.19
+🧠 Reason: last > SMA20 by >0.15%
+Price source: close
+Source: twelvedata
+[2025-10-14 11:36:10] ✓ run ok
+[2025-10-14 11:36:10] Sleeping 3600s
+
+--- Iteration start: 2025-10-14 12:36:10 ---
+✗ Data quality failed: empty dataframe
+[2025-10-14 12:36:12] ✗ run failed rc=2
+[2025-10-14 12:36:12] Sleeping 3600s
+
+--- Iteration start: 2025-10-14 13:36:12 ---
+✗ Data quality failed: empty dataframe
+[2025-10-14 13:36:14] ✗ run failed rc=2
+[2025-10-14 13:36:14] Sleeping 3600s
+=== BotA H1 Auto-Loop START ===
+[2025-10-14 20:55:39] PID=8487  CWD=/data/data/com.termux/files/home/bot-a  LOG=/data/data/com.termux/files/home/bot-a/logs/auto_h1.log
+[2025-10-14 20:55:39] Env loaded from .env.botA (BOT_TOKEN masked, CHAT_ID present=yes)
+[2025-10-14 20:55:39] Entering hourly loop… (EURUSD H1)
+
+--- Iteration start: 2025-10-14 20:55:39 ---
+✗ Data quality failed: empty dataframe
+[2025-10-14 20:56:20] ✗ run failed rc=2
+[2025-10-14 20:56:20] Sleeping 3600s
+=== BotA H1 Auto-Loop START ===
+[2025-10-14 21:02:42] PID=21512  CWD=/data/data/com.termux/files/home/bot-a  LOG=/data/data/com.termux/files/home/bot-a/logs/auto_h1.log
+[2025-10-14 21:02:42] Env loaded from .env.botA (BOT_TOKEN masked, CHAT_ID present=yes)
+[2025-10-14 21:02:42] Entering hourly loop… (EURUSD H1)
+
+--- Iteration start: 2025-10-14 21:02:42 ---
+📊 EURUSD (H1)
+🕒 2025-10-14 21:02 UTC
+📈 Action: BUY
+📊 Score: 0.17
+🧠 Reason: last > SMA20 by >0.15%
+Price source: close
+Source: twelvedata
+[2025-10-14 21:02:45] ✓ run ok
+[2025-10-14 21:02:45] Sleeping 3600s
+
+--- Iteration start: 2025-10-14 22:17:15 ---
+📊 EURUSD (H1)
+🕒 2025-10-14 22:17 UTC
+📈 Action: BUY
+📊 Score: 0.25
+🧠 Reason: last > SMA20 by >0.15%
+Price source: close
+Source: twelvedata
+[2025-10-14 22:17:17] ✓ run ok
+[2025-10-14 22:17:17] Sleeping 3600s
+
+--- Iteration start: 2025-10-14 23:17:17 ---
+📊 EURUSD (H1)
+🕒 2025-10-14 23:17 UTC
+📈 Action: BUY
+📊 Score: 0.27
+🧠 Reason: last > SMA20 by >0.15%
+Price source: close
+Source: twelvedata
+[2025-10-14 23:17:19] ✓ run ok
+[2025-10-14 23:17:19] Sleeping 3600s
+
+--- Iteration start: 2025-10-15 00:17:19 ---
+✗ Data quality failed: empty dataframe
+[2025-10-15 00:18:03] ✗ run failed rc=2
+[2025-10-15 00:18:03] Sleeping 3600s
+
+--- Iteration start: 2025-10-15 01:18:03 ---
+📊 EURUSD (H1)
+🕒 2025-10-15 01:18 UTC
+📈 Action: BUY
+📊 Score: 0.2
+🧠 Reason: last > SMA20 by >0.15%
+Price source: close
+Source: twelvedata
+[2025-10-15 01:18:05] ✓ run ok
+[2025-10-15 01:18:05] Sleeping 3600s
+
+--- Iteration start: 2025-10-15 02:18:05 ---
+📊 EURUSD (H1)
+🕒 2025-10-15 02:18 UTC
+📈 Action: BUY
+📊 Score: 0.2
+🧠 Reason: last > SMA20 by >0.15%
+Price source: close
+Source: twelvedata
+[2025-10-15 02:18:08] ✓ run ok
+[2025-10-15 02:18:09] Sleeping 3600s
+
+--- Iteration start: 2025-10-15 03:18:09 ---
+📊 EURUSD (H1)
+🕒 2025-10-15 03:18 UTC
+📈 Action: BUY
+📊 Score: 0.21
+🧠 Reason: last > SMA20 by >0.15%
+Price source: close
+Source: twelvedata
+[2025-10-15 03:18:11] ✓ run ok
+[2025-10-15 03:18:11] Sleeping 3600s
+
+--- Iteration start: 2025-10-15 04:18:11 ---
+📊 EURUSD (H1)
+🕒 2025-10-15 04:18 UTC
+📈 Action: BUY
+📊 Score: 0.24
+🧠 Reason: last > SMA20 by >0.15%
+Price source: close
+Source: twelvedata
+[2025-10-15 04:18:14] ✓ run ok
+[2025-10-15 04:18:14] Sleeping 3600s
+
+--- Iteration start: 2025-10-15 05:18:14 ---
+📊 EURUSD (H1)
+🕒 2025-10-15 05:18 UTC
+📈 Action: BUY
+📊 Score: 0.22
+🧠 Reason: last > SMA20 by >0.15%
+Price source: close
+Source: twelvedata
+[2025-10-15 05:18:17] ✓ run ok
+[2025-10-15 05:18:17] Sleeping 3600s
+
+--- Iteration start: 2025-10-15 06:18:17 ---
+📊 EURUSD (H1)
+🕒 2025-10-15 06:18 UTC
+📈 Action: WAIT
+📊 Score: 0.13
+🧠 Reason: near SMA20
+Price source: close
+Source: twelvedata
+[2025-10-15 06:18:22] ✓ run ok
+[2025-10-15 06:18:22] Sleeping 3600s
+
+--- Iteration start: 2025-10-15 07:18:22 ---
+📊 EURUSD (H1)
+🕒 2025-10-15 07:18 UTC
+📈 Action: WAIT
+📊 Score: 0.08
+🧠 Reason: near SMA20
+Price source: close
+Source: twelvedata
+[2025-10-15 07:18:59] ✓ run ok
+[2025-10-15 07:18:59] Sleeping 3600s
+
+--- Iteration start: 2025-10-15 08:18:59 ---
+✗ Data quality failed: empty dataframe
+[2025-10-15 08:19:42] ✗ run failed rc=2
+[2025-10-15 08:19:42] Sleeping 3600s
+
+--- Iteration start: 2025-10-15 09:19:42 ---
+✗ Data quality failed: empty dataframe
+[2025-10-15 09:19:43] ✗ run failed rc=2
+[2025-10-15 09:19:43] Sleeping 3600s
+
+--- Iteration start: 2025-10-15 10:19:43 ---
+✗ Data quality failed: empty dataframe
+[2025-10-15 10:19:43] ✗ run failed rc=2
+[2025-10-15 10:19:43] Sleeping 3600s
+
+--- Iteration start: 2025-10-15 11:19:43 ---
+✗ Data quality failed: empty dataframe
+[2025-10-15 11:20:02] ✗ run failed rc=2
+[2025-10-15 11:20:02] Sleeping 3600s
+=== BotA H1 Auto-Loop START ===
+[2025-10-15 12:14:54] PID=23527  CWD=/data/data/com.termux/files/home/bot-a  LOG=/data/data/com.termux/files/home/bot-a/logs/auto_h1.log
+[2025-10-15 12:14:54] Env loaded from .env.botA (BOT_TOKEN masked, CHAT_ID present=yes)
+[2025-10-15 12:14:54] Entering hourly loop… (EURUSD H1)
+
+--- Iteration start: 2025-10-15 12:14:54 ---
+📊 EURUSD (H1)
+🕒 2025-10-15 12:14 UTC
+📈 Action: WAIT
+📊 Score: 0.05
+🧠 Reason: near SMA20
+Price source: close
+Source: twelvedata
+[2025-10-15 12:14:57] ✓ run ok
+[2025-10-15 12:14:58] Sleeping 3600s

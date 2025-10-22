@@ -1,0 +1,7 @@
+═══ BotA Telegram Smoke Test ═══
+VERIFY_SSL: true
+✓ TELEGRAM_BOT_TOKEN: 79912807...v2mw
+✓ Target chat(s): 6074056245
+
+Sending test message...
+✓ Message sent successfully

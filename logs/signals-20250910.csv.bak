@@ -1,0 +1,125 @@
+run_id,time_utc,symbol,tf,type,score,bias,side,entry,stop,target,why,cadence,watchlist,engine
+9e332892,2025-09-10 00:18:13Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+00d54a83,2025-09-10 00:48:13Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+8938a4db,2025-09-10 01:18:14Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+6617bb88,2025-09-10 01:48:16Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+566e2236,2025-09-10 02:18:18Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+3de0387e,2025-09-10 02:48:18Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+0036280f,2025-09-10 03:18:19Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+aa50cc5e,2025-09-10 03:48:21Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+c809a8d9,2025-09-10 04:18:22Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+f26652cd,2025-09-10 04:48:22Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+b373fd9e,2025-09-10 05:18:24Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+0ff68948,2025-09-10 05:46:38Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+0ff68948,2025-09-10 05:46:38Z,EURUSD,5min,error,,,,,,,"engine The truth value of a DataFrame is ambiguous. Use a.empty, a.bool(), a.item(), a.any() or a.all(). |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+0ff68948,2025-09-10 05:46:38Z,XAUUSD,5min,skip,0,,,,,,score<1 | 0 | 30,,"EURUSD,XAUUSD",v2b
+34f70cfe,2025-09-10 05:48:26Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+405b0203,2025-09-10 06:18:28Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+405b0203,2025-09-10 06:18:28Z,EURUSD,5min,error,,,,,,,"engine The truth value of a DataFrame is ambiguous. Use a.empty, a.bool(), a.item(), a.any() or a.all(). |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+405b0203,2025-09-10 06:18:28Z,XAUUSD,5min,skip,0,,,,,,score<55 | 0 | 30,,"EURUSD,XAUUSD",v2b
+6db4db50,2025-09-10 06:24:33Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+6db4db50,2025-09-10 06:24:33Z,EURUSD,5min,signal,11,BULLISH,,,,, | 1 | 30,,"EURUSD,XAUUSD",v2b
+6db4db50,2025-09-10 06:24:33Z,XAUUSD,5min,error,,,,,,,"engine int() argument must be a string, a bytes-like object or a real number, not 'NoneType' |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+6e8f3646,2025-09-10 06:28:37Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+6e8f3646,2025-09-10 06:28:37Z,EURUSD,5min,skip,20,BULLISH,,,,,score<35 | 0 | 30,,"EURUSD,XAUUSD",v2b
+6e8f3646,2025-09-10 06:28:37Z,XAUUSD,5min,error,,,,,,,"engine int() argument must be a string, a bytes-like object or a real number, not 'NoneType' |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+00bc1431,2025-09-10 06:48:48Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+00bc1431,2025-09-10 06:48:48Z,EURUSD,5min,skip,34,BULLISH,,,,,score<55 | 0 | 30,,"EURUSD,XAUUSD",v2b
+00bc1431,2025-09-10 06:48:48Z,XAUUSD,5min,error,,,,,,,"engine int() argument must be a string, a bytes-like object or a real number, not 'NoneType' |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+5b6be65b,2025-09-10 07:19:03Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+5b6be65b,2025-09-10 07:19:03Z,EURUSD,5min,error,,,,,,,"engine int() argument must be a string, a bytes-like object or a real number, not 'NoneType' |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+5b6be65b,2025-09-10 07:19:03Z,XAUUSD,5min,error,,,,,,,"engine int() argument must be a string, a bytes-like object or a real number, not 'NoneType' |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+f1a02498,2025-09-10 07:30:01Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+f1a02498,2025-09-10 07:30:01Z,EURUSD,5min,error,,,,,,,"engine int() argument must be a string, a bytes-like object or a real number, not 'NoneType' |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+f1a02498,2025-09-10 07:30:01Z,XAUUSD,5min,error,,,,,,,"engine int() argument must be a string, a bytes-like object or a real number, not 'NoneType' |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+e23d02ee,2025-09-10 07:49:04Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+e23d02ee,2025-09-10 07:49:04Z,EURUSD,5min,error,,,,,,,"engine int() argument must be a string, a bytes-like object or a real number, not 'NoneType' |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+e23d02ee,2025-09-10 07:49:04Z,XAUUSD,5min,error,,,,,,,"engine int() argument must be a string, a bytes-like object or a real number, not 'NoneType' |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+ff4e8ac5,2025-09-10 08:19:05Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+ff4e8ac5,2025-09-10 08:19:05Z,EURUSD,5min,error,,,,,,,"engine int() argument must be a string, a bytes-like object or a real number, not 'NoneType' |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+ff4e8ac5,2025-09-10 08:19:05Z,XAUUSD,5min,error,,,,,,,"engine int() argument must be a string, a bytes-like object or a real number, not 'NoneType' |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+3f23bc19,2025-09-10 08:49:07Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+3f23bc19,2025-09-10 08:49:07Z,EURUSD,5min,error,,,,,,,"engine int() argument must be a string, a bytes-like object or a real number, not 'NoneType' |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+3f23bc19,2025-09-10 08:49:07Z,XAUUSD,5min,error,,,,,,,"engine int() argument must be a string, a bytes-like object or a real number, not 'NoneType' |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+60aab599,2025-09-10 09:19:10Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+60aab599,2025-09-10 09:19:10Z,EURUSD,5min,error,,,,,,,"engine int() argument must be a string, a bytes-like object or a real number, not 'NoneType' |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+60aab599,2025-09-10 09:19:10Z,XAUUSD,5min,error,,,,,,,"engine int() argument must be a string, a bytes-like object or a real number, not 'NoneType' |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+9d291eee,2025-09-10 09:30:03Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+9d291eee,2025-09-10 09:30:03Z,EURUSD,5min,error,,,,,,,"engine int() argument must be a string, a bytes-like object or a real number, not 'NoneType' |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+9d291eee,2025-09-10 09:30:03Z,XAUUSD,5min,error,,,,,,,"engine int() argument must be a string, a bytes-like object or a real number, not 'NoneType' |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+7e6512b0,2025-09-10 09:49:14Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+7e6512b0,2025-09-10 09:49:14Z,EURUSD,5min,error,,,,,,,"engine int() argument must be a string, a bytes-like object or a real number, not 'NoneType' |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+7e6512b0,2025-09-10 09:49:14Z,XAUUSD,5min,error,,,,,,,"engine int() argument must be a string, a bytes-like object or a real number, not 'NoneType' |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+3f48b6d1,2025-09-10 10:00:02Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+3f48b6d1,2025-09-10 10:00:02Z,EURUSD,5min,error,,,,,,,"engine int() argument must be a string, a bytes-like object or a real number, not 'NoneType' |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+3f48b6d1,2025-09-10 10:00:02Z,XAUUSD,5min,error,,,,,,,"engine int() argument must be a string, a bytes-like object or a real number, not 'NoneType' |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+bdb3006e,2025-09-10 10:19:16Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+bdb3006e,2025-09-10 10:19:16Z,EURUSD,5min,error,,,,,,,"engine int() argument must be a string, a bytes-like object or a real number, not 'NoneType' |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+bdb3006e,2025-09-10 10:19:16Z,XAUUSD,5min,error,,,,,,,"engine int() argument must be a string, a bytes-like object or a real number, not 'NoneType' |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+bf05081c,2025-09-10 10:30:02Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+bf05081c,2025-09-10 10:30:02Z,EURUSD,5min,error,,,,,,,"engine int() argument must be a string, a bytes-like object or a real number, not 'NoneType' |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+bf05081c,2025-09-10 10:30:02Z,XAUUSD,5min,error,,,,,,,"engine int() argument must be a string, a bytes-like object or a real number, not 'NoneType' |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+b9a671cf,2025-09-10 10:49:21Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+b9a671cf,2025-09-10 10:49:21Z,EURUSD,5min,error,,,,,,,"engine int() argument must be a string, a bytes-like object or a real number, not 'NoneType' |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+b9a671cf,2025-09-10 10:49:21Z,XAUUSD,5min,error,,,,,,,"engine int() argument must be a string, a bytes-like object or a real number, not 'NoneType' |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+357f75b8,2025-09-10 11:00:04Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+357f75b8,2025-09-10 11:00:04Z,EURUSD,5min,error,,,,,,,"engine int() argument must be a string, a bytes-like object or a real number, not 'NoneType' |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+357f75b8,2025-09-10 11:00:04Z,XAUUSD,5min,error,,,,,,,"engine int() argument must be a string, a bytes-like object or a real number, not 'NoneType' |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+9bedaf26,2025-09-10 11:19:23Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+9bedaf26,2025-09-10 11:19:23Z,EURUSD,5min,error,,,,,,,"engine int() argument must be a string, a bytes-like object or a real number, not 'NoneType' |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+9bedaf26,2025-09-10 11:19:23Z,XAUUSD,5min,error,,,,,,,"engine int() argument must be a string, a bytes-like object or a real number, not 'NoneType' |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+69414ec9,2025-09-10 11:30:01Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+69414ec9,2025-09-10 11:30:01Z,EURUSD,5min,error,,,,,,,"engine int() argument must be a string, a bytes-like object or a real number, not 'NoneType' |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+69414ec9,2025-09-10 11:30:01Z,XAUUSD,5min,error,,,,,,,"engine int() argument must be a string, a bytes-like object or a real number, not 'NoneType' |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+25b08fdb,2025-09-10 11:49:25Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+25b08fdb,2025-09-10 11:49:25Z,EURUSD,5min,error,,,,,,,"engine int() argument must be a string, a bytes-like object or a real number, not 'NoneType' |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+25b08fdb,2025-09-10 11:49:25Z,XAUUSD,5min,error,,,,,,,"engine int() argument must be a string, a bytes-like object or a real number, not 'NoneType' |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+eeb4260e,2025-09-10 12:00:02Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+eeb4260e,2025-09-10 12:00:02Z,EURUSD,5min,error,,,,,,,"engine int() argument must be a string, a bytes-like object or a real number, not 'NoneType' |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+eeb4260e,2025-09-10 12:00:02Z,XAUUSD,5min,error,,,,,,,"engine int() argument must be a string, a bytes-like object or a real number, not 'NoneType' |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+0196ee6b,2025-09-10 12:19:28Z,-,5min,heartbeat,,,,,,,alive |  | 30,,"EURUSD,XAUUSD",v2b
+0196ee6b,2025-09-10 12:19:28Z,EURUSD,5min,skip,27,BEARISH,,,,,score<55 | 0 | 30,,"EURUSD,XAUUSD",v2b
+0196ee6b,2025-09-10 12:19:28Z,XAUUSD,5min,error,,,,,,,"engine int() argument must be a string, a bytes-like object or a real number, not 'NoneType' |  | 0 | 30",,"EURUSD,XAUUSD",v2b
+0f34a15d,2025-09-10T12:30:04Z,EURUSD,5min,error,,,,,,,"must be real number, not NoneType | must be real number, not NoneType | 0 | 30 |  |  |  | ",,"EURUSD,XAUUSD",v2b
+0f34a15d,2025-09-10T12:30:29Z,XAUUSD,5min,signal,0,Neutral,,,,,missing TOKEN/CHAT_ID | no data | 0 | 30 |  |  |  | 2.0,,"EURUSD,XAUUSD",v2b
+71a3acdf,2025-09-10T12:40:47Z,EURUSD,5min,skip,23,Bearish,,,,,score<35 | - |  | auto | XAUUSD | v2b,,30,EURUSD
+71a3acdf,2025-09-10T12:41:05Z,XAUUSD,5min,skip,,Neutral,,,,,score<35 | no data |  | auto | XAUUSD | v2b,,30,EURUSD
+fec027e5,2025-09-10T12:41:11Z,EURUSD,5min,skip,23,Bearish,,,,,score<35 | - |  | auto | XAUUSD | v2b,,30,EURUSD
+fec027e5,2025-09-10T12:41:28Z,XAUUSD,5min,skip,,Neutral,,,,,score<35 | no data |  | auto | XAUUSD | v2b,,30,EURUSD
+1b287826,2025-09-10T12:49:51Z,EURUSD,5min,skip,23,Bearish,,,,,score<25 | - |  | auto | XAUUSD | v2b,,30,EURUSD
+1b287826,2025-09-10T12:50:12Z,XAUUSD,5min,skip,,Neutral,,,,,score<25 | no data |  | auto | XAUUSD | v2b,,30,EURUSD
+20250910T133004Z,2025-09-10 13:30:04Z,,,heartbeat,,,,,,," |  |  | 30 | EURUSD,XAUUSD | v2b",,,
+20250910T133004Z,2025-09-10 13:30:07Z,,,ping,,,,,,," |  |  | 30 | EURUSD,XAUUSD | v2b",,,twelvedata ok=True code=200 ok
+20250910T133004Z,2025-09-10 13:30:26Z,EURUSD,5min,ok,0,0,,,,,0 | 0 | 0 | 0 | 30 | EURUSD | v2b,,Neutral,no data
+20250910T133004Z,2025-09-10 13:30:50Z,XAUUSD,5min,ok,0,0,,,,,0 | 0 | 0 | 0 | 30 | XAUUSD | v2b,,Neutral,no data
+20250910T140003Z,2025-09-10 14:00:03Z,,,heartbeat,,,,,,," |  |  | 30 | EURUSD,XAUUSD | v2b",,,
+20250910T140003Z,2025-09-10 14:00:05Z,,,ping,,,,,,," |  |  | 30 | EURUSD,XAUUSD | v2b",,,twelvedata ok=True code=200 ok
+20250910T140003Z,2025-09-10 14:00:21Z,EURUSD,5min,ok,0,0,,,,,0 | 0 | 0 | 0 | 30 | EURUSD | v2b,,Neutral,no data
+20250910T140003Z,2025-09-10 14:00:43Z,XAUUSD,5min,ok,0,0,,,,,0 | 0 | 0 | 0 | 30 | XAUUSD | v2b,,Neutral,no data
+20250910T143003Z,2025-09-10 14:30:03Z,,,heartbeat,,,,,,, |  |  | 30 | EURUSD | v2b,,,
+20250910T143003Z,2025-09-10 14:30:05Z,,,ping,,,,,,, |  |  | 30 | EURUSD | v2b,,,twelvedata ok=True code=200 ok
+20250910T143003Z,2025-09-10 14:30:16Z,EURUSD,5min,ok,0,0,,,,,0 | 0 | 0 | 0 | 30 | EURUSD | v2b,,Neutral,no data
+0926696e,2025-09-10 14:52:09Z,,,heartbeat,,,,,,,alive |  |  |  |  | 30 | EURUSD | v2b,,,
+0926696e,2025-09-10 14:52:10Z,,5min,ping,,,,,,,twelvedata ok=True code=200 ok |  |  |  |  | 30 | EURUSD | v2b,,,
+0926696e,2025-09-10 14:52:24Z,EURUSD,5min,skip,0,Neutral,,,,,score<35 |  | 0 |  |  | 30 | EURUSD | v2b,,,
+339145c5,2025-09-10 15:00:02Z,,,heartbeat,,,,,alive,,EURUSD | v2b,,,30
+339145c5,2025-09-10 15:00:04Z,,5min,ping,,,,,twelvedata ok=True code=200 ok,,EURUSD | v2b,,,30
+339145c5,2025-09-10 15:00:16Z,EURUSD,5min,skip,0,Neutral,,0,score<35,,EURUSD | v2b,,,30
+038533b6,2025-09-10 16:53:54Z,,5min,heartbeat,,,,,,,30,EURUSD,v2b,
+038533b6,2025-09-10 16:53:55Z,,,ping,,,,,,twelvedata ok=True code=200 ok,30,EURUSD,v2b,
+038533b6,2025-09-10 16:54:07Z,EURUSD,5min,ok,0,0,,,,no data,30,EURUSD,v2b,
+fb80329e,2025-09-10 16:54:10Z,,5min,heartbeat,,,,,,,30,EURUSD,v2b,
+fb80329e,2025-09-10 16:54:11Z,,,ping,,,,,,twelvedata ok=True code=200 ok,30,EURUSD,v2b,
+fb80329e,2025-09-10 16:54:21Z,EURUSD,5min,ok,0,0,,,,no data,30,EURUSD,v2b,
+d0b58279,2025-09-10 16:58:27Z,,5min,heartbeat,,,,,,,30,EURUSD,v2b,
+d0b58279,2025-09-10 16:58:28Z,,,ping,,,,,,twelvedata ok=True code=200 ok,30,EURUSD,v2b,
+d0b58279,2025-09-10 16:58:40Z,EURUSD,5min,ok,0,0,,,,no data,30,EURUSD,v2b,
+72c9d3d6,2025-09-10 16:58:41Z,,5min,heartbeat,,,,,,,30,EURUSD,v2b,
+72c9d3d6,2025-09-10 16:58:42Z,,,ping,,,,,,twelvedata ok=True code=200 ok,30,EURUSD,v2b,
+72c9d3d6,2025-09-10 16:58:54Z,EURUSD,5min,ok,0,0,,,,no data,30,EURUSD,v2b,
+913b6388,2025-09-10 17:00:02Z,,5min,heartbeat,,,,,,,30,EURUSD,v2b,
+913b6388,2025-09-10 17:00:02Z,,,ping,,,,,,twelvedata ok=True code=200 ok,30,EURUSD,v2b,
+913b6388,2025-09-10 17:00:12Z,EURUSD,5min,ok,0,0,,,,no data,30,EURUSD,v2b,
+7b5ff657,2025-09-10 17:30:02Z,,5min,heartbeat,,,,,,,30,EURUSD,v2b,
+7b5ff657,2025-09-10 17:30:03Z,,,ping,,,,,,twelvedata ok=True code=200 ok,30,EURUSD,v2b,
+7b5ff657,2025-09-10 17:30:30Z,EURUSD,5min,ok,0,0,,,,no data,30,EURUSD,v2b,

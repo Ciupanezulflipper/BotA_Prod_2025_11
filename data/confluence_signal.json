@@ -1,0 +1,48 @@
+{
+  "symbol": "EURUSD",
+  "time": "19:58 UTC",
+  "entry": 1.1853,
+  "sl": 1.1862,
+  "tp1": 1.1838,
+  "tp2": 1.1825,
+  "timeframes": {
+    "m5": {
+      "bias": "SELL",
+      "reason": "points=2",
+      "emoji": "🟢"
+    },
+    "m15": {
+      "bias": "SELL",
+      "reason": "points=3",
+      "emoji": "🟢"
+    },
+    "h1": {
+      "bias": "SELL",
+      "reason": "points=3",
+      "emoji": "🟢"
+    },
+    "h5": {
+      "bias": "SELL",
+      "reason": "points=2",
+      "emoji": "🟢"
+    },
+    "h4": {
+      "bias": "BUY",
+      "reason": "points=4",
+      "emoji": "🔴"
+    },
+    "d1": {
+      "bias": "BUY",
+      "reason": "points=2",
+      "emoji": "🔴"
+    }
+  },
+  "final_bias": "BUY (weak)",
+  "confidence": "7.7",
+  "note": "Aligned with higher timeframe.",
+  "reasons": [
+    "Resistance rejection at 1.1860",
+    "Volume spike",
+    "RSI easing"
+  ]
+}

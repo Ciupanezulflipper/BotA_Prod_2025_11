@@ -1,0 +1,295 @@
+run_id,time_utc,symbol,tf,type,score,bias,entry,stop,target,why,cadence_min,watchlist,engine
+97c37ace,2025-10-09 00:00:50Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+97c37ace,2025-10-09 00:00:50Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+c9d4023e,2025-10-09 00:05:51Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+c9d4023e,2025-10-09 00:05:51Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+8c384124,2025-10-09 00:15:52Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+8c384124,2025-10-09 00:15:52Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+bb983c48,2025-10-09 00:20:52Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+bb983c48,2025-10-09 00:20:52Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+fad74cd2,2025-10-09 00:25:53Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+fad74cd2,2025-10-09 00:25:53Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+e54e8286,2025-10-09 00:30:53Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+e54e8286,2025-10-09 00:30:53Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+0cf1adaf,2025-10-09 01:16:03Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+0cf1adaf,2025-10-09 01:16:03Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+dad2c968,2025-10-09 01:21:03Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+dad2c968,2025-10-09 01:21:03Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+f5bf8da1,2025-10-09 01:26:03Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+f5bf8da1,2025-10-09 01:26:03Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+936cfcb5,2025-10-09 01:31:04Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+936cfcb5,2025-10-09 01:31:04Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+5204ce39,2025-10-09 01:36:04Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+5204ce39,2025-10-09 01:36:04Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+e827d622,2025-10-09 01:41:05Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+e827d622,2025-10-09 01:41:05Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+81f17a58,2025-10-09 01:46:05Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+81f17a58,2025-10-09 01:46:05Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+598f91d1,2025-10-09 01:51:06Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+598f91d1,2025-10-09 01:51:06Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+6607c338,2025-10-09 01:56:06Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+6607c338,2025-10-09 01:56:06Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+ba845a67,2025-10-09 02:06:08Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+ba845a67,2025-10-09 02:06:08Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+a0bb0cdb,2025-10-09 02:11:08Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+a0bb0cdb,2025-10-09 02:11:08Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+48fada1f,2025-10-09 02:16:10Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+48fada1f,2025-10-09 02:16:10Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+573f71ff,2025-10-09 02:21:09Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+573f71ff,2025-10-09 02:21:09Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+d344a977,2025-10-09 02:26:09Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+d344a977,2025-10-09 02:26:09Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+d52be1b4,2025-10-09 02:31:10Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+d52be1b4,2025-10-09 02:31:10Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+3cf29557,2025-10-09 02:36:10Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+3cf29557,2025-10-09 02:36:10Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+3487bdd9,2025-10-09 02:41:10Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+3487bdd9,2025-10-09 02:41:10Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+6bd02d40,2025-10-09 02:46:11Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+6bd02d40,2025-10-09 02:46:11Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+69a52022,2025-10-09 02:58:52Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+69a52022,2025-10-09 02:58:52Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+0667fba4,2025-10-09 03:41:35Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+0667fba4,2025-10-09 03:41:35Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+e7595b11,2025-10-09 04:20:15Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+e7595b11,2025-10-09 04:20:15Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+3252653a,2025-10-09 04:52:34Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+3252653a,2025-10-09 04:52:34Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+e14c62c3,2025-10-09 04:57:33Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+e14c62c3,2025-10-09 04:57:33Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+864ffbf8,2025-10-09 05:02:33Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+864ffbf8,2025-10-09 05:02:33Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+7d2cf6eb,2025-10-09 05:07:34Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+7d2cf6eb,2025-10-09 05:07:34Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+a6354397,2025-10-09 05:12:36Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+a6354397,2025-10-09 05:12:36Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+8803cbfd,2025-10-09 05:19:18Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+8803cbfd,2025-10-09 05:19:18Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+bc1fa716,2025-10-09 05:24:49Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+bc1fa716,2025-10-09 05:24:49Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+f6125423,2025-10-09 05:30:45Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+f6125423,2025-10-09 05:30:45Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+c12402c8,2025-10-09 05:35:45Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+c12402c8,2025-10-09 05:35:45Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+6c860801,2025-10-09 05:46:35Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+6c860801,2025-10-09 05:46:35Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+8acacfc6,2025-10-09 05:51:37Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+8acacfc6,2025-10-09 05:51:37Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+8852edfa,2025-10-09 05:56:36Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+8852edfa,2025-10-09 05:56:36Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+8681514a,2025-10-09 06:01:36Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+8681514a,2025-10-09 06:01:36Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+9707e9a2,2025-10-09 06:11:38Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+9707e9a2,2025-10-09 06:11:38Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+3534a8a6,2025-10-09 06:16:38Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+3534a8a6,2025-10-09 06:16:38Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+649271c6,2025-10-09 06:21:40Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+649271c6,2025-10-09 06:21:40Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+ad382160,2025-10-09 06:27:44Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+ad382160,2025-10-09 06:27:44Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+dc983c97,2025-10-09 06:34:12Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+dc983c97,2025-10-09 06:34:12Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+98f108ec,2025-10-09 06:39:38Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+98f108ec,2025-10-09 06:39:38Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+558a0010,2025-10-09 06:45:11Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+558a0010,2025-10-09 06:45:11Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+49592219,2025-10-09 06:50:11Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+49592219,2025-10-09 06:50:11Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+505ff32d,2025-10-09 06:55:12Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+505ff32d,2025-10-09 06:55:12Z,,5min,skip,,,,,,outside trading hours,30,"EURUSD,XAUUSD",v2b
+12271c37,2025-10-09 07:00:12Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+12271c37,2025-10-09 07:00:23Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+12271c37,2025-10-09 07:00:27Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+12271c37,2025-10-09 07:00:35Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+e093a658,2025-10-09 07:05:13Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+e093a658,2025-10-09 07:05:28Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+e093a658,2025-10-09 07:05:32Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+e093a658,2025-10-09 07:05:41Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+82fe070b,2025-10-09 07:10:14Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+82fe070b,2025-10-09 07:10:25Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+82fe070b,2025-10-09 07:10:29Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+82fe070b,2025-10-09 07:10:37Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+bd0b19a4,2025-10-09 07:15:13Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+bd0b19a4,2025-10-09 07:15:24Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+bd0b19a4,2025-10-09 07:15:28Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+bd0b19a4,2025-10-09 07:15:38Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+a73efa43,2025-10-09 07:20:14Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+a73efa43,2025-10-09 07:20:30Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+a73efa43,2025-10-09 07:20:36Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+a73efa43,2025-10-09 07:20:47Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+972fba34,2025-10-09 07:25:14Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+972fba34,2025-10-09 07:25:26Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+972fba34,2025-10-09 07:25:31Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+972fba34,2025-10-09 07:25:39Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+31a77cb7,2025-10-09 07:30:15Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+31a77cb7,2025-10-09 07:30:27Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+31a77cb7,2025-10-09 07:30:32Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+31a77cb7,2025-10-09 07:30:44Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+fecaa00e,2025-10-09 07:35:15Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+fecaa00e,2025-10-09 07:35:27Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+fecaa00e,2025-10-09 07:35:31Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+fecaa00e,2025-10-09 07:35:43Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+89207e04,2025-10-09 07:40:15Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+89207e04,2025-10-09 07:40:28Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+89207e04,2025-10-09 07:40:32Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+89207e04,2025-10-09 07:40:39Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+e3ef0881,2025-10-09 07:45:16Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+e3ef0881,2025-10-09 07:45:32Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+e3ef0881,2025-10-09 07:45:38Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+e3ef0881,2025-10-09 07:45:45Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+3f489ffa,2025-10-09 07:50:16Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+3f489ffa,2025-10-09 07:50:28Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+3f489ffa,2025-10-09 07:50:32Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+3f489ffa,2025-10-09 07:50:41Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+ba55ecc2,2025-10-09 07:55:17Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+ba55ecc2,2025-10-09 07:55:31Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+ba55ecc2,2025-10-09 07:55:39Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+ba55ecc2,2025-10-09 07:55:56Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+38a543e0,2025-10-09 08:00:17Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+38a543e0,2025-10-09 08:00:29Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+38a543e0,2025-10-09 08:00:33Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+38a543e0,2025-10-09 08:00:41Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+3dbf56dd,2025-10-09 08:05:17Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+3dbf56dd,2025-10-09 08:05:28Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+3dbf56dd,2025-10-09 08:05:32Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+3dbf56dd,2025-10-09 08:05:40Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+2e0bee8e,2025-10-09 08:10:18Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+2e0bee8e,2025-10-09 08:10:30Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+2e0bee8e,2025-10-09 08:10:35Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+2e0bee8e,2025-10-09 08:10:44Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+f74a4c50,2025-10-09 08:15:18Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+f74a4c50,2025-10-09 08:15:31Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+f74a4c50,2025-10-09 08:15:36Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+f74a4c50,2025-10-09 08:15:45Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+79fd9d2f,2025-10-09 08:20:25Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+79fd9d2f,2025-10-09 08:20:38Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+79fd9d2f,2025-10-09 08:20:43Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+79fd9d2f,2025-10-09 08:20:53Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+44d54005,2025-10-09 08:25:58Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+44d54005,2025-10-09 08:26:08Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+44d54005,2025-10-09 08:26:13Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+44d54005,2025-10-09 08:26:24Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+81206e2c,2025-10-09 08:30:57Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+81206e2c,2025-10-09 08:31:07Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+81206e2c,2025-10-09 08:31:11Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+81206e2c,2025-10-09 08:31:19Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+fb1c7271,2025-10-09 08:41:31Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+fb1c7271,2025-10-09 08:42:12Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+fb1c7271,2025-10-09 08:42:48Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+fb1c7271,2025-10-09 08:43:26Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+b3e9d915,2025-10-09 08:51:33Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+b3e9d915,2025-10-09 08:51:48Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+b3e9d915,2025-10-09 08:51:54Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+b3e9d915,2025-10-09 08:52:03Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+29dd2607,2025-10-09 09:04:11Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+29dd2607,2025-10-09 09:04:22Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+29dd2607,2025-10-09 09:04:26Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+29dd2607,2025-10-09 09:04:35Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+16aafbd2,2025-10-09 09:14:12Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+16aafbd2,2025-10-09 09:14:33Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+16aafbd2,2025-10-09 09:14:39Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+16aafbd2,2025-10-09 09:14:52Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+6d059633,2025-10-09 09:19:12Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+6d059633,2025-10-09 09:19:23Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+6d059633,2025-10-09 09:19:28Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+6d059633,2025-10-09 09:19:38Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+f2f795b5,2025-10-09 09:24:13Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+f2f795b5,2025-10-09 09:24:27Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+f2f795b5,2025-10-09 09:24:30Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+f2f795b5,2025-10-09 09:24:38Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+b3f5eb72,2025-10-09 09:29:13Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+b3f5eb72,2025-10-09 09:29:24Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+b3f5eb72,2025-10-09 09:29:27Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+b3f5eb72,2025-10-09 09:29:35Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+03929736,2025-10-09 09:34:14Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+03929736,2025-10-09 09:34:27Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+03929736,2025-10-09 09:34:32Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+03929736,2025-10-09 09:34:40Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+765266b2,2025-10-09 09:39:14Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+765266b2,2025-10-09 09:39:27Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+765266b2,2025-10-09 09:39:31Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+765266b2,2025-10-09 09:39:40Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+52b1baa9,2025-10-09 09:44:15Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+52b1baa9,2025-10-09 09:44:28Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+52b1baa9,2025-10-09 09:44:32Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+52b1baa9,2025-10-09 09:44:54Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+45fe3476,2025-10-09 09:49:16Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+45fe3476,2025-10-09 09:49:28Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+45fe3476,2025-10-09 09:49:34Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+45fe3476,2025-10-09 09:49:43Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+c745e597,2025-10-09 09:54:15Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+c745e597,2025-10-09 09:54:32Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+c745e597,2025-10-09 09:54:41Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+c745e597,2025-10-09 09:54:56Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+1150bbb7,2025-10-09 09:59:16Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+1150bbb7,2025-10-09 09:59:26Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+1150bbb7,2025-10-09 09:59:30Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+1150bbb7,2025-10-09 09:59:36Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+933ab4b7,2025-10-09 10:14:18Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+933ab4b7,2025-10-09 10:14:32Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+933ab4b7,2025-10-09 10:14:38Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+933ab4b7,2025-10-09 10:14:48Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+7bd6c6cd,2025-10-09 10:42:03Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+7bd6c6cd,2025-10-09 10:42:03Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+7bd6c6cd,2025-10-09 10:42:03Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+7bd6c6cd,2025-10-09 10:42:04Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+50305ee6,2025-10-09 10:47:04Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+50305ee6,2025-10-09 10:47:04Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+50305ee6,2025-10-09 10:47:04Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+50305ee6,2025-10-09 10:47:05Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+41899203,2025-10-09 10:52:03Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+41899203,2025-10-09 10:52:10Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+41899203,2025-10-09 10:52:12Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+41899203,2025-10-09 10:52:18Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+4927723c,2025-10-09 10:57:04Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+4927723c,2025-10-09 10:57:12Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+4927723c,2025-10-09 10:57:15Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+4927723c,2025-10-09 10:57:21Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+8a877f4c,2025-10-09 11:02:04Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+8a877f4c,2025-10-09 11:02:11Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+8a877f4c,2025-10-09 11:02:14Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+8a877f4c,2025-10-09 11:02:19Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+a88a9a6e,2025-10-09 11:07:05Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+a88a9a6e,2025-10-09 11:07:12Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+a88a9a6e,2025-10-09 11:07:15Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+a88a9a6e,2025-10-09 11:07:20Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+bd35700b,2025-10-09 11:12:05Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+bd35700b,2025-10-09 11:12:15Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+bd35700b,2025-10-09 11:12:19Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+bd35700b,2025-10-09 11:12:25Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+06151fbc,2025-10-09 11:17:05Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+06151fbc,2025-10-09 11:17:12Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+06151fbc,2025-10-09 11:17:15Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+06151fbc,2025-10-09 11:17:20Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+69f36889,2025-10-09 11:22:06Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+69f36889,2025-10-09 11:22:13Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+69f36889,2025-10-09 11:22:16Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+69f36889,2025-10-09 11:22:21Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+6de19320,2025-10-09 11:27:07Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+6de19320,2025-10-09 11:27:14Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+6de19320,2025-10-09 11:27:17Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+6de19320,2025-10-09 11:27:23Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+35357b7e,2025-10-09 11:32:07Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+35357b7e,2025-10-09 11:32:14Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+35357b7e,2025-10-09 11:32:17Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+35357b7e,2025-10-09 11:32:22Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+9d82444d,2025-10-09 11:37:07Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+9d82444d,2025-10-09 11:37:14Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+9d82444d,2025-10-09 11:37:17Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+9d82444d,2025-10-09 11:37:22Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+53973647,2025-10-09 11:42:08Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+53973647,2025-10-09 11:42:19Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+53973647,2025-10-09 11:42:36Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+53973647,2025-10-09 11:43:06Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+376034b8,2025-10-09 11:47:08Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+376034b8,2025-10-09 11:47:17Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+376034b8,2025-10-09 11:47:20Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+376034b8,2025-10-09 11:47:27Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+da750ff3,2025-10-09 11:52:09Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+da750ff3,2025-10-09 11:52:20Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+da750ff3,2025-10-09 11:52:24Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+da750ff3,2025-10-09 11:52:32Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+05ffbf05,2025-10-09 11:57:09Z,,5min,heartbeat,,,,,,,30,"EURUSD,XAUUSD",v2b
+05ffbf05,2025-10-09 11:57:16Z,,,ping,,,,,,yfinance ok=False code=500 empty,30,"EURUSD,XAUUSD",v2b
+05ffbf05,2025-10-09 11:57:19Z,EURUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b
+05ffbf05,2025-10-09 11:57:24Z,XAUUSD,5min,ok,0,0,,,,no data,30,"EURUSD,XAUUSD",v2b

@@ -1,0 +1,4 @@
+*/10 * * * * /data/data/com.termux/files/home/bot-a/tools/autopilot.sh >/dev/null 2>&1
+0 */2 * * *   /data/data/com.termux/files/home/bot-a/tools/send_status_hourly.sh >/dev/null 2>&1
+15 * * * *    /data/data/com.termux/files/home/bot-a/tools/heartbeat_once.sh  >/dev/null 2>&1
+0 3 * * 0 find /data/data/com.termux/files/home/bot-a/logs -type f -name '*.log' -mtime +14 -delete

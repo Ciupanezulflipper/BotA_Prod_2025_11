@@ -1,0 +1,175 @@
+#!/usr/bin/env python3
+"""
+BotA.tools.runner_confluence
+Resilient one-file runner for confluence signal cards.
+
+Flags:
+  --dry-run  : print card to console only
+  --force    : send to Telegram (prints exactly one status line)
+
+Tolerances:
+  - indicator result can be dict/object/missing
+  - no dependency on signal_card.py
+"""
+
+from __future__ import annotations
+import argparse
+import datetime as dt
+import os
+from typing import Any, Dict, List, Tuple
+
+def _safe_import_indicators():
+    try:
+        from BotA.tools.indicators_ext import analyze_indicators  # type: ignore
+        return analyze_indicators
+    except Exception:
+        return None
+
+def _safe_import_providers():
+    from BotA.tools.providers import get_ohlc
+    return get_ohlc
+
+def _safe_import_tg():
+    try:
+        from BotA.tools.telegramalert import send_telegram_message  # type: ignore
+        return send_telegram_message
+    except Exception:
+        return None
+
+def _to_dataframe(rows: List[Dict[str, Any]]):
+    try:
+        import pandas as pd
+        if not rows:
+            return None
+        df = pd.DataFrame(rows)
+        if "time" in df.columns:
+            df["time"] = pd.to_datetime(df["time"], utc=True, errors="coerce")
+        for c in ("open", "high", "low", "close"):
+            if c not in df.columns:
+                df[c] = None
+        if "time" in df.columns:
+            df = df.dropna(subset=["time", "close"])
+        return df if len(df) else None
+    except Exception:
+        return None
+
+def _obj_to_dict(x: Any) -> Dict[str, Any]:
+    if x is None:
+        return {}
+    if isinstance(x, dict):
+        return x
+    if hasattr(x, "__dict__"):
+        return {k: v for k, v in vars(x).items() if not k.startswith("_")}
+    try:
+        return dict(x)
+    except Exception:
+        return {}
+
+def _fmt_time(ts: Any) -> str:
+    if ts is None:
+        return "n/a"
+    if hasattr(ts, "tzinfo"):
+        try:
+            return ts.astimezone(dt.timezone.utc).strftime("%Y-%m-%d %H:%M") + " UTC"
+        except Exception:
+            pass
+    try:
+        t = dt.datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
+        return t.astimezone(dt.timezone.utc).strftime("%Y-%m-%d %H:%M") + " UTC"
+    except Exception:
+        return "n/a"
+
+def _render_card(pair: str, tf: str, sig_time: str, action: str,
+                 score16: str, score6: str, reason: str, risk: str, spread: str) -> str:
+    return (
+        f"📊 {pair} ({tf})\n"
+        f"🕒 Signal Time: {sig_time}\n"
+        f"📈 Action: {action}\n"
+        f"📊 Score: {score16} + {score6}\n"
+        f"🧠 Reason: {reason}\n"
+        f"⚠️ Risk: {risk}\n"
+        f"📉 Spread: {spread}\n"
+    )
+
+def _extract_fields(ind: Dict[str, Any]) -> Tuple[str, str, str, str]:
+    action = ind.get("action") or ind.get("signal") or ind.get("decision") or "⏸️ WAIT"
+    def _pick(*keys, default=None):
+        for k in keys:
+            if k in ind and ind[k] is not None:
+                return ind[k]
+        return default
+    s16 = _pick("score16", "score_16", "trend_score", "score_trend")
+    s6  = _pick("score6",  "score_6",  "aux_score",   "score_aux")
+    def _fmt_score(x, denom):
+        try:
+            if isinstance(x, (list, tuple)) and len(x) >= 1:
+                num = x[0]
+            else:
+                num = x
+            return f"{int(num)}/{denom}"
+        except Exception:
+            return f"n/a/{denom}"
+    score16 = _fmt_score(s16, 16)
+    score6  = _fmt_score(s6, 6)
+    reason = ind.get("reason_text") or ind.get("reason") or "No reason provided"
+    if isinstance(reason, (list, tuple)):
+        reason = " + ".join(str(x) for x in reason if x)
+    return action, score16, score6, str(reason)
+
+def run_analysis(pair: str, tf: str, dry_run: bool = False, force: bool = False):
+    get_ohlc = _safe_import_providers()
+    send_tg = _safe_import_tg()
+    analyze_indicators = _safe_import_indicators()
+
+    rows, source = get_ohlc(pair, tf, bars=200)
+
+    df = _to_dataframe(rows)
+    if df is not None and "time" in df.columns and len(df) > 0:
+        last_ts = df["time"].iloc[-1]
+        sig_time = _fmt_time(last_ts)
+    else:
+        sig_time = "n/a"
+
+    ind_raw: Dict[str, Any] = {}
+    if analyze_indicators is not None and df is not None:
+        try:
+            tmp = analyze_indicators(df, pair)  # repo signature: (df, pair)
+            ind_raw = _obj_to_dict(tmp)
+        except Exception:
+            ind_raw = {}
+    action, score16, score6, reason = _extract_fields(ind_raw)
+
+    spread = "n/a"
+    risk = ind_raw.get("risk", "normal")
+
+    card = _render_card(pair, tf, sig_time, action, score16, score6, reason, risk, spread)
+
+    if dry_run or not force:
+        print(card)
+        print("Tip: use --dry-run to preview or --force to send.")
+        return
+
+    if send_tg is None:
+        print("✗ Telegram send failed: telegram module missing")
+        return
+    try:
+        res = send_tg(card)  # <<< fixed: use imported function reference
+        if isinstance(res, tuple) and len(res) == 2:
+            ok, err = res
+            print("✓ Signal sent to Telegram" if ok else f"✗ Telegram send failed: {err or 'unknown error'}")
+        else:
+            print("✓ Signal sent to Telegram" if bool(res) else "✗ Telegram send failed")
+    except Exception as e:
+        print(f"✗ Telegram send failed: {e}")
+
+def main():
+    ap = argparse.ArgumentParser(description="Confluence signal runner")
+    ap.add_argument("--pair", required=True, dest="pair")
+    ap.add_argument("--tf", required=True, dest="tf")
+    ap.add_argument("--dry-run", action="store_true", dest="dry_run")
+    ap.add_argument("--force",   action="store_true", dest="force")
+    args = ap.parse_args()
+    run_analysis(args.pair, args.tf, dry_run=args.dry_run, force=args.force)
+
+if __name__ == "__main__":
+    main()

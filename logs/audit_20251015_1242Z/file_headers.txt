@@ -1,0 +1,3 @@
+# === Bot A (PRIVATE) ===
+TWELVEDATA_API_KEY=06fe46e64e1b4408a0c47efba324d1d2
+FINNHUB_API_KEY=cfrd3qpr01qj5n3fb9dg

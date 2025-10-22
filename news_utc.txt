@@ -1,0 +1,17 @@
+# High-Impact Economic Events (UTC Time)
+# Format: YYYY-MM-DDTHH:MM:SSZ
+# Add ±90 min blackout around these times
+
+# Example - US NFP (usually first Friday of month at 12:30 UTC)
+2025-10-24T12:30:00Z
+2025-11-07T13:30:00Z
+
+# ECB Rate Decision (usually Thursday 12:45 UTC)
+2025-10-23T12:45:00Z
+
+# US CPI (usually mid-month 12:30 UTC)
+2025-10-15T12:30:00Z
+2025-11-13T12:30:00Z
+
+# Add more events as they're announced
+# Check: https://www.forexfactory.com/calendar

@@ -1,0 +1,77 @@
+# Minimal OHLCV fetcher (TwelveData -> AlphaVantage fallback)
+import os, time, requests
+
+def _get(env):
+    v = os.getenv(env, "").strip()
+    return v if v else None
+
+TD = _get("TWELVEDATA_API_KEY")
+AV = _get("ALPHAVANTAGE_API_KEY")
+
+def _http_json(url, params, timeout=8):
+    r = requests.get(url, params=params, timeout=timeout)
+    r.raise_for_status()
+    return r.json()
+
+def fetch(symbol="EURUSD", tf="5min", limit=200):
+    """
+    Returns list of candles: [{t, o, h, l, c, v}], newest last.
+    tf: 1min/5min/15min/60min
+    """
+    # --- TwelveData first ---
+    if TD:
+        mp = {"1min":"1min","5min":"5min","15min":"15min","60min":"1h"}.get(tf, "5min")
+        try:
+            js = _http_json("https://api.twelvedata.com/time_series", {
+                "symbol": symbol,
+                "interval": mp,
+                "apikey": TD,
+                "outputsize": min(limit, 500)
+            })
+            data = js.get("values") or []
+            rows = []
+            for it in reversed(data):  # oldest->newest
+                rows.append({
+                    "t": it["datetime"],
+                    "o": float(it["open"]),
+                    "h": float(it["high"]),
+                    "l": float(it["low"]),
+                    "c": float(it["close"]),
+                    "v": float(it.get("volume", 0) or 0),
+                })
+            if rows: return rows[-limit:]
+        except Exception:
+            pass
+
+    # --- AlphaVantage fallback ---
+    if AV:
+        fn = {
+            "1min":"FX_INTRADAY",
+            "5min":"FX_INTRADAY",
+            "15min":"FX_INTRADAY",
+            "60min":"FX_INTRADAY",
+        }.get(tf,"FX_INTRADAY")
+        interval = {"1min":"1min","5min":"5min","15min":"15min","60min":"60min"}.get(tf,"5min")
+        try:
+            js = _http_json("https://www.alphavantage.co/query", {
+                "function": fn, "from_symbol": symbol[:3], "to_symbol": symbol[-3:],
+                "interval": interval, "apikey": AV, "outputsize": "compact",
+            })
+            key = next((k for k in js.keys() if "Time Series" in k), None)
+            ts = js.get(key, {})
+            rows = []
+            for t in sorted(ts.keys()):
+                k = ts[t]
+                rows.append({
+                    "t": t,
+                    "o": float(k.get("1. open", k.get("open"))),
+                    "h": float(k.get("2. high", k.get("high"))),
+                    "l": float(k.get("3. low", k.get("low"))),
+                    "c": float(k.get("4. close", k.get("close"))),
+                    "v": 0.0,
+                })
+            if rows: return rows[-limit:]
+        except Exception:
+            pass
+
+    return []

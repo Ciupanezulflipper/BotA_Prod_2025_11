@@ -1,0 +1,24 @@
+timestamp,pair,action,entry,sl,tp,rr,confidence,mode,reason
+2025-09-07 23:01:26Z,EURUSD,HOLD,8.653,8.653,8.653,0.0,0.0,normal,NO_DATA_FALLBACK
+2025-09-08T22:34:11Z,
+2025-09-08T22:34:11Z,
+2025-09-08T22:34:11Z,
+2025-09-08T22:35:22Z,
+2025-09-08T22:35:22Z,
+2025-09-08T22:35:22Z,
+2025-10-03T21:15:00+00:00,EURUSD,M15,WAIT,WAIT,1.17440,n/a,n/a,n/a,n/a,1.2,2.9,0,0,n/a,
+2025-10-03T21:15:00+00:00,EURUSD,M15,WAIT,WAIT,1.17440,n/a,n/a,n/a,n/a,1.2,2.9,0,0,indicators_ext error: indicators_ext: missing OHLC columns in input,spread/ATR=42.02% > 35%
+2025-10-03T21:15:00+00:00,EURUSD,M15,WAIT,WAIT,1.17440,n/a,n/a,n/a,n/a,1.2,2.9,0,0,indicators_ext error: indicators_ext: missing OHLC columns in input,
+2025-10-03T21:15:00+00:00,EURUSD,M15,WAIT,WAIT,1.17440,n/a,n/a,n/a,n/a,1.2,2.9,0,0,"indicators_ext error: 'time' is both an index level and a column label, which is ambiguous.",spread/ATR=42.02% > 35%
+2025-10-03T21:15:00+00:00,EURUSD,M15,WAIT,WAIT,1.17440,n/a,n/a,n/a,n/a,1.2,2.9,0,0,"indicators_ext error: 'time' is both an index level and a column label, which is ambiguous.",
+2025-10-03T21:15:00+00:00,EURUSD,M15,WAIT,WAIT,1.17440,n/a,n/a,n/a,n/a,1.2,2.9,0,0,indicators_ext error: indicators_ext: missing OHLC columns in input,spread/ATR=42.02% > 35%
+2025-10-03T21:15:00+00:00,EURUSD,M15,WAIT,WAIT,1.17440,n/a,n/a,n/a,n/a,1.2,2.9,0,0,indicators_ext error: indicators_ext: missing OHLC columns in input,
+2025-10-03T21:15:00+00:00,EURUSD,M15,WAIT,WAIT,1.17440,n/a,n/a,n/a,n/a,1.2,2.9,0,0,indicators_ext error: indicators_ext: missing OHLC columns in input,spread/ATR=42.02% > 35%
+2025-10-03T21:15:00+00:00,EURUSD,M15,WAIT,WAIT,1.17440,n/a,n/a,n/a,n/a,1.2,2.9,0,0,indicators_ext error: indicators_ext: missing OHLC columns in input,
+2025-10-03T21:15:00+00:00,EURUSD,M15,WAIT,WAIT,1.17440,n/a,n/a,n/a,n/a,1.2,2.9,0,0,indicators_ext error: short[not enough rows for short schema] long[not enough rows for long schema],spread/ATR=42.02% > 35%
+2025-10-03T21:15:00+00:00,EURUSD,M15,WAIT,WAIT,1.17440,n/a,n/a,n/a,n/a,1.2,2.9,0,0,indicators_ext error: short[not enough rows for short schema] long[not enough rows for long schema],
+2025-10-03T21:15:00+00:00,EURUSD,M15,WAIT,WAIT,1.17440,n/a,n/a,n/a,n/a,1.2,2.9,0,0,indicators_ext error: short[not enough rows for short schema] long[not enough rows for long schema],
+2025-10-03T21:15:00+00:00,EURUSD,M15,WAIT,WAIT,1.17440,n/a,n/a,n/a,n/a,1.2,2.9,0,0,indicators_ext error: short[not enough rows for short schema] long[not enough rows for long schema],
+2025-10-03T21:15:00+00:00,EURUSD,M15,BUY,BUY,1.17440,1.17397,1.17474,1.17508,1.17543,1.2,2.9,16,6,EMA50>EMA200 + EMA50 slope up + MACD>signal + price>EMA50,
+2025-10-03T21:15:00+00:00,EURUSD,M15,BUY,BUY,1.17440,1.17397,1.17474,1.17508,1.17543,1.2,2.9,16,6,EMA50>EMA200 + EMA50 slope up + MACD>signal + price>EMA50,
+2025-10-03T21:15:00+00:00,EURUSD,M15,BUY,BUY,1.17440,1.17397,1.17474,1.17508,1.17543,1.2,2.9,16,6,EMA50>EMA200 + EMA50 slope up + MACD>signal + price>EMA50,

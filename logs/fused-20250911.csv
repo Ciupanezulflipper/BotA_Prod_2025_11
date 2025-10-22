@@ -1,0 +1,6 @@
+time_utc,symbol,tech_side,tech_score,news_side,news_score,fused_side,fused_score,risk,why
+2025-09-11T13:30:31Z,XAUUSD,HOLD,0,HOLD,0,WAIT,0.0,0% (wait),Insufficient signal
+2025-09-11T13:45:00Z,XAUUSD,HOLD,0,HOLD,0,WAIT,0.0,0% (wait),Insufficient signal
+2025-09-11T13:58:00Z,XAUUSD,HOLD,0,HOLD,0,WAIT,0.0,0% (wait),Insufficient signal
+2025-09-11T13:59:49Z,XAUUSD,HOLD,0,HOLD,0,WAIT,0.0,0% (wait),Insufficient signal
+2025-09-11T14:00:00Z,XAUUSD,HOLD,0,HOLD,0,WAIT,0.0,0% (wait),Insufficient signal

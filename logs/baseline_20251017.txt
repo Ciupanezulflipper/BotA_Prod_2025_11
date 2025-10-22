@@ -1,0 +1,37 @@
+=== Day 2 Baseline Report ===
+Date: Fri Oct 17 08:12:56 AEDT 2025
+
+Signals Today:
+  BUY:  0
+  SELL: 0
+  WAIT: 0
+
+=== API Circuit Breaker Status ===
+
+🟢 TWELVEDATA
+   Calls: 0/800 (0.0%)
+   Remaining: 800
+
+🟢 FINNHUB
+   Calls: 0/86400 (0.0%)
+   Remaining: 86400
+
+🟢 ALPHAVANTAGE
+   Calls: 0/25 (0.0%)
+   Remaining: 25
+
+✅ TwelveData: 800 calls remaining today
+
+=== BotA Risk Manager ===
+💰 Account: $200.0
+📊 Max Risk Per Trade: 2.0% ($4.0)
+🛑 Max Daily Loss: 6.0% ($12.0)
+
+📈 Current Balance: $200.0
+🟢 Today's P&L: $0.00
+📊 Trades Today: 0 (Win Rate: 0%)
+💵 Remaining Daily Risk: $12.00
+📏 Recommended Position: 0.02 lots
+
+✅ CLEAR TO TRADE
+   ✅ All risk checks passed

@@ -1,0 +1,31 @@
+{
+  "ts": "2025-09-30T03:28:52Z",
+  "pair": "EURUSD",
+  "prefer_tf": "M15",
+  "decision": "HOLD",
+  "score": 0.0,
+  "buy_sum": 0.0,
+  "sell_sum": 0.0,
+  "tfs": [],
+  "inputs": {
+    "M15": {
+      "tf": "M15",
+      "signal": "",
+      "strength": 0.0,
+      "score": 0.0,
+      "raw": {
+        "ts_utc": "2025-09-22T06:05:07Z",
+        "event": "BLOCK",
+        "pair": "EURUSD",
+        "tf": "M15",
+        "score": "0",
+        "conf": "0.0",
+        "reason": "BLOCK spread-block: BLOCK spread>2.0 pips (got 3.2)",
+        "signal_id": "tight_loader.py",
+        "source": "0",
+        "log_line_no": null,
+        "_tscore": 1759202932.1132302
+      }
+    }
+  }
+}

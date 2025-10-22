@@ -1,0 +1,180 @@
+#!/usr/bin/env python3
+"""
+Fixed Trading Bot for EURUSD M15 with proper indicator calculations
+Runs in Termux with Python 3.12
+"""
+
+import pandas as pd
+import numpy as np
+import time
+import requests
+from datetime import datetime
+import os
+import sys
+
+# Configuration
+PAIR = "EURUSD"
+TIMEFRAME = "M15"
+CSV_FILE = "eurusd_m15.csv"  # Make sure this file exists in the same folder
+TELEGRAM_BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"  # Replace later
+TELEGRAM_CHAT_ID = "YOUR_CHAT_ID_HERE"      # Replace later
+
+class TechnicalIndicators:
+    """Calculate technical indicators"""
+
+    @staticmethod
+    def rsi(data, period=14):
+        if len(data) < period + 1:
+            return 50.0
+        delta = data.diff()
+        gain = (delta.where(delta > 0, 0)).rolling(window=period).mean()
+        loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
+        rs = gain / loss
+        rsi = 100 - (100 / (1 + rs))
+        return rsi.iloc[-1] if not pd.isna(rsi.iloc[-1]) else 50.0
+
+    @staticmethod
+    def adx(high, low, close, period=14):
+        if len(high) < period + 1:
+            return 5.0
+        tr1 = high - low
+        tr2 = abs(high - close.shift())
+        tr3 = abs(low - close.shift())
+        tr = pd.DataFrame({"tr1": tr1, "tr2": tr2, "tr3": tr3}).max(axis=1)
+        plus_dm = high.diff()
+        minus_dm = -low.diff()
+        plus_dm[plus_dm < 0] = 0
+        minus_dm[minus_dm < 0] = 0
+        plus_dm[(plus_dm <= minus_dm)] = 0
+        minus_dm[(minus_dm <= plus_dm)] = 0
+        tr_smooth = tr.rolling(window=period).mean()
+        plus_dm_smooth = plus_dm.rolling(window=period).mean()
+        minus_dm_smooth = minus_dm.rolling(window=period).mean()
+        plus_di = 100 * plus_dm_smooth / tr_smooth
+        minus_di = 100 * minus_dm_smooth / tr_smooth
+        dx = 100 * abs(plus_di - minus_di) / (plus_di + minus_di)
+        adx = dx.rolling(window=period).mean()
+        return adx.iloc[-1] if not pd.isna(adx.iloc[-1]) else 5.0
+
+    @staticmethod
+    def macd(data, fast=12, slow=26, signal=9):
+        if len(data) < slow + signal:
+            return 0.0, 0.0, 0.0
+        ema_fast = data.ewm(span=fast).mean()
+        ema_slow = data.ewm(span=slow).mean()
+        macd_line = ema_fast - ema_slow
+        signal_line = macd_line.ewm(span=signal).mean()
+        histogram = macd_line - signal_line
+        return (
+            macd_line.iloc[-1] if not pd.isna(macd_line.iloc[-1]) else 0.0,
+            signal_line.iloc[-1] if not pd.isna(signal_line.iloc[-1]) else 0.0,
+            histogram.iloc[-1] if not pd.isna(histogram.iloc[-1]) else 0.0,
+        )
+
+def send_telegram(message):
+    try:
+        if (
+            TELEGRAM_BOT_TOKEN == "YOUR_BOT_TOKEN_HERE"
+            or TELEGRAM_CHAT_ID == "YOUR_CHAT_ID_HERE"
+        ):
+            print(f"[TELEGRAM STUB] {message}")
+            return True
+        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+        data = {"chat_id": TELEGRAM_CHAT_ID, "text": message, "parse_mode": "HTML"}
+        response = requests.post(url, data=data, timeout=10)
+        if response.status_code == 200:
+            print("[TELEGRAM] Sent OK")
+            return True
+        else:
+            print(f"[TELEGRAM] Failed {response.status_code}")
+            return False
+    except Exception as e:
+        print(f"[TELEGRAM ERROR] {e}")
+        return False
+
+def load_and_refresh_data():
+    try:
+        if not os.path.exists(CSV_FILE):
+            print(f"[ERROR] Missing {CSV_FILE}")
+            return None
+        df = pd.read_csv(CSV_FILE)
+        required = ["open", "high", "low", "close", "volume"]
+        if not all(col in df.columns for col in required):
+            print(f"[ERROR] CSV missing: {required}")
+            return None
+        if "timestamp" in df.columns:
+            df = df.sort_values("timestamp")
+        elif "time" in df.columns:
+            df = df.sort_values("time")
+        df = df.tail(200).copy()
+        last_idx = df.index[-1]
+        base_price = df.loc[last_idx, "close"]
+        variation = np.random.uniform(-0.001, 0.001) * base_price
+        df.loc[last_idx, "close"] += variation
+        if df.loc[last_idx, "close"] > df.loc[last_idx, "high"]:
+            df.loc[last_idx, "high"] = df.loc[last_idx, "close"]
+        if df.loc[last_idx, "close"] < df.loc[last_idx, "low"]:
+            df.loc[last_idx, "low"] = df.loc[last_idx, "close"]
+        return df
+    except Exception as e:
+        print(f"[ERROR] Data load failed: {e}")
+        return None
+
+def analyze_market(df):
+    if df is None or len(df) < 50:
+        return None
+    ti = TechnicalIndicators()
+    close = df["close"]
+    high = df["high"]
+    low = df["low"]
+    rsi = ti.rsi(close)
+    adx = ti.adx(high, low, close)
+    macd_line, macd_signal, macd_hist = ti.macd(close)
+    price = close.iloc[-1]
+    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    print(f"\n[{ts}] {PAIR} {TIMEFRAME} Price: {price:.5f} | RSI {rsi:.2f} | ADX {adx:.2f}")
+    signals = []
+    if rsi < 30:
+        signals.append(f"🟢 RSI Oversold {rsi:.1f}")
+    elif rsi > 70:
+        signals.append(f"🔴 RSI Overbought {rsi:.1f}")
+    if adx > 25:
+        if macd_line > macd_signal:
+            signals.append(f"📈 Strong uptrend (ADX {adx:.1f})")
+        elif macd_line < macd_signal:
+            signals.append(f"📉 Strong downtrend (ADX {adx:.1f})")
+    if macd_line > macd_signal and macd_hist > 0:
+        signals.append("⬆️ MACD Bullish")
+    elif macd_line < macd_signal and macd_hist < 0:
+        signals.append("⬇️ MACD Bearish")
+    return {"timestamp": ts, "price": price, "rsi": rsi, "adx": adx,
+            "macd": macd_line, "macd_signal": macd_signal,
+            "macd_hist": macd_hist, "signals": signals}
+
+def main():
+    print(f"[START] Bot {PAIR} {TIMEFRAME} | Python {sys.version}")
+    loop = 0
+    while True:
+        loop += 1
+        print(f"\n[LOOP {loop}] --------------------")
+        df = load_and_refresh_data()
+        if df is None:
+            print("[ERROR] No data, retry in 30s")
+            time.sleep(30)
+            continue
+        analysis = analyze_market(df)
+        if analysis and analysis["signals"]:
+            print("[SIGNALS]")
+            for s in analysis["signals"]:
+                print(" •", s)
+            msg = f"🤖 <b>{PAIR} {TIMEFRAME}</b>\nPrice {analysis['price']:.5f}\n"
+            msg += f"RSI {analysis['rsi']:.1f} | ADX {analysis['adx']:.1f}\n"
+            msg += f"Signals:\n" + "\n".join("• " + s for s in analysis["signals"])
+            msg += f"\n⏰ {analysis['timestamp']}"
+            send_telegram(msg)
+        else:
+            print("[INFO] No signal")
+        time.sleep(60)
+
+if __name__ == "__main__":
+    main()

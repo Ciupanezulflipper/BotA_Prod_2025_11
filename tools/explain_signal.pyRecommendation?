@@ -1,0 +1,163 @@
+#!/usr/bin/env python3
+import os, sys, csv, math, argparse
+from pathlib import Path
+
+# ---- small helpers ----------------------------------------------------------
+def read_ohlc(csv_path, limit=300):
+    rows=[]
+    with open(csv_path, newline="") as f:
+        r=csv.reader(f)
+        for row in r:
+            if not row: continue
+            # expect: ts,open,high,low,close
+            try:
+                o=float(row[1]); h=float(row[2]); l=float(row[3]); c=float(row[4])
+                rows.append((o,h,l,c))
+            except: pass
+    return rows[-limit:]
+
+def ema(series, n):
+    if not series or n<=1: return []
+    k=2/(n+1)
+    out=[series[0]]
+    for x in series[1:]:
+        out.append(out[-1]+k*(x-out[-1]))
+    return out
+
+def rsi14(closes, n=14):
+    if len(closes) < n+1: return None
+    gains=[]; losses=[]
+    for i in range(1,len(closes)):
+        d=closes[i]-closes[i-1]
+        gains.append(max(d,0.0))
+        losses.append(max(-d,0.0))
+    avg_g=sum(gains[:n])/n
+    avg_l=sum(losses[:n])/n
+    rsis=[None]*(n)
+    for i in range(n,len(closes)-1):
+        g=gains[i]; l=losses[i]
+        avg_g=(avg_g*(n-1)+g)/n
+        avg_l=(avg_l*(n-1)+l)/n
+        rs= (avg_g/avg_l) if avg_l>0 else 999999
+        rsis.append(100-100/(1+rs))
+    return rsis[-1]
+
+def macd_diff(closes, fast=12, slow=26, sig=9):
+    if len(closes) < slow+sig+5: return None
+    ema_fast=ema(closes, fast)
+    ema_slow=ema(closes, slow)
+    macd=[a-b for a,b in zip(ema_fast[-len(ema_slow):], ema_slow)]
+    signal=ema(macd, sig)
+    if not signal: return None
+    return macd[-1]-signal[-1]
+
+def adx14(ohlc, n=14):
+    # Lightweight ADX; good enough for scoring gates
+    if len(ohlc) < n+2: return None
+    trs=[]; plusdm=[]; minusdm=[]
+    prev_h,prev_l,prev_c = ohlc[0][1],ohlc[0][2],ohlc[0][3]
+    for (o,h,l,c) in ohlc[1:]:
+        up = h-prev_h
+        dn = prev_l-l
+        pDM = up if (up>dn and up>0) else 0.0
+        mDM = dn if (dn>up and dn>0) else 0.0
+        tr = max(h-l, abs(h-prev_c), abs(l-prev_c))
+        trs.append(tr); plusdm.append(pDM); minusdm.append(mDM)
+        prev_h,prev_l,prev_c=h,l,c
+    def smoothed(arr, n):
+        out=[]; s=sum(arr[:n]); out.append(s)
+        for i in range(n,len(arr)):
+            s = s - (s/n) + arr[i]
+            out.append(s)
+        return out
+    if len(trs) < n: return None
+    atr = [x/n for x in smoothed(trs,n)]
+    pDMs= [x/n for x in smoothed(plusdm,n)]
+    mDMs= [x/n for x in smoothed(minusdm,n)]
+    di_plus  = [100*(p/atr[i]) if atr[i]>0 else 0 for i,p in enumerate(pDMs)]
+    di_minus = [100*(m/atr[i]) if atr[i]>0 else 0 for i,m in enumerate(mDMs)]
+    dx = [ (100*abs(dp-dm)/(dp+dm)) if (dp+dm)>0 else 0 for dp,dm in zip(di_plus, di_minus) ]
+    # smooth DX into ADX
+    if len(dx) < n: return None
+    adx = [sum(dx[:n])/n]
+    for i in range(n,len(dx)):
+        adx.append((adx[-1]*(n-1)+dx[i])/n)
+    return adx[-1]
+
+def score_from(macd_d, rsi_v, adx_v, htf_ok):
+    score=0.0
+    tags=[]
+    # MACD gate: tiny diffs don’t help much
+    if macd_d is not None and macd_d > 0:
+        tags.append("MACD↑")
+        if macd_d > 0.0006: score += 1.2
+        elif macd_d > 0.0003: score += 0.8
+        else: score += 0.3
+    # RSI regime
+    if rsi_v is not None:
+        if rsi_v >= 60: score += 0.6; tags.append("RSI≥60")
+        if rsi_v >= 70: score += 0.4; tags.append("RSI≥70")
+    # ADX trend strength
+    if adx_v is not None:
+        if adx_v >= 22: score += 0.6; tags.append("ADX≥22")
+        elif adx_v >= 18: score += 0.3; tags.append("ADX≥18")
+    # HTF alignment
+    if htf_ok: score += 0.6; tags.append("HTF✓")
+    else: tags.append("HTF~")
+    return score, tags
+
+def find_csv(pair, tf):
+    base=Path.home()/ "bot-a" / "data" / "candles"
+    return base / f"{pair}_{tf}.csv"
+
+# ---- main -------------------------------------------------------------------
+def main():
+    ap=argparse.ArgumentParser()
+    ap.add_argument("pair", help="e.g., EURUSD")
+    ap.add_argument("tf", help="e.g., M15")
+    args=ap.parse_args()
+    pair=args.pair.upper()
+    tf=args.tf.upper()
+
+    csv_path=find_csv(pair, tf)
+    if not csv_path.exists():
+        print(f"Missing candles at {csv_path}")
+        sys.exit(2)
+
+    rows = read_ohlc(csv_path)
+    closes=[c for (_,_,_,c) in rows]
+    macd_d = macd_diff(closes)
+    rsi_v  = rsi14(closes)
+    adx_v  = adx14(rows)
+
+    # simple HTF check: if we have H1/H4 and last close > last ema(26) on either, consider aligned
+    def htf_align():
+        for htf in ("H1","H4"):
+            p = find_csv(pair, htf)
+            if p.exists():
+                r = read_ohlc(p)
+                cs=[c for *_,c in r]
+                if len(cs) > 30:
+                    e26 = ema(cs, 26)[-1]
+                    if cs[-1] > e26:
+                        return True
+        return False
+    htf_ok = htf_align()
+
+    score, tags = score_from(macd_d, rsi_v, adx_v, htf_ok)
+    conf_min = float(os.environ.get("CONF_MIN", "3.0"))
+
+    print(f"== Explain {pair} {tf} ==")
+    print(f"Score: {round(score,2)} | Send: {'True' if score>=conf_min else 'False'} | Tags: {', '.join(tags)}")
+    print("\n--- Components ---")
+    print(f"macd: {0 if macd_d is None else round(macd_d,6)}")
+    print(f"rsi : {0 if rsi_v  is None else round(rsi_v,2)}")
+    print(f"adx : {0 if adx_v  is None else round(adx_v,2)}")
+    print(f"htf : {1.0 if htf_ok else 0.0}")
+    print("\n--- Telemetry ---")
+    print(f"last_macd_diff: {0 if macd_d is None else macd_d}")
+    print(f"last_rsi: {0 if rsi_v is None else rsi_v}")
+    print(f"last_adx: {0 if adx_v is None else adx_v}")
+
+if __name__ == "__main__":
+    main()

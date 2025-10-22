@@ -1,0 +1,457 @@
+run_id,time_utc,asof_utc,symbol,score,bias,why,event_risk,version
+35a3e9fa,2025-09-11T00:00:08Z,2025-09-11T00:00:08Z,EURUSD,5,Bullish,US CPI (high-impact): USD↑ → EURUSD↓ (news +5),True,news_v1
+35a3e9fa,2025-09-11T00:00:08Z,2025-09-11T00:00:08Z,XAUUSD,5,Bullish,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5),True,news_v1
+df28b3,2025-09-11T00:09:25.552566Z,2025-09-10T23:12:46Z,EURUSD,0,Neutral,finnhub | Jim Cramer reflects on 30 years of 'Squawk Box',True,news_v2
+df28b3,2025-09-11T00:09:25.552566Z,2025-09-10T23:12:46Z,XAUUSD,0,Neutral,finnhub | Jim Cramer reflects on 30 years of 'Squawk Box',True,news_v2
+df28b3,2025-09-11T00:09:25.552566Z,2025-09-10T20:28:00Z,EURUSD,0,Neutral,finnhub | Stablecoins could help the dollar remain the world’s No. 1 reserve currency — but not through Treasury-bill buying,True,news_v2
+df28b3,2025-09-11T00:09:25.552566Z,2025-09-10T17:35:00Z,EURUSD,0,Neutral,finnhub | Investors are chasing bond yields ahead of the Fed’s rate decision. Here’s the opportunity.,True,news_v2
+df28b3,2025-09-11T00:09:25.552566Z,2025-09-10T17:35:00Z,XAUUSD,0,Neutral,finnhub | Investors are chasing bond yields ahead of the Fed’s rate decision. Here’s the opportunity.,True,news_v2
+df28b3,2025-09-11T00:09:25.552566Z,2025-09-10T17:32:00Z,EURUSD,4,Bullish,"finnhub | Family offices favor this area of bonds ahead of potential Fed rate cuts, Goldman Sachs finds",True,news_v2
+df28b3,2025-09-11T00:09:25.552566Z,2025-09-10T17:32:00Z,XAUUSD,4,Bullish,"finnhub | Family offices favor this area of bonds ahead of potential Fed rate cuts, Goldman Sachs finds",True,news_v2
+df28b3,2025-09-11T00:09:25.552566Z,2025-09-10T16:26:00Z,EURUSD,4,Bullish,finnhub | What many investors are looking for in the August CPI data coming out tomorrow,True,news_v2
+df28b3,2025-09-11T00:09:25.552566Z,2025-09-10T16:26:00Z,XAUUSD,2,Bullish,finnhub | What many investors are looking for in the August CPI data coming out tomorrow,True,news_v2
+d23303c9,2025-09-11T00:30:07Z,2025-09-11T00:30:07Z,EURUSD,5,Bullish,US CPI (high-impact): USD↑ → EURUSD↓ (news +5),True,news_v1
+d23303c9,2025-09-11T00:30:07Z,2025-09-11T00:30:07Z,XAUUSD,5,Bullish,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5),True,news_v1
+1edfd0d1,2025-09-11T01:00:16Z,2025-09-11T01:00:16Z,EURUSD,5,Bullish,US CPI (high-impact): USD↑ → EURUSD↓ (news +5),True,news_v1
+1edfd0d1,2025-09-11T01:00:16Z,2025-09-11T01:00:16Z,XAUUSD,5,Bullish,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5),True,news_v1
+935a64f7,2025-09-11T01:30:16Z,2025-09-11T01:30:16Z,EURUSD,5,Bullish,US CPI (high-impact): USD↑ → EURUSD↓ (news +5),True,news_v1
+935a64f7,2025-09-11T01:30:16Z,2025-09-11T01:30:16Z,XAUUSD,5,Bullish,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5),True,news_v1
+6896a1ce,2025-09-11T01:00:01Z,2025-09-11T01:00:01Z,EURUSD,5,Bullish,US CPI (high-impact): USD↑ → EURUSD↓ (news +5),True,news_v1
+6896a1ce,2025-09-11T01:00:01Z,2025-09-11T01:00:01Z,XAUUSD,5,Bullish,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5),True,news_v1
+1370f8fc,2025-09-11T01:31:12Z,2025-09-11T01:31:12Z,EURUSD,5,Bullish,US CPI (high-impact): USD↑ → EURUSD↓ (news +5),True,news_v1
+1370f8fc,2025-09-11T01:31:12Z,2025-09-11T01:31:12Z,XAUUSD,5,Bullish,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5),True,news_v1
+285f6c84,2025-09-11T02:00:08Z,2025-09-11T02:00:08Z,EURUSD,5,Bullish,US CPI (high-impact): USD↑ → EURUSD↓ (news +5),True,news_v1
+285f6c84,2025-09-11T02:00:08Z,2025-09-11T02:00:08Z,XAUUSD,5,Bullish,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5),True,news_v1
+156938c3,2025-09-11T02:30:03Z,2025-09-11T02:30:03Z,EURUSD,0,Neutral,-,False,news_v1
+156938c3,2025-09-11T02:30:03Z,2025-09-11T02:30:03Z,XAUUSD,0,Neutral,-,False,news_v1
+b200c56b,2025-09-11T03:00:02Z,2025-09-11T03:00:02Z,EURUSD,0,Neutral,-,False,news_v1
+b200c56b,2025-09-11T03:00:02Z,2025-09-11T03:00:02Z,XAUUSD,0,Neutral,-,False,news_v1
+ea7dfe6c,2025-09-11T03:30:02Z,2025-09-11T03:30:02Z,EURUSD,0,Neutral,-,False,news_v1
+ea7dfe6c,2025-09-11T03:30:02Z,2025-09-11T03:30:02Z,XAUUSD,0,Neutral,-,False,news_v1
+4e90a2d9,2025-09-11T04:00:06Z,2025-09-11T04:00:06Z,EURUSD,0,Neutral,-,False,news_v1
+4e90a2d9,2025-09-11T04:00:06Z,2025-09-11T04:00:06Z,XAUUSD,0,Neutral,-,False,news_v1
+30873a6c,2025-09-11T04:30:02Z,2025-09-11T04:30:02Z,EURUSD,0,Neutral,-,False,news_v1
+30873a6c,2025-09-11T04:30:02Z,2025-09-11T04:30:02Z,XAUUSD,0,Neutral,-,False,news_v1
+2c424bf4,2025-09-11T05:00:02Z,2025-09-11T05:00:02Z,EURUSD,0,Neutral,-,False,news_v1
+2c424bf4,2025-09-11T05:00:02Z,2025-09-11T05:00:02Z,XAUUSD,0,Neutral,-,False,news_v1
+33fa0254,2025-09-11T05:30:03Z,2025-09-11T05:30:03Z,EURUSD,0,Neutral,-,False,news_v1
+33fa0254,2025-09-11T05:30:03Z,2025-09-11T05:30:03Z,XAUUSD,0,Neutral,-,False,news_v1
+3888cdf3,2025-09-11T06:00:00Z,2025-09-11T06:00:00Z,EURUSD,0,Neutral,-,False,news_v1
+3888cdf3,2025-09-11T06:00:00Z,2025-09-11T06:00:00Z,XAUUSD,0,Neutral,-,False,news_v1
+06125d63,2025-09-11T06:30:12Z,2025-09-11T06:30:12Z,EURUSD,5,Bullish,US CPI (high-impact): USD↑ → EURUSD↓ (news +5),True,news_v1
+06125d63,2025-09-11T06:30:12Z,2025-09-11T06:30:12Z,XAUUSD,5,Bullish,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5),True,news_v1
+dc805c,2025-09-11T06:38:50.164275Z,2025-09-11T13:06:24Z,EURUSD,0,Neutral,finnhub | Jim Cramer's top 10 things to watch in the stock market Thursday,True,news_v2
+dc805c,2025-09-11T06:38:50.164275Z,2025-09-11T13:06:24Z,XAUUSD,0,Neutral,finnhub | Jim Cramer's top 10 things to watch in the stock market Thursday,True,news_v2
+dc805c,2025-09-11T06:38:50.164275Z,2025-09-11T12:55:31Z,EURUSD,4,Bullish,finnhub | 10-year Treasury yield falls to 4% then snaps back as traders assess inflation data,True,news_v2
+dc805c,2025-09-11T06:38:50.164275Z,2025-09-11T12:55:31Z,XAUUSD,0,Neutral,finnhub | 10-year Treasury yield falls to 4% then snaps back as traders assess inflation data,True,news_v2
+dc805c,2025-09-11T06:38:50.164275Z,2025-09-11T12:21:00Z,EURUSD,0,Neutral,finnhub | Nomura bets on the dollar against the pound as U.K. fiscal predicament grabs spotlight,True,news_v2
+dc805c,2025-09-11T06:38:50.164275Z,2025-09-11T12:03:50Z,XAUUSD,1,Neutral,finnhub | Family offices double down on stocks and dial back on private equity,True,news_v2
+dc805c,2025-09-11T06:38:50.164275Z,2025-09-11T11:35:00Z,XAUUSD,1,Neutral,finnhub | Gold has a September trading pattern that could surprise investors this time,True,news_v2
+dc805c,2025-09-11T06:38:50.164275Z,2025-09-11T09:03:00Z,EURUSD,0,Neutral,finnhub | ‘Today’ host Dylan Dreyer and estranged husband Brian Fichera discount New York apartment by $500K,True,news_v2
+dc805c,2025-09-11T06:38:50.164275Z,2025-09-10T23:12:46Z,EURUSD,0,Neutral,finnhub | Jim Cramer reflects on 30 years of 'Squawk Box',True,news_v2
+dc805c,2025-09-11T06:38:50.164275Z,2025-09-10T23:12:46Z,XAUUSD,0,Neutral,finnhub | Jim Cramer reflects on 30 years of 'Squawk Box',True,news_v2
+dc805c,2025-09-11T06:38:50.164275Z,2025-09-10T20:28:00Z,EURUSD,0,Neutral,finnhub | Stablecoins could help the dollar remain the world’s No. 1 reserve currency — but not through Treasury-bill buying,True,news_v2
+dc805c,2025-09-11T06:38:50.164275Z,2025-09-10T17:35:00Z,EURUSD,0,Neutral,finnhub | Investors are chasing bond yields ahead of the Fed’s rate decision. Here’s the opportunity.,True,news_v2
+dc805c,2025-09-11T06:38:50.164275Z,2025-09-10T17:35:00Z,XAUUSD,0,Neutral,finnhub | Investors are chasing bond yields ahead of the Fed’s rate decision. Here’s the opportunity.,True,news_v2
+dc805c,2025-09-11T06:38:50.164275Z,2025-09-10T17:32:00Z,EURUSD,4,Bullish,"finnhub | Family offices favor this area of bonds ahead of potential Fed rate cuts, Goldman Sachs finds",True,news_v2
+dc805c,2025-09-11T06:38:50.164275Z,2025-09-10T17:32:00Z,XAUUSD,4,Bullish,"finnhub | Family offices favor this area of bonds ahead of potential Fed rate cuts, Goldman Sachs finds",True,news_v2
+dc805c,2025-09-11T06:38:50.164275Z,2025-09-10T16:26:00Z,EURUSD,4,Bullish,finnhub | What many investors are looking for in the August CPI data coming out tomorrow,True,news_v2
+dc805c,2025-09-11T06:38:50.164275Z,2025-09-10T16:26:00Z,XAUUSD,2,Bullish,finnhub | What many investors are looking for in the August CPI data coming out tomorrow,True,news_v2
+4e2416,2025-09-11T06:40:03.889215Z,2025-09-11T13:06:24Z,EURUSD,0,Neutral,finnhub | Jim Cramer's top 10 things to watch in the stock market Thursday,True,news_v2
+4e2416,2025-09-11T06:40:03.889215Z,2025-09-11T13:06:24Z,XAUUSD,0,Neutral,finnhub | Jim Cramer's top 10 things to watch in the stock market Thursday,True,news_v2
+4e2416,2025-09-11T06:40:03.889215Z,2025-09-11T12:55:31Z,EURUSD,4,Bullish,finnhub | 10-year Treasury yield falls to 4% then snaps back as traders assess inflation data,True,news_v2
+4e2416,2025-09-11T06:40:03.889215Z,2025-09-11T12:55:31Z,XAUUSD,0,Neutral,finnhub | 10-year Treasury yield falls to 4% then snaps back as traders assess inflation data,True,news_v2
+4e2416,2025-09-11T06:40:03.889215Z,2025-09-11T12:21:00Z,EURUSD,0,Neutral,finnhub | Nomura bets on the dollar against the pound as U.K. fiscal predicament grabs spotlight,True,news_v2
+4e2416,2025-09-11T06:40:03.889215Z,2025-09-11T12:03:50Z,XAUUSD,1,Neutral,finnhub | Family offices double down on stocks and dial back on private equity,True,news_v2
+4e2416,2025-09-11T06:40:03.889215Z,2025-09-11T11:35:00Z,XAUUSD,1,Neutral,finnhub | Gold has a September trading pattern that could surprise investors this time,True,news_v2
+4e2416,2025-09-11T06:40:03.889215Z,2025-09-11T09:03:00Z,EURUSD,0,Neutral,finnhub | ‘Today’ host Dylan Dreyer and estranged husband Brian Fichera discount New York apartment by $500K,True,news_v2
+4e2416,2025-09-11T06:40:03.889215Z,2025-09-10T23:12:46Z,EURUSD,0,Neutral,finnhub | Jim Cramer reflects on 30 years of 'Squawk Box',True,news_v2
+4e2416,2025-09-11T06:40:03.889215Z,2025-09-10T23:12:46Z,XAUUSD,0,Neutral,finnhub | Jim Cramer reflects on 30 years of 'Squawk Box',True,news_v2
+4e2416,2025-09-11T06:40:03.889215Z,2025-09-10T20:28:00Z,EURUSD,0,Neutral,finnhub | Stablecoins could help the dollar remain the world’s No. 1 reserve currency — but not through Treasury-bill buying,True,news_v2
+4e2416,2025-09-11T06:40:03.889215Z,2025-09-10T17:35:00Z,EURUSD,0,Neutral,finnhub | Investors are chasing bond yields ahead of the Fed’s rate decision. Here’s the opportunity.,True,news_v2
+4e2416,2025-09-11T06:40:03.889215Z,2025-09-10T17:35:00Z,XAUUSD,0,Neutral,finnhub | Investors are chasing bond yields ahead of the Fed’s rate decision. Here’s the opportunity.,True,news_v2
+4e2416,2025-09-11T06:40:03.889215Z,2025-09-10T17:32:00Z,EURUSD,4,Bullish,"finnhub | Family offices favor this area of bonds ahead of potential Fed rate cuts, Goldman Sachs finds",True,news_v2
+4e2416,2025-09-11T06:40:03.889215Z,2025-09-10T17:32:00Z,XAUUSD,4,Bullish,"finnhub | Family offices favor this area of bonds ahead of potential Fed rate cuts, Goldman Sachs finds",True,news_v2
+4e2416,2025-09-11T06:40:03.889215Z,2025-09-10T16:26:00Z,EURUSD,4,Bullish,finnhub | What many investors are looking for in the August CPI data coming out tomorrow,True,news_v2
+4e2416,2025-09-11T06:40:03.889215Z,2025-09-10T16:26:00Z,XAUUSD,2,Bullish,finnhub | What many investors are looking for in the August CPI data coming out tomorrow,True,news_v2
+76e6d0,2025-09-11T06:50:06.036934Z,2025-09-11T13:06:24Z,EURUSD,0,Neutral,finnhub | Jim Cramer's top 10 things to watch in the stock market Thursday,True,news_v2
+76e6d0,2025-09-11T06:50:06.036934Z,2025-09-11T13:06:24Z,XAUUSD,0,Neutral,finnhub | Jim Cramer's top 10 things to watch in the stock market Thursday,True,news_v2
+76e6d0,2025-09-11T06:50:06.036934Z,2025-09-11T12:55:31Z,EURUSD,4,Bullish,finnhub | 10-year Treasury yield falls to 4% then snaps back as traders assess inflation data,True,news_v2
+76e6d0,2025-09-11T06:50:06.036934Z,2025-09-11T12:55:31Z,XAUUSD,0,Neutral,finnhub | 10-year Treasury yield falls to 4% then snaps back as traders assess inflation data,True,news_v2
+76e6d0,2025-09-11T06:50:06.036934Z,2025-09-11T12:21:00Z,EURUSD,0,Neutral,finnhub | Nomura bets on the dollar against the pound as U.K. fiscal predicament grabs spotlight,True,news_v2
+76e6d0,2025-09-11T06:50:06.036934Z,2025-09-11T12:03:50Z,XAUUSD,1,Neutral,finnhub | Family offices double down on stocks and dial back on private equity,True,news_v2
+76e6d0,2025-09-11T06:50:06.036934Z,2025-09-11T11:35:00Z,XAUUSD,1,Neutral,finnhub | Gold has a September trading pattern that could surprise investors this time,True,news_v2
+76e6d0,2025-09-11T06:50:06.036934Z,2025-09-11T09:03:00Z,EURUSD,0,Neutral,finnhub | ‘Today’ host Dylan Dreyer and estranged husband Brian Fichera discount New York apartment by $500K,True,news_v2
+76e6d0,2025-09-11T06:50:06.036934Z,2025-09-10T23:12:46Z,EURUSD,0,Neutral,finnhub | Jim Cramer reflects on 30 years of 'Squawk Box',True,news_v2
+76e6d0,2025-09-11T06:50:06.036934Z,2025-09-10T23:12:46Z,XAUUSD,0,Neutral,finnhub | Jim Cramer reflects on 30 years of 'Squawk Box',True,news_v2
+76e6d0,2025-09-11T06:50:06.036934Z,2025-09-10T20:28:00Z,EURUSD,0,Neutral,finnhub | Stablecoins could help the dollar remain the world’s No. 1 reserve currency — but not through Treasury-bill buying,True,news_v2
+76e6d0,2025-09-11T06:50:06.036934Z,2025-09-10T17:35:00Z,EURUSD,0,Neutral,finnhub | Investors are chasing bond yields ahead of the Fed’s rate decision. Here’s the opportunity.,True,news_v2
+76e6d0,2025-09-11T06:50:06.036934Z,2025-09-10T17:35:00Z,XAUUSD,0,Neutral,finnhub | Investors are chasing bond yields ahead of the Fed’s rate decision. Here’s the opportunity.,True,news_v2
+76e6d0,2025-09-11T06:50:06.036934Z,2025-09-10T17:32:00Z,EURUSD,4,Bullish,"finnhub | Family offices favor this area of bonds ahead of potential Fed rate cuts, Goldman Sachs finds",True,news_v2
+76e6d0,2025-09-11T06:50:06.036934Z,2025-09-10T17:32:00Z,XAUUSD,4,Bullish,"finnhub | Family offices favor this area of bonds ahead of potential Fed rate cuts, Goldman Sachs finds",True,news_v2
+76e6d0,2025-09-11T06:50:06.036934Z,2025-09-10T16:26:00Z,EURUSD,4,Bullish,finnhub | What many investors are looking for in the August CPI data coming out tomorrow,True,news_v2
+76e6d0,2025-09-11T06:50:06.036934Z,2025-09-10T16:26:00Z,XAUUSD,2,Bullish,finnhub | What many investors are looking for in the August CPI data coming out tomorrow,True,news_v2
+c56846c6,2025-09-11T07:00:00Z,2025-09-11T07:00:00Z,EURUSD,0,Neutral,-,False,news_v1
+c56846c6,2025-09-11T07:00:00Z,2025-09-11T07:00:00Z,XAUUSD,0,Neutral,-,False,news_v1
+c0ef7ee4,2025-09-11T07:30:00Z,2025-09-11T07:30:00Z,EURUSD,0,Neutral,-,False,news_v1
+c0ef7ee4,2025-09-11T07:30:00Z,2025-09-11T07:30:00Z,XAUUSD,0,Neutral,-,False,news_v1
+ff4fcf80,2025-09-11T08:00:04Z,2025-09-11T08:00:04Z,EURUSD,0,Neutral,-,False,news_v1
+ff4fcf80,2025-09-11T08:00:04Z,2025-09-11T08:00:04Z,XAUUSD,0,Neutral,-,False,news_v1
+be31a432,2025-09-11T08:30:00Z,2025-09-11T08:30:00Z,EURUSD,0,Neutral,-,False,news_v1
+be31a432,2025-09-11T08:30:00Z,2025-09-11T08:30:00Z,XAUUSD,0,Neutral,-,False,news_v1
+52d616bc,2025-09-11T09:00:00Z,2025-09-11T09:00:00Z,EURUSD,0,Neutral,-,False,news_v1
+52d616bc,2025-09-11T09:00:00Z,2025-09-11T09:00:00Z,XAUUSD,0,Neutral,-,False,news_v1
+73732d4f,2025-09-11T09:30:04Z,2025-09-11T09:30:04Z,EURUSD,0,Neutral,-,False,news_v1
+73732d4f,2025-09-11T09:30:04Z,2025-09-11T09:30:04Z,XAUUSD,0,Neutral,-,False,news_v1
+a28272f4,2025-09-11T10:00:00Z,2025-09-11T10:00:00Z,EURUSD,0,Neutral,-,False,news_v1
+a28272f4,2025-09-11T10:00:00Z,2025-09-11T10:00:00Z,XAUUSD,0,Neutral,-,False,news_v1
+6f030e31,2025-09-11T10:30:00Z,2025-09-11T10:30:00Z,EURUSD,0,Neutral,-,False,news_v1
+6f030e31,2025-09-11T10:30:00Z,2025-09-11T10:30:00Z,XAUUSD,0,Neutral,-,False,news_v1
+5402d7d4,2025-09-11T11:00:03Z,2025-09-11T11:00:03Z,EURUSD,0,Neutral,-,False,news_v1
+5402d7d4,2025-09-11T11:00:03Z,2025-09-11T11:00:03Z,XAUUSD,0,Neutral,-,False,news_v1
+d298319b,2025-09-11T11:30:03Z,2025-09-11T11:30:03Z,EURUSD,0,Neutral,-,False,news_v1
+d298319b,2025-09-11T11:30:03Z,2025-09-11T11:30:03Z,XAUUSD,0,Neutral,-,False,news_v1
+31d384,2025-09-11T11:40:03.694898Z,2025-09-11T18:49:00Z,EURUSD,0,Neutral,finnhub | It’s full-speed ahead for stocks going into next week’s Fed meeting,True,news_v2
+31d384,2025-09-11T11:40:03.694898Z,2025-09-11T18:49:00Z,XAUUSD,0,Neutral,finnhub | It’s full-speed ahead for stocks going into next week’s Fed meeting,True,news_v2
+31d384,2025-09-11T11:40:03.694898Z,2025-09-11T18:40:44Z,EURUSD,0,Neutral,"finnhub | Health care inflation rises as patients, employers brace for biggest jump in health spending in 15 years",True,news_v2
+31d384,2025-09-11T11:40:03.694898Z,2025-09-11T18:40:44Z,XAUUSD,0,Neutral,"finnhub | Health care inflation rises as patients, employers brace for biggest jump in health spending in 15 years",True,news_v2
+31d384,2025-09-11T11:40:03.694898Z,2025-09-11T16:35:00Z,EURUSD,0,Neutral,finnhub | Risky mortgages are on the rise again — but don’t panic just yet,True,news_v2
+31d384,2025-09-11T11:40:03.694898Z,2025-09-11T16:35:00Z,XAUUSD,0,Neutral,finnhub | Risky mortgages are on the rise again — but don’t panic just yet,True,news_v2
+31d384,2025-09-11T11:40:03.694898Z,2025-09-11T16:12:38Z,EURUSD,0,Neutral,finnhub | We're buying this stock ahead of lower rates — and would trim a winning name,True,news_v2
+31d384,2025-09-11T11:40:03.694898Z,2025-09-11T16:12:38Z,XAUUSD,0,Neutral,finnhub | We're buying this stock ahead of lower rates — and would trim a winning name,True,news_v2
+31d384,2025-09-11T11:40:03.694898Z,2025-09-11T16:01:00Z,EURUSD,4,Bullish,finnhub | ECB signals it may be done cutting rates as Fed gets ready to resume easing,True,news_v2
+31d384,2025-09-11T11:40:03.694898Z,2025-09-11T16:01:00Z,XAUUSD,2,Bullish,finnhub | ECB signals it may be done cutting rates as Fed gets ready to resume easing,True,news_v2
+31d384,2025-09-11T11:40:03.694898Z,2025-09-11T13:06:24Z,EURUSD,0,Neutral,finnhub | Jim Cramer's top 10 things to watch in the stock market Thursday,True,news_v2
+31d384,2025-09-11T11:40:03.694898Z,2025-09-11T13:06:24Z,XAUUSD,0,Neutral,finnhub | Jim Cramer's top 10 things to watch in the stock market Thursday,True,news_v2
+31d384,2025-09-11T11:40:03.694898Z,2025-09-11T12:55:31Z,EURUSD,4,Bullish,finnhub | 10-year Treasury yield falls to 4% then snaps back as traders assess inflation data,True,news_v2
+31d384,2025-09-11T11:40:03.694898Z,2025-09-11T12:55:31Z,XAUUSD,0,Neutral,finnhub | 10-year Treasury yield falls to 4% then snaps back as traders assess inflation data,True,news_v2
+31d384,2025-09-11T11:40:03.694898Z,2025-09-11T12:21:00Z,EURUSD,0,Neutral,finnhub | Nomura bets on the dollar against the pound as U.K. fiscal predicament grabs spotlight,True,news_v2
+31d384,2025-09-11T11:40:03.694898Z,2025-09-11T12:03:50Z,XAUUSD,1,Neutral,finnhub | Family offices double down on stocks and dial back on private equity,True,news_v2
+31d384,2025-09-11T11:40:03.694898Z,2025-09-11T11:35:00Z,XAUUSD,1,Neutral,finnhub | Gold has a September trading pattern that could surprise investors this time,True,news_v2
+31d384,2025-09-11T11:40:03.694898Z,2025-09-11T09:03:00Z,EURUSD,0,Neutral,finnhub | ‘Today’ host Dylan Dreyer and estranged husband Brian Fichera discount New York apartment by $500K,True,news_v2
+31d384,2025-09-11T11:40:03.694898Z,2025-09-10T23:12:46Z,EURUSD,0,Neutral,finnhub | Jim Cramer reflects on 30 years of 'Squawk Box',True,news_v2
+31d384,2025-09-11T11:40:03.694898Z,2025-09-10T23:12:46Z,XAUUSD,0,Neutral,finnhub | Jim Cramer reflects on 30 years of 'Squawk Box',True,news_v2
+31d384,2025-09-11T11:40:03.694898Z,2025-09-10T20:28:00Z,EURUSD,0,Neutral,finnhub | Stablecoins could help the dollar remain the world’s No. 1 reserve currency — but not through Treasury-bill buying,True,news_v2
+d1d3da,2025-09-11T11:50:03.314855Z,2025-09-11T18:49:00Z,EURUSD,0,Neutral,finnhub | It’s full-speed ahead for stocks going into next week’s Fed meeting,True,news_v2
+d1d3da,2025-09-11T11:50:03.314855Z,2025-09-11T18:49:00Z,XAUUSD,0,Neutral,finnhub | It’s full-speed ahead for stocks going into next week’s Fed meeting,True,news_v2
+d1d3da,2025-09-11T11:50:03.314855Z,2025-09-11T18:40:44Z,EURUSD,0,Neutral,"finnhub | Health care inflation rises as patients, employers brace for biggest jump in health spending in 15 years",True,news_v2
+d1d3da,2025-09-11T11:50:03.314855Z,2025-09-11T18:40:44Z,XAUUSD,0,Neutral,"finnhub | Health care inflation rises as patients, employers brace for biggest jump in health spending in 15 years",True,news_v2
+d1d3da,2025-09-11T11:50:03.314855Z,2025-09-11T16:35:00Z,EURUSD,0,Neutral,finnhub | Risky mortgages are on the rise again — but don’t panic just yet,True,news_v2
+d1d3da,2025-09-11T11:50:03.314855Z,2025-09-11T16:35:00Z,XAUUSD,0,Neutral,finnhub | Risky mortgages are on the rise again — but don’t panic just yet,True,news_v2
+d1d3da,2025-09-11T11:50:03.314855Z,2025-09-11T16:12:38Z,EURUSD,0,Neutral,finnhub | We're buying this stock ahead of lower rates — and would trim a winning name,True,news_v2
+d1d3da,2025-09-11T11:50:03.314855Z,2025-09-11T16:12:38Z,XAUUSD,0,Neutral,finnhub | We're buying this stock ahead of lower rates — and would trim a winning name,True,news_v2
+d1d3da,2025-09-11T11:50:03.314855Z,2025-09-11T16:01:00Z,EURUSD,4,Bullish,finnhub | ECB signals it may be done cutting rates as Fed gets ready to resume easing,True,news_v2
+d1d3da,2025-09-11T11:50:03.314855Z,2025-09-11T16:01:00Z,XAUUSD,2,Bullish,finnhub | ECB signals it may be done cutting rates as Fed gets ready to resume easing,True,news_v2
+d1d3da,2025-09-11T11:50:03.314855Z,2025-09-11T13:06:24Z,EURUSD,0,Neutral,finnhub | Jim Cramer's top 10 things to watch in the stock market Thursday,True,news_v2
+d1d3da,2025-09-11T11:50:03.314855Z,2025-09-11T13:06:24Z,XAUUSD,0,Neutral,finnhub | Jim Cramer's top 10 things to watch in the stock market Thursday,True,news_v2
+d1d3da,2025-09-11T11:50:03.314855Z,2025-09-11T12:55:31Z,EURUSD,4,Bullish,finnhub | 10-year Treasury yield falls to 4% then snaps back as traders assess inflation data,True,news_v2
+d1d3da,2025-09-11T11:50:03.314855Z,2025-09-11T12:55:31Z,XAUUSD,0,Neutral,finnhub | 10-year Treasury yield falls to 4% then snaps back as traders assess inflation data,True,news_v2
+d1d3da,2025-09-11T11:50:03.314855Z,2025-09-11T12:21:00Z,EURUSD,0,Neutral,finnhub | Nomura bets on the dollar against the pound as U.K. fiscal predicament grabs spotlight,True,news_v2
+d1d3da,2025-09-11T11:50:03.314855Z,2025-09-11T12:03:50Z,XAUUSD,1,Neutral,finnhub | Family offices double down on stocks and dial back on private equity,True,news_v2
+d1d3da,2025-09-11T11:50:03.314855Z,2025-09-11T11:35:00Z,XAUUSD,1,Neutral,finnhub | Gold has a September trading pattern that could surprise investors this time,True,news_v2
+d1d3da,2025-09-11T11:50:03.314855Z,2025-09-11T09:03:00Z,EURUSD,0,Neutral,finnhub | ‘Today’ host Dylan Dreyer and estranged husband Brian Fichera discount New York apartment by $500K,True,news_v2
+d1d3da,2025-09-11T11:50:03.314855Z,2025-09-10T23:12:46Z,EURUSD,0,Neutral,finnhub | Jim Cramer reflects on 30 years of 'Squawk Box',True,news_v2
+d1d3da,2025-09-11T11:50:03.314855Z,2025-09-10T23:12:46Z,XAUUSD,0,Neutral,finnhub | Jim Cramer reflects on 30 years of 'Squawk Box',True,news_v2
+d1d3da,2025-09-11T11:50:03.314855Z,2025-09-10T20:28:00Z,EURUSD,0,Neutral,finnhub | Stablecoins could help the dollar remain the world’s No. 1 reserve currency — but not through Treasury-bill buying,True,news_v2
+7a313b,2025-09-11T12:00:04.229969Z,2025-09-11T18:49:00Z,EURUSD,0,Neutral,finnhub | It’s full-speed ahead for stocks going into next week’s Fed meeting,True,news_v2
+7a313b,2025-09-11T12:00:04.229969Z,2025-09-11T18:49:00Z,XAUUSD,0,Neutral,finnhub | It’s full-speed ahead for stocks going into next week’s Fed meeting,True,news_v2
+7a313b,2025-09-11T12:00:04.229969Z,2025-09-11T18:40:44Z,EURUSD,0,Neutral,"finnhub | Health care inflation rises as patients, employers brace for biggest jump in health spending in 15 years",True,news_v2
+7a313b,2025-09-11T12:00:04.229969Z,2025-09-11T18:40:44Z,XAUUSD,0,Neutral,"finnhub | Health care inflation rises as patients, employers brace for biggest jump in health spending in 15 years",True,news_v2
+7a313b,2025-09-11T12:00:04.229969Z,2025-09-11T16:35:00Z,EURUSD,0,Neutral,finnhub | Risky mortgages are on the rise again — but don’t panic just yet,True,news_v2
+7a313b,2025-09-11T12:00:04.229969Z,2025-09-11T16:35:00Z,XAUUSD,0,Neutral,finnhub | Risky mortgages are on the rise again — but don’t panic just yet,True,news_v2
+7a313b,2025-09-11T12:00:04.229969Z,2025-09-11T16:12:38Z,EURUSD,0,Neutral,finnhub | We're buying this stock ahead of lower rates — and would trim a winning name,True,news_v2
+7a313b,2025-09-11T12:00:04.229969Z,2025-09-11T16:12:38Z,XAUUSD,0,Neutral,finnhub | We're buying this stock ahead of lower rates — and would trim a winning name,True,news_v2
+7a313b,2025-09-11T12:00:04.229969Z,2025-09-11T16:01:00Z,EURUSD,4,Bullish,finnhub | ECB signals it may be done cutting rates as Fed gets ready to resume easing,True,news_v2
+7a313b,2025-09-11T12:00:04.229969Z,2025-09-11T16:01:00Z,XAUUSD,2,Bullish,finnhub | ECB signals it may be done cutting rates as Fed gets ready to resume easing,True,news_v2
+7a313b,2025-09-11T12:00:04.229969Z,2025-09-11T13:06:24Z,EURUSD,0,Neutral,finnhub | Jim Cramer's top 10 things to watch in the stock market Thursday,True,news_v2
+7a313b,2025-09-11T12:00:04.229969Z,2025-09-11T13:06:24Z,XAUUSD,0,Neutral,finnhub | Jim Cramer's top 10 things to watch in the stock market Thursday,True,news_v2
+7a313b,2025-09-11T12:00:04.229969Z,2025-09-11T12:55:31Z,EURUSD,4,Bullish,finnhub | 10-year Treasury yield falls to 4% then snaps back as traders assess inflation data,True,news_v2
+7a313b,2025-09-11T12:00:04.229969Z,2025-09-11T12:55:31Z,XAUUSD,0,Neutral,finnhub | 10-year Treasury yield falls to 4% then snaps back as traders assess inflation data,True,news_v2
+7a313b,2025-09-11T12:00:04.229969Z,2025-09-11T12:21:00Z,EURUSD,0,Neutral,finnhub | Nomura bets on the dollar against the pound as U.K. fiscal predicament grabs spotlight,True,news_v2
+7a313b,2025-09-11T12:00:04.229969Z,2025-09-11T12:03:50Z,XAUUSD,1,Neutral,finnhub | Family offices double down on stocks and dial back on private equity,True,news_v2
+7a313b,2025-09-11T12:00:04.229969Z,2025-09-11T11:35:00Z,XAUUSD,1,Neutral,finnhub | Gold has a September trading pattern that could surprise investors this time,True,news_v2
+7a313b,2025-09-11T12:00:04.229969Z,2025-09-11T09:03:00Z,EURUSD,0,Neutral,finnhub | ‘Today’ host Dylan Dreyer and estranged husband Brian Fichera discount New York apartment by $500K,True,news_v2
+7a313b,2025-09-11T12:00:04.229969Z,2025-09-10T23:12:46Z,EURUSD,0,Neutral,finnhub | Jim Cramer reflects on 30 years of 'Squawk Box',True,news_v2
+7a313b,2025-09-11T12:00:04.229969Z,2025-09-10T23:12:46Z,XAUUSD,0,Neutral,finnhub | Jim Cramer reflects on 30 years of 'Squawk Box',True,news_v2
+7a313b,2025-09-11T12:00:04.229969Z,2025-09-10T20:28:00Z,EURUSD,0,Neutral,finnhub | Stablecoins could help the dollar remain the world’s No. 1 reserve currency — but not through Treasury-bill buying,True,news_v2
+5648ebea,2025-09-11T12:00:06Z,2025-09-11T12:00:06Z,EURUSD,5,Bullish,US CPI (high-impact): USD↑ → EURUSD↓ (news +5),True,news_v1
+5648ebea,2025-09-11T12:00:06Z,2025-09-11T12:00:06Z,XAUUSD,5,Bullish,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5),True,news_v1
+114140,2025-09-11T12:10:04.621055Z,2025-09-11T20:54:21Z,EURUSD,0,Neutral,finnhub | Trump asks appeals court to let him fire Lisa Cook before next week's Fed meeting,True,news_v2
+114140,2025-09-11T12:10:04.621055Z,2025-09-11T20:54:21Z,XAUUSD,0,Neutral,finnhub | Trump asks appeals court to let him fire Lisa Cook before next week's Fed meeting,True,news_v2
+114140,2025-09-11T12:10:04.621055Z,2025-09-11T20:54:00Z,EURUSD,0,Neutral,"finnhub | As jobless claims rise, unemployment benefits aren’t keeping up with inflation. Here’s what to know.",True,news_v2
+114140,2025-09-11T12:10:04.621055Z,2025-09-11T20:54:00Z,XAUUSD,0,Neutral,"finnhub | As jobless claims rise, unemployment benefits aren’t keeping up with inflation. Here’s what to know.",True,news_v2
+114140,2025-09-11T12:10:04.621055Z,2025-09-11T18:49:00Z,EURUSD,0,Neutral,finnhub | It’s full-speed ahead for stocks going into next week’s Fed meeting,True,news_v2
+114140,2025-09-11T12:10:04.621055Z,2025-09-11T18:49:00Z,XAUUSD,0,Neutral,finnhub | It’s full-speed ahead for stocks going into next week’s Fed meeting,True,news_v2
+114140,2025-09-11T12:10:04.621055Z,2025-09-11T18:40:44Z,EURUSD,0,Neutral,"finnhub | Health care inflation rises as patients, employers brace for biggest jump in health spending in 15 years",True,news_v2
+114140,2025-09-11T12:10:04.621055Z,2025-09-11T18:40:44Z,XAUUSD,0,Neutral,"finnhub | Health care inflation rises as patients, employers brace for biggest jump in health spending in 15 years",True,news_v2
+114140,2025-09-11T12:10:04.621055Z,2025-09-11T16:35:00Z,EURUSD,0,Neutral,finnhub | Risky mortgages are on the rise again — but don’t panic just yet,True,news_v2
+114140,2025-09-11T12:10:04.621055Z,2025-09-11T16:35:00Z,XAUUSD,0,Neutral,finnhub | Risky mortgages are on the rise again — but don’t panic just yet,True,news_v2
+114140,2025-09-11T12:10:04.621055Z,2025-09-11T16:12:38Z,EURUSD,0,Neutral,finnhub | We're buying this stock ahead of lower rates — and would trim a winning name,True,news_v2
+114140,2025-09-11T12:10:04.621055Z,2025-09-11T16:12:38Z,XAUUSD,0,Neutral,finnhub | We're buying this stock ahead of lower rates — and would trim a winning name,True,news_v2
+114140,2025-09-11T12:10:04.621055Z,2025-09-11T16:01:00Z,EURUSD,4,Bullish,finnhub | ECB signals it may be done cutting rates as Fed gets ready to resume easing,True,news_v2
+114140,2025-09-11T12:10:04.621055Z,2025-09-11T16:01:00Z,XAUUSD,2,Bullish,finnhub | ECB signals it may be done cutting rates as Fed gets ready to resume easing,True,news_v2
+114140,2025-09-11T12:10:04.621055Z,2025-09-11T13:06:24Z,EURUSD,0,Neutral,finnhub | Jim Cramer's top 10 things to watch in the stock market Thursday,True,news_v2
+114140,2025-09-11T12:10:04.621055Z,2025-09-11T13:06:24Z,XAUUSD,0,Neutral,finnhub | Jim Cramer's top 10 things to watch in the stock market Thursday,True,news_v2
+114140,2025-09-11T12:10:04.621055Z,2025-09-11T12:55:31Z,EURUSD,4,Bullish,finnhub | 10-year Treasury yield falls to 4% then snaps back as traders assess inflation data,True,news_v2
+114140,2025-09-11T12:10:04.621055Z,2025-09-11T12:55:31Z,XAUUSD,0,Neutral,finnhub | 10-year Treasury yield falls to 4% then snaps back as traders assess inflation data,True,news_v2
+114140,2025-09-11T12:10:04.621055Z,2025-09-11T12:21:00Z,EURUSD,0,Neutral,finnhub | Nomura bets on the dollar against the pound as U.K. fiscal predicament grabs spotlight,True,news_v2
+114140,2025-09-11T12:10:04.621055Z,2025-09-11T12:03:50Z,XAUUSD,1,Neutral,finnhub | Family offices double down on stocks and dial back on private equity,True,news_v2
+114140,2025-09-11T12:10:04.621055Z,2025-09-11T11:35:00Z,XAUUSD,1,Neutral,finnhub | Gold has a September trading pattern that could surprise investors this time,True,news_v2
+114140,2025-09-11T12:10:04.621055Z,2025-09-11T09:03:00Z,EURUSD,0,Neutral,finnhub | ‘Today’ host Dylan Dreyer and estranged husband Brian Fichera discount New York apartment by $500K,True,news_v2
+114140,2025-09-11T12:10:04.621055Z,2025-09-10T23:12:46Z,EURUSD,0,Neutral,finnhub | Jim Cramer reflects on 30 years of 'Squawk Box',True,news_v2
+114140,2025-09-11T12:10:04.621055Z,2025-09-10T23:12:46Z,XAUUSD,0,Neutral,finnhub | Jim Cramer reflects on 30 years of 'Squawk Box',True,news_v2
+114140,2025-09-11T12:10:04.621055Z,2025-09-10T20:28:00Z,EURUSD,0,Neutral,finnhub | Stablecoins could help the dollar remain the world’s No. 1 reserve currency — but not through Treasury-bill buying,True,news_v2
+1ebd76,2025-09-11T12:20:02.803326Z,2025-09-11T20:54:21Z,EURUSD,0,Neutral,finnhub | Trump asks appeals court to let him fire Lisa Cook before next week's Fed meeting,True,news_v2
+1ebd76,2025-09-11T12:20:02.803326Z,2025-09-11T20:54:21Z,XAUUSD,0,Neutral,finnhub | Trump asks appeals court to let him fire Lisa Cook before next week's Fed meeting,True,news_v2
+1ebd76,2025-09-11T12:20:02.803326Z,2025-09-11T20:54:00Z,EURUSD,0,Neutral,"finnhub | As jobless claims rise, unemployment benefits aren’t keeping up with inflation. Here’s what to know.",True,news_v2
+1ebd76,2025-09-11T12:20:02.803326Z,2025-09-11T20:54:00Z,XAUUSD,0,Neutral,"finnhub | As jobless claims rise, unemployment benefits aren’t keeping up with inflation. Here’s what to know.",True,news_v2
+1ebd76,2025-09-11T12:20:02.803326Z,2025-09-11T18:49:00Z,EURUSD,0,Neutral,finnhub | It’s full-speed ahead for stocks going into next week’s Fed meeting,True,news_v2
+1ebd76,2025-09-11T12:20:02.803326Z,2025-09-11T18:49:00Z,XAUUSD,0,Neutral,finnhub | It’s full-speed ahead for stocks going into next week’s Fed meeting,True,news_v2
+1ebd76,2025-09-11T12:20:02.803326Z,2025-09-11T18:40:44Z,EURUSD,0,Neutral,"finnhub | Health care inflation rises as patients, employers brace for biggest jump in health spending in 15 years",True,news_v2
+1ebd76,2025-09-11T12:20:02.803326Z,2025-09-11T18:40:44Z,XAUUSD,0,Neutral,"finnhub | Health care inflation rises as patients, employers brace for biggest jump in health spending in 15 years",True,news_v2
+1ebd76,2025-09-11T12:20:02.803326Z,2025-09-11T16:35:00Z,EURUSD,0,Neutral,finnhub | Risky mortgages are on the rise again — but don’t panic just yet,True,news_v2
+1ebd76,2025-09-11T12:20:02.803326Z,2025-09-11T16:35:00Z,XAUUSD,0,Neutral,finnhub | Risky mortgages are on the rise again — but don’t panic just yet,True,news_v2
+1ebd76,2025-09-11T12:20:02.803326Z,2025-09-11T16:12:38Z,EURUSD,0,Neutral,finnhub | We're buying this stock ahead of lower rates — and would trim a winning name,True,news_v2
+1ebd76,2025-09-11T12:20:02.803326Z,2025-09-11T16:12:38Z,XAUUSD,0,Neutral,finnhub | We're buying this stock ahead of lower rates — and would trim a winning name,True,news_v2
+1ebd76,2025-09-11T12:20:02.803326Z,2025-09-11T16:01:00Z,EURUSD,4,Bullish,finnhub | ECB signals it may be done cutting rates as Fed gets ready to resume easing,True,news_v2
+1ebd76,2025-09-11T12:20:02.803326Z,2025-09-11T16:01:00Z,XAUUSD,2,Bullish,finnhub | ECB signals it may be done cutting rates as Fed gets ready to resume easing,True,news_v2
+1ebd76,2025-09-11T12:20:02.803326Z,2025-09-11T13:06:24Z,EURUSD,0,Neutral,finnhub | Jim Cramer's top 10 things to watch in the stock market Thursday,True,news_v2
+1ebd76,2025-09-11T12:20:02.803326Z,2025-09-11T13:06:24Z,XAUUSD,0,Neutral,finnhub | Jim Cramer's top 10 things to watch in the stock market Thursday,True,news_v2
+1ebd76,2025-09-11T12:20:02.803326Z,2025-09-11T12:55:31Z,EURUSD,4,Bullish,finnhub | 10-year Treasury yield falls to 4% then snaps back as traders assess inflation data,True,news_v2
+1ebd76,2025-09-11T12:20:02.803326Z,2025-09-11T12:55:31Z,XAUUSD,0,Neutral,finnhub | 10-year Treasury yield falls to 4% then snaps back as traders assess inflation data,True,news_v2
+1ebd76,2025-09-11T12:20:02.803326Z,2025-09-11T12:21:00Z,EURUSD,0,Neutral,finnhub | Nomura bets on the dollar against the pound as U.K. fiscal predicament grabs spotlight,True,news_v2
+1ebd76,2025-09-11T12:20:02.803326Z,2025-09-11T12:03:50Z,XAUUSD,1,Neutral,finnhub | Family offices double down on stocks and dial back on private equity,True,news_v2
+1ebd76,2025-09-11T12:20:02.803326Z,2025-09-11T11:35:00Z,XAUUSD,1,Neutral,finnhub | Gold has a September trading pattern that could surprise investors this time,True,news_v2
+1ebd76,2025-09-11T12:20:02.803326Z,2025-09-11T09:03:00Z,EURUSD,0,Neutral,finnhub | ‘Today’ host Dylan Dreyer and estranged husband Brian Fichera discount New York apartment by $500K,True,news_v2
+1ebd76,2025-09-11T12:20:02.803326Z,2025-09-10T23:12:46Z,EURUSD,0,Neutral,finnhub | Jim Cramer reflects on 30 years of 'Squawk Box',True,news_v2
+1ebd76,2025-09-11T12:20:02.803326Z,2025-09-10T23:12:46Z,XAUUSD,0,Neutral,finnhub | Jim Cramer reflects on 30 years of 'Squawk Box',True,news_v2
+1ebd76,2025-09-11T12:20:02.803326Z,2025-09-10T20:28:00Z,EURUSD,0,Neutral,finnhub | Stablecoins could help the dollar remain the world’s No. 1 reserve currency — but not through Treasury-bill buying,True,news_v2
+b07f8e66,2025-09-11T12:30:24Z,2025-09-11T12:30:24Z,EURUSD,0,Neutral,-,False,news_v1
+b07f8e66,2025-09-11T12:30:24Z,2025-09-11T12:30:24Z,XAUUSD,0,Neutral,-,False,news_v1
+ee3136,2025-09-11T12:40:05.079999Z,2025-09-11T20:54:21Z,EURUSD,0,Neutral,finnhub | Trump asks appeals court to let him fire Lisa Cook before next week's Fed meeting,True,news_v2
+ee3136,2025-09-11T12:40:05.079999Z,2025-09-11T20:54:21Z,XAUUSD,0,Neutral,finnhub | Trump asks appeals court to let him fire Lisa Cook before next week's Fed meeting,True,news_v2
+ee3136,2025-09-11T12:40:05.079999Z,2025-09-11T20:54:00Z,EURUSD,0,Neutral,"finnhub | As jobless claims rise, unemployment benefits aren’t keeping up with inflation. Here’s what to know.",True,news_v2
+ee3136,2025-09-11T12:40:05.079999Z,2025-09-11T20:54:00Z,XAUUSD,0,Neutral,"finnhub | As jobless claims rise, unemployment benefits aren’t keeping up with inflation. Here’s what to know.",True,news_v2
+ee3136,2025-09-11T12:40:05.079999Z,2025-09-11T18:49:00Z,EURUSD,0,Neutral,finnhub | It’s full-speed ahead for stocks going into next week’s Fed meeting,True,news_v2
+ee3136,2025-09-11T12:40:05.079999Z,2025-09-11T18:49:00Z,XAUUSD,0,Neutral,finnhub | It’s full-speed ahead for stocks going into next week’s Fed meeting,True,news_v2
+ee3136,2025-09-11T12:40:05.079999Z,2025-09-11T18:40:44Z,EURUSD,0,Neutral,"finnhub | Health care inflation rises as patients, employers brace for biggest jump in health spending in 15 years",True,news_v2
+ee3136,2025-09-11T12:40:05.079999Z,2025-09-11T18:40:44Z,XAUUSD,0,Neutral,"finnhub | Health care inflation rises as patients, employers brace for biggest jump in health spending in 15 years",True,news_v2
+ee3136,2025-09-11T12:40:05.079999Z,2025-09-11T16:35:00Z,EURUSD,0,Neutral,finnhub | Risky mortgages are on the rise again — but don’t panic just yet,True,news_v2
+ee3136,2025-09-11T12:40:05.079999Z,2025-09-11T16:35:00Z,XAUUSD,0,Neutral,finnhub | Risky mortgages are on the rise again — but don’t panic just yet,True,news_v2
+ee3136,2025-09-11T12:40:05.079999Z,2025-09-11T16:12:38Z,EURUSD,0,Neutral,finnhub | We're buying this stock ahead of lower rates — and would trim a winning name,True,news_v2
+ee3136,2025-09-11T12:40:05.079999Z,2025-09-11T16:12:38Z,XAUUSD,0,Neutral,finnhub | We're buying this stock ahead of lower rates — and would trim a winning name,True,news_v2
+ee3136,2025-09-11T12:40:05.079999Z,2025-09-11T16:01:00Z,EURUSD,4,Bullish,finnhub | ECB signals it may be done cutting rates as Fed gets ready to resume easing,True,news_v2
+ee3136,2025-09-11T12:40:05.079999Z,2025-09-11T16:01:00Z,XAUUSD,2,Bullish,finnhub | ECB signals it may be done cutting rates as Fed gets ready to resume easing,True,news_v2
+ee3136,2025-09-11T12:40:05.079999Z,2025-09-11T13:06:24Z,EURUSD,0,Neutral,finnhub | Jim Cramer's top 10 things to watch in the stock market Thursday,True,news_v2
+ee3136,2025-09-11T12:40:05.079999Z,2025-09-11T13:06:24Z,XAUUSD,0,Neutral,finnhub | Jim Cramer's top 10 things to watch in the stock market Thursday,True,news_v2
+ee3136,2025-09-11T12:40:05.079999Z,2025-09-11T12:55:31Z,EURUSD,4,Bullish,finnhub | 10-year Treasury yield falls to 4% then snaps back as traders assess inflation data,True,news_v2
+ee3136,2025-09-11T12:40:05.079999Z,2025-09-11T12:55:31Z,XAUUSD,0,Neutral,finnhub | 10-year Treasury yield falls to 4% then snaps back as traders assess inflation data,True,news_v2
+ee3136,2025-09-11T12:40:05.079999Z,2025-09-11T12:21:00Z,EURUSD,0,Neutral,finnhub | Nomura bets on the dollar against the pound as U.K. fiscal predicament grabs spotlight,True,news_v2
+ee3136,2025-09-11T12:40:05.079999Z,2025-09-11T12:03:50Z,XAUUSD,1,Neutral,finnhub | Family offices double down on stocks and dial back on private equity,True,news_v2
+ee3136,2025-09-11T12:40:05.079999Z,2025-09-11T11:35:00Z,XAUUSD,1,Neutral,finnhub | Gold has a September trading pattern that could surprise investors this time,True,news_v2
+ee3136,2025-09-11T12:40:05.079999Z,2025-09-11T09:03:00Z,EURUSD,0,Neutral,finnhub | ‘Today’ host Dylan Dreyer and estranged husband Brian Fichera discount New York apartment by $500K,True,news_v2
+ee3136,2025-09-11T12:40:05.079999Z,2025-09-10T23:12:46Z,EURUSD,0,Neutral,finnhub | Jim Cramer reflects on 30 years of 'Squawk Box',True,news_v2
+ee3136,2025-09-11T12:40:05.079999Z,2025-09-10T23:12:46Z,XAUUSD,0,Neutral,finnhub | Jim Cramer reflects on 30 years of 'Squawk Box',True,news_v2
+21ac654e,2025-09-11T13:00:25Z,2025-09-11T13:00:25Z,EURUSD,0,Neutral,-,False,news_v1
+21ac654e,2025-09-11T13:00:25Z,2025-09-11T13:00:25Z,XAUUSD,0,Neutral,-,False,news_v1
+cd2cd8,2025-09-11T13:10:03.276638Z,2025-09-11T21:52:00Z,EURUSD,5,Bearish,"finnhub | RH CEO: ‘Significant inflation’ to hit this year, and gather speed in 2026 and beyond",True,news_v2
+cd2cd8,2025-09-11T13:10:03.276638Z,2025-09-11T21:52:00Z,XAUUSD,0,Neutral,"finnhub | RH CEO: ‘Significant inflation’ to hit this year, and gather speed in 2026 and beyond",True,news_v2
+cd2cd8,2025-09-11T13:10:03.276638Z,2025-09-11T20:54:21Z,EURUSD,0,Neutral,finnhub | Trump asks appeals court to let him fire Lisa Cook before next week's Fed meeting,True,news_v2
+cd2cd8,2025-09-11T13:10:03.276638Z,2025-09-11T20:54:21Z,XAUUSD,0,Neutral,finnhub | Trump asks appeals court to let him fire Lisa Cook before next week's Fed meeting,True,news_v2
+cd2cd8,2025-09-11T13:10:03.276638Z,2025-09-11T20:54:00Z,EURUSD,0,Neutral,"finnhub | As jobless claims rise, unemployment benefits aren’t keeping up with inflation. Here’s what to know.",True,news_v2
+cd2cd8,2025-09-11T13:10:03.276638Z,2025-09-11T20:54:00Z,XAUUSD,0,Neutral,"finnhub | As jobless claims rise, unemployment benefits aren’t keeping up with inflation. Here’s what to know.",True,news_v2
+cd2cd8,2025-09-11T13:10:03.276638Z,2025-09-11T18:49:00Z,EURUSD,0,Neutral,finnhub | It’s full-speed ahead for stocks going into next week’s Fed meeting,True,news_v2
+cd2cd8,2025-09-11T13:10:03.276638Z,2025-09-11T18:49:00Z,XAUUSD,0,Neutral,finnhub | It’s full-speed ahead for stocks going into next week’s Fed meeting,True,news_v2
+cd2cd8,2025-09-11T13:10:03.276638Z,2025-09-11T18:40:44Z,EURUSD,0,Neutral,"finnhub | Health care inflation rises as patients, employers brace for biggest jump in health spending in 15 years",True,news_v2
+cd2cd8,2025-09-11T13:10:03.276638Z,2025-09-11T18:40:44Z,XAUUSD,0,Neutral,"finnhub | Health care inflation rises as patients, employers brace for biggest jump in health spending in 15 years",True,news_v2
+cd2cd8,2025-09-11T13:10:03.276638Z,2025-09-11T16:35:00Z,EURUSD,0,Neutral,finnhub | Risky mortgages are on the rise again — but don’t panic just yet,True,news_v2
+cd2cd8,2025-09-11T13:10:03.276638Z,2025-09-11T16:35:00Z,XAUUSD,0,Neutral,finnhub | Risky mortgages are on the rise again — but don’t panic just yet,True,news_v2
+cd2cd8,2025-09-11T13:10:03.276638Z,2025-09-11T16:12:38Z,EURUSD,0,Neutral,finnhub | We're buying this stock ahead of lower rates — and would trim a winning name,True,news_v2
+cd2cd8,2025-09-11T13:10:03.276638Z,2025-09-11T16:12:38Z,XAUUSD,0,Neutral,finnhub | We're buying this stock ahead of lower rates — and would trim a winning name,True,news_v2
+cd2cd8,2025-09-11T13:10:03.276638Z,2025-09-11T16:01:00Z,EURUSD,4,Bullish,finnhub | ECB signals it may be done cutting rates as Fed gets ready to resume easing,True,news_v2
+cd2cd8,2025-09-11T13:10:03.276638Z,2025-09-11T16:01:00Z,XAUUSD,2,Bullish,finnhub | ECB signals it may be done cutting rates as Fed gets ready to resume easing,True,news_v2
+cd2cd8,2025-09-11T13:10:03.276638Z,2025-09-11T13:06:24Z,EURUSD,0,Neutral,finnhub | Jim Cramer's top 10 things to watch in the stock market Thursday,True,news_v2
+cd2cd8,2025-09-11T13:10:03.276638Z,2025-09-11T13:06:24Z,XAUUSD,0,Neutral,finnhub | Jim Cramer's top 10 things to watch in the stock market Thursday,True,news_v2
+cd2cd8,2025-09-11T13:10:03.276638Z,2025-09-11T12:55:31Z,EURUSD,4,Bullish,finnhub | 10-year Treasury yield falls to 4% then snaps back as traders assess inflation data,True,news_v2
+cd2cd8,2025-09-11T13:10:03.276638Z,2025-09-11T12:55:31Z,XAUUSD,0,Neutral,finnhub | 10-year Treasury yield falls to 4% then snaps back as traders assess inflation data,True,news_v2
+cd2cd8,2025-09-11T13:10:03.276638Z,2025-09-11T12:21:00Z,EURUSD,0,Neutral,finnhub | Nomura bets on the dollar against the pound as U.K. fiscal predicament grabs spotlight,True,news_v2
+cd2cd8,2025-09-11T13:10:03.276638Z,2025-09-11T12:03:50Z,XAUUSD,1,Neutral,finnhub | Family offices double down on stocks and dial back on private equity,True,news_v2
+cd2cd8,2025-09-11T13:10:03.276638Z,2025-09-11T11:35:00Z,XAUUSD,1,Neutral,finnhub | Gold has a September trading pattern that could surprise investors this time,True,news_v2
+cd2cd8,2025-09-11T13:10:03.276638Z,2025-09-11T09:03:00Z,EURUSD,0,Neutral,finnhub | ‘Today’ host Dylan Dreyer and estranged husband Brian Fichera discount New York apartment by $500K,True,news_v2
+cd2cd8,2025-09-11T13:10:03.276638Z,2025-09-10T23:12:46Z,EURUSD,0,Neutral,finnhub | Jim Cramer reflects on 30 years of 'Squawk Box',True,news_v2
+cd2cd8,2025-09-11T13:10:03.276638Z,2025-09-10T23:12:46Z,XAUUSD,0,Neutral,finnhub | Jim Cramer reflects on 30 years of 'Squawk Box',True,news_v2
+9adda0bc,2025-09-11T13:30:06Z,2025-09-11T13:30:06Z,EURUSD,5,Bullish,US CPI (high-impact): USD↑ → EURUSD↓ (news +5),True,news_v1
+9adda0bc,2025-09-11T13:30:06Z,2025-09-11T13:30:06Z,XAUUSD,5,Bullish,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5),True,news_v1
+5374607d,2025-09-11T14:00:05Z,2025-09-11T14:00:05Z,EURUSD,5,Bullish,US CPI (high-impact): USD↑ → EURUSD↓ (news +5),True,news_v1
+5374607d,2025-09-11T14:00:05Z,2025-09-11T14:00:05Z,XAUUSD,5,Bullish,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5),True,news_v1
+ca8211,2025-09-11T14:06:03.916825Z,2025-09-11T21:52:00Z,EURUSD,5,Bearish,"finnhub | RH CEO: ‘Significant inflation’ to hit this year, and gather speed in 2026 and beyond",True,news_v2
+ca8211,2025-09-11T14:06:03.916825Z,2025-09-11T21:52:00Z,XAUUSD,0,Neutral,"finnhub | RH CEO: ‘Significant inflation’ to hit this year, and gather speed in 2026 and beyond",True,news_v2
+ca8211,2025-09-11T14:06:03.916825Z,2025-09-11T20:54:21Z,EURUSD,0,Neutral,finnhub | Trump asks appeals court to let him fire Lisa Cook before next week's Fed meeting,True,news_v2
+ca8211,2025-09-11T14:06:03.916825Z,2025-09-11T20:54:21Z,XAUUSD,0,Neutral,finnhub | Trump asks appeals court to let him fire Lisa Cook before next week's Fed meeting,True,news_v2
+ca8211,2025-09-11T14:06:03.916825Z,2025-09-11T20:54:00Z,EURUSD,0,Neutral,"finnhub | As jobless claims rise, unemployment benefits aren’t keeping up with inflation. Here’s what to know.",True,news_v2
+ca8211,2025-09-11T14:06:03.916825Z,2025-09-11T20:54:00Z,XAUUSD,0,Neutral,"finnhub | As jobless claims rise, unemployment benefits aren’t keeping up with inflation. Here’s what to know.",True,news_v2
+ca8211,2025-09-11T14:06:03.916825Z,2025-09-11T18:49:00Z,EURUSD,0,Neutral,finnhub | It’s full-speed ahead for stocks going into next week’s Fed meeting,True,news_v2
+ca8211,2025-09-11T14:06:03.916825Z,2025-09-11T18:49:00Z,XAUUSD,0,Neutral,finnhub | It’s full-speed ahead for stocks going into next week’s Fed meeting,True,news_v2
+ca8211,2025-09-11T14:06:03.916825Z,2025-09-11T18:40:44Z,EURUSD,0,Neutral,"finnhub | Health care inflation rises as patients, employers brace for biggest jump in health spending in 15 years",True,news_v2
+ca8211,2025-09-11T14:06:03.916825Z,2025-09-11T18:40:44Z,XAUUSD,0,Neutral,"finnhub | Health care inflation rises as patients, employers brace for biggest jump in health spending in 15 years",True,news_v2
+ca8211,2025-09-11T14:06:03.916825Z,2025-09-11T16:35:00Z,EURUSD,0,Neutral,finnhub | Risky mortgages are on the rise again — but don’t panic just yet,True,news_v2
+ca8211,2025-09-11T14:06:03.916825Z,2025-09-11T16:35:00Z,XAUUSD,0,Neutral,finnhub | Risky mortgages are on the rise again — but don’t panic just yet,True,news_v2
+ca8211,2025-09-11T14:06:03.916825Z,2025-09-11T16:12:38Z,EURUSD,0,Neutral,finnhub | We're buying this stock ahead of lower rates — and would trim a winning name,True,news_v2
+ca8211,2025-09-11T14:06:03.916825Z,2025-09-11T16:12:38Z,XAUUSD,0,Neutral,finnhub | We're buying this stock ahead of lower rates — and would trim a winning name,True,news_v2
+ca8211,2025-09-11T14:06:03.916825Z,2025-09-11T16:01:00Z,EURUSD,4,Bullish,finnhub | ECB signals it may be done cutting rates as Fed gets ready to resume easing,True,news_v2
+ca8211,2025-09-11T14:06:03.916825Z,2025-09-11T16:01:00Z,XAUUSD,2,Bullish,finnhub | ECB signals it may be done cutting rates as Fed gets ready to resume easing,True,news_v2
+ca8211,2025-09-11T14:06:03.916825Z,2025-09-11T13:06:24Z,EURUSD,0,Neutral,finnhub | Jim Cramer's top 10 things to watch in the stock market Thursday,True,news_v2
+ca8211,2025-09-11T14:06:03.916825Z,2025-09-11T13:06:24Z,XAUUSD,0,Neutral,finnhub | Jim Cramer's top 10 things to watch in the stock market Thursday,True,news_v2
+ca8211,2025-09-11T14:06:03.916825Z,2025-09-11T12:55:31Z,EURUSD,4,Bullish,finnhub | 10-year Treasury yield falls to 4% then snaps back as traders assess inflation data,True,news_v2
+ca8211,2025-09-11T14:06:03.916825Z,2025-09-11T12:55:31Z,XAUUSD,0,Neutral,finnhub | 10-year Treasury yield falls to 4% then snaps back as traders assess inflation data,True,news_v2
+ca8211,2025-09-11T14:06:03.916825Z,2025-09-11T12:21:00Z,EURUSD,0,Neutral,finnhub | Nomura bets on the dollar against the pound as U.K. fiscal predicament grabs spotlight,True,news_v2
+ca8211,2025-09-11T14:06:03.916825Z,2025-09-11T12:03:50Z,XAUUSD,1,Neutral,finnhub | Family offices double down on stocks and dial back on private equity,True,news_v2
+ca8211,2025-09-11T14:06:03.916825Z,2025-09-11T11:35:00Z,XAUUSD,1,Neutral,finnhub | Gold has a September trading pattern that could surprise investors this time,True,news_v2
+ca8211,2025-09-11T14:06:03.916825Z,2025-09-11T09:03:00Z,EURUSD,0,Neutral,finnhub | ‘Today’ host Dylan Dreyer and estranged husband Brian Fichera discount New York apartment by $500K,True,news_v2
+ca8211,2025-09-11T14:06:03.916825Z,2025-09-10T23:12:46Z,EURUSD,0,Neutral,finnhub | Jim Cramer reflects on 30 years of 'Squawk Box',True,news_v2
+ca8211,2025-09-11T14:06:03.916825Z,2025-09-10T23:12:46Z,XAUUSD,0,Neutral,finnhub | Jim Cramer reflects on 30 years of 'Squawk Box',True,news_v2
+ca8211,2025-09-11T14:06:03.916825Z,2025-09-10T20:28:00Z,EURUSD,0,Neutral,finnhub | Stablecoins could help the dollar remain the world’s No. 1 reserve currency — but not through Treasury-bill buying,True,news_v2
+7ab4b978,2025-09-11T14:30:06Z,2025-09-11T14:30:06Z,EURUSD,5,Bullish,US CPI (high-impact): USD↑ → EURUSD↓ (news +5),True,news_v1
+7ab4b978,2025-09-11T14:30:06Z,2025-09-11T14:30:06Z,XAUUSD,5,Bullish,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5),True,news_v1
+13817d40,2025-09-11T15:00:06Z,2025-09-11T15:00:06Z,EURUSD,5,Bullish,US CPI (high-impact): USD↑ → EURUSD↓ (news +5),True,news_v1
+13817d40,2025-09-11T15:00:06Z,2025-09-11T15:00:06Z,XAUUSD,5,Bullish,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5),True,news_v1
+680ecd,2025-09-11T15:06:04.431853Z,2025-09-11T21:52:00Z,EURUSD,5,Bearish,"finnhub | RH CEO: ‘Significant inflation’ to hit this year, and gather speed in 2026 and beyond",True,news_v2
+680ecd,2025-09-11T15:06:04.431853Z,2025-09-11T21:52:00Z,XAUUSD,0,Neutral,"finnhub | RH CEO: ‘Significant inflation’ to hit this year, and gather speed in 2026 and beyond",True,news_v2
+680ecd,2025-09-11T15:06:04.431853Z,2025-09-11T20:54:21Z,EURUSD,0,Neutral,finnhub | Trump asks appeals court to let him fire Lisa Cook before next week's Fed meeting,True,news_v2
+680ecd,2025-09-11T15:06:04.431853Z,2025-09-11T20:54:21Z,XAUUSD,0,Neutral,finnhub | Trump asks appeals court to let him fire Lisa Cook before next week's Fed meeting,True,news_v2
+680ecd,2025-09-11T15:06:04.431853Z,2025-09-11T20:54:00Z,EURUSD,0,Neutral,"finnhub | As jobless claims rise, unemployment benefits aren’t keeping up with inflation. Here’s what to know.",True,news_v2
+680ecd,2025-09-11T15:06:04.431853Z,2025-09-11T20:54:00Z,XAUUSD,0,Neutral,"finnhub | As jobless claims rise, unemployment benefits aren’t keeping up with inflation. Here’s what to know.",True,news_v2
+680ecd,2025-09-11T15:06:04.431853Z,2025-09-11T18:49:00Z,EURUSD,0,Neutral,finnhub | It’s full-speed ahead for stocks going into next week’s Fed meeting,True,news_v2
+680ecd,2025-09-11T15:06:04.431853Z,2025-09-11T18:49:00Z,XAUUSD,0,Neutral,finnhub | It’s full-speed ahead for stocks going into next week’s Fed meeting,True,news_v2
+680ecd,2025-09-11T15:06:04.431853Z,2025-09-11T18:40:44Z,EURUSD,0,Neutral,"finnhub | Health care inflation rises as patients, employers brace for biggest jump in health spending in 15 years",True,news_v2
+680ecd,2025-09-11T15:06:04.431853Z,2025-09-11T18:40:44Z,XAUUSD,0,Neutral,"finnhub | Health care inflation rises as patients, employers brace for biggest jump in health spending in 15 years",True,news_v2
+680ecd,2025-09-11T15:06:04.431853Z,2025-09-11T16:35:00Z,EURUSD,0,Neutral,finnhub | Risky mortgages are on the rise again — but don’t panic just yet,True,news_v2
+680ecd,2025-09-11T15:06:04.431853Z,2025-09-11T16:35:00Z,XAUUSD,0,Neutral,finnhub | Risky mortgages are on the rise again — but don’t panic just yet,True,news_v2
+680ecd,2025-09-11T15:06:04.431853Z,2025-09-11T16:12:38Z,EURUSD,0,Neutral,finnhub | We're buying this stock ahead of lower rates — and would trim a winning name,True,news_v2
+680ecd,2025-09-11T15:06:04.431853Z,2025-09-11T16:12:38Z,XAUUSD,0,Neutral,finnhub | We're buying this stock ahead of lower rates — and would trim a winning name,True,news_v2
+680ecd,2025-09-11T15:06:04.431853Z,2025-09-11T16:01:00Z,EURUSD,4,Bullish,finnhub | ECB signals it may be done cutting rates as Fed gets ready to resume easing,True,news_v2
+680ecd,2025-09-11T15:06:04.431853Z,2025-09-11T16:01:00Z,XAUUSD,2,Bullish,finnhub | ECB signals it may be done cutting rates as Fed gets ready to resume easing,True,news_v2
+680ecd,2025-09-11T15:06:04.431853Z,2025-09-11T13:06:24Z,EURUSD,0,Neutral,finnhub | Jim Cramer's top 10 things to watch in the stock market Thursday,True,news_v2
+680ecd,2025-09-11T15:06:04.431853Z,2025-09-11T13:06:24Z,XAUUSD,0,Neutral,finnhub | Jim Cramer's top 10 things to watch in the stock market Thursday,True,news_v2
+680ecd,2025-09-11T15:06:04.431853Z,2025-09-11T12:55:31Z,EURUSD,4,Bullish,finnhub | 10-year Treasury yield falls to 4% then snaps back as traders assess inflation data,True,news_v2
+680ecd,2025-09-11T15:06:04.431853Z,2025-09-11T12:55:31Z,XAUUSD,0,Neutral,finnhub | 10-year Treasury yield falls to 4% then snaps back as traders assess inflation data,True,news_v2
+680ecd,2025-09-11T15:06:04.431853Z,2025-09-11T12:21:00Z,EURUSD,0,Neutral,finnhub | Nomura bets on the dollar against the pound as U.K. fiscal predicament grabs spotlight,True,news_v2
+680ecd,2025-09-11T15:06:04.431853Z,2025-09-11T12:03:50Z,XAUUSD,1,Neutral,finnhub | Family offices double down on stocks and dial back on private equity,True,news_v2
+680ecd,2025-09-11T15:06:04.431853Z,2025-09-11T11:35:00Z,XAUUSD,1,Neutral,finnhub | Gold has a September trading pattern that could surprise investors this time,True,news_v2
+680ecd,2025-09-11T15:06:04.431853Z,2025-09-11T09:03:00Z,EURUSD,0,Neutral,finnhub | ‘Today’ host Dylan Dreyer and estranged husband Brian Fichera discount New York apartment by $500K,True,news_v2
+680ecd,2025-09-11T15:06:04.431853Z,2025-09-10T23:12:46Z,EURUSD,0,Neutral,finnhub | Jim Cramer reflects on 30 years of 'Squawk Box',True,news_v2
+680ecd,2025-09-11T15:06:04.431853Z,2025-09-10T23:12:46Z,XAUUSD,0,Neutral,finnhub | Jim Cramer reflects on 30 years of 'Squawk Box',True,news_v2
+680ecd,2025-09-11T15:06:04.431853Z,2025-09-10T20:28:00Z,EURUSD,0,Neutral,finnhub | Stablecoins could help the dollar remain the world’s No. 1 reserve currency — but not through Treasury-bill buying,True,news_v2
+32a1c7e0,2025-09-11T15:30:06Z,2025-09-11T15:30:06Z,EURUSD,5,Bullish,US CPI (high-impact): USD↑ → EURUSD↓ (news +5),True,news_v1
+32a1c7e0,2025-09-11T15:30:06Z,2025-09-11T15:30:06Z,XAUUSD,5,Bullish,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5),True,news_v1
+8ed50cb2,2025-09-11T16:00:00Z,2025-09-11T16:00:00Z,EURUSD,0,Neutral,-,False,news_v1
+8ed50cb2,2025-09-11T16:00:00Z,2025-09-11T16:00:00Z,XAUUSD,0,Neutral,-,False,news_v1
+0b01b1f6,2025-09-11T16:30:00Z,2025-09-11T16:30:00Z,EURUSD,0,Neutral,-,False,news_v1
+0b01b1f6,2025-09-11T16:30:00Z,2025-09-11T16:30:00Z,XAUUSD,0,Neutral,-,False,news_v1
+4f81ae36,2025-09-11T17:00:01Z,2025-09-11T17:00:01Z,EURUSD,0,Neutral,-,False,news_v1
+4f81ae36,2025-09-11T17:00:01Z,2025-09-11T17:00:01Z,XAUUSD,0,Neutral,-,False,news_v1
+69103137,2025-09-11T17:30:00Z,2025-09-11T17:30:00Z,EURUSD,0,Neutral,-,False,news_v1
+69103137,2025-09-11T17:30:00Z,2025-09-11T17:30:00Z,XAUUSD,0,Neutral,-,False,news_v1
+f0d801ff,2025-09-11T18:00:03Z,2025-09-11T18:00:03Z,EURUSD,0,Neutral,-,False,news_v1
+f0d801ff,2025-09-11T18:00:03Z,2025-09-11T18:00:03Z,XAUUSD,0,Neutral,-,False,news_v1
+bf29c7f0,2025-09-11T18:30:18Z,2025-09-11T18:30:18Z,EURUSD,5,Bullish,US CPI (high-impact): USD↑ → EURUSD↓ (news +5),True,news_v1
+bf29c7f0,2025-09-11T18:30:18Z,2025-09-11T18:30:18Z,XAUUSD,5,Bullish,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5),True,news_v1
+9aed24c9,2025-09-11T19:00:01Z,2025-09-11T19:00:01Z,EURUSD,0,Neutral,-,False,news_v1
+9aed24c9,2025-09-11T19:00:01Z,2025-09-11T19:00:01Z,XAUUSD,0,Neutral,-,False,news_v1
+15e4c024,2025-09-11T19:30:01Z,2025-09-11T19:30:01Z,EURUSD,0,Neutral,-,False,news_v1
+15e4c024,2025-09-11T19:30:01Z,2025-09-11T19:30:01Z,XAUUSD,0,Neutral,-,False,news_v1
+9c0b4550,2025-09-11T20:00:00Z,2025-09-11T20:00:00Z,EURUSD,0,Neutral,-,False,news_v1
+9c0b4550,2025-09-11T20:00:00Z,2025-09-11T20:00:00Z,XAUUSD,0,Neutral,-,False,news_v1
+5910f68e,2025-09-11T20:30:01Z,2025-09-11T20:30:01Z,EURUSD,0,Neutral,-,False,news_v1
+5910f68e,2025-09-11T20:30:01Z,2025-09-11T20:30:01Z,XAUUSD,0,Neutral,-,False,news_v1
+5e84d127,2025-09-11T21:00:45Z,2025-09-11T21:00:45Z,EURUSD,4,Bullish,EU ECB (high-impact): EUR↑ → EURUSD↑ (news +4),True,news_v1
+5e84d127,2025-09-11T21:00:45Z,2025-09-11T21:00:45Z,XAUUSD,5,Bullish,US FED (high-impact): USD↑ → XAUUSD↓ (news +5),True,news_v1
+31d9fd,2025-09-11T21:06:03.672155Z,2025-09-11T21:52:00Z,EURUSD,5,Bearish,"finnhub | RH CEO: ‘Significant inflation’ to hit this year, and gather speed in 2026 and beyond",True,news_v2
+31d9fd,2025-09-11T21:06:03.672155Z,2025-09-11T21:52:00Z,XAUUSD,0,Neutral,"finnhub | RH CEO: ‘Significant inflation’ to hit this year, and gather speed in 2026 and beyond",True,news_v2
+31d9fd,2025-09-11T21:06:03.672155Z,2025-09-11T20:54:21Z,EURUSD,0,Neutral,finnhub | Trump asks appeals court to let him fire Lisa Cook before next week's Fed meeting,True,news_v2
+31d9fd,2025-09-11T21:06:03.672155Z,2025-09-11T20:54:21Z,XAUUSD,0,Neutral,finnhub | Trump asks appeals court to let him fire Lisa Cook before next week's Fed meeting,True,news_v2
+31d9fd,2025-09-11T21:06:03.672155Z,2025-09-11T20:54:00Z,EURUSD,0,Neutral,"finnhub | As jobless claims rise, unemployment benefits aren’t keeping up with inflation. Here’s what to know.",True,news_v2
+31d9fd,2025-09-11T21:06:03.672155Z,2025-09-11T20:54:00Z,XAUUSD,0,Neutral,"finnhub | As jobless claims rise, unemployment benefits aren’t keeping up with inflation. Here’s what to know.",True,news_v2
+31d9fd,2025-09-11T21:06:03.672155Z,2025-09-11T18:49:00Z,EURUSD,0,Neutral,finnhub | It’s full-speed ahead for stocks going into next week’s Fed meeting,True,news_v2
+31d9fd,2025-09-11T21:06:03.672155Z,2025-09-11T18:49:00Z,XAUUSD,0,Neutral,finnhub | It’s full-speed ahead for stocks going into next week’s Fed meeting,True,news_v2
+31d9fd,2025-09-11T21:06:03.672155Z,2025-09-11T18:40:44Z,EURUSD,0,Neutral,"finnhub | Health care inflation rises as patients, employers brace for biggest jump in health spending in 15 years",True,news_v2
+31d9fd,2025-09-11T21:06:03.672155Z,2025-09-11T18:40:44Z,XAUUSD,0,Neutral,"finnhub | Health care inflation rises as patients, employers brace for biggest jump in health spending in 15 years",True,news_v2
+31d9fd,2025-09-11T21:06:03.672155Z,2025-09-11T16:35:00Z,EURUSD,0,Neutral,finnhub | Risky mortgages are on the rise again — but don’t panic just yet,True,news_v2
+31d9fd,2025-09-11T21:06:03.672155Z,2025-09-11T16:35:00Z,XAUUSD,0,Neutral,finnhub | Risky mortgages are on the rise again — but don’t panic just yet,True,news_v2
+31d9fd,2025-09-11T21:06:03.672155Z,2025-09-11T16:12:38Z,EURUSD,0,Neutral,finnhub | We're buying this stock ahead of lower rates — and would trim a winning name,True,news_v2
+31d9fd,2025-09-11T21:06:03.672155Z,2025-09-11T16:12:38Z,XAUUSD,0,Neutral,finnhub | We're buying this stock ahead of lower rates — and would trim a winning name,True,news_v2
+31d9fd,2025-09-11T21:06:03.672155Z,2025-09-11T16:01:00Z,EURUSD,4,Bullish,finnhub | ECB signals it may be done cutting rates as Fed gets ready to resume easing,True,news_v2
+31d9fd,2025-09-11T21:06:03.672155Z,2025-09-11T16:01:00Z,XAUUSD,2,Bullish,finnhub | ECB signals it may be done cutting rates as Fed gets ready to resume easing,True,news_v2
+31d9fd,2025-09-11T21:06:03.672155Z,2025-09-11T13:06:24Z,EURUSD,0,Neutral,finnhub | Jim Cramer's top 10 things to watch in the stock market Thursday,True,news_v2
+31d9fd,2025-09-11T21:06:03.672155Z,2025-09-11T13:06:24Z,XAUUSD,0,Neutral,finnhub | Jim Cramer's top 10 things to watch in the stock market Thursday,True,news_v2
+31d9fd,2025-09-11T21:06:03.672155Z,2025-09-11T12:55:31Z,EURUSD,4,Bullish,finnhub | 10-year Treasury yield falls to 4% then snaps back as traders assess inflation data,True,news_v2
+31d9fd,2025-09-11T21:06:03.672155Z,2025-09-11T12:55:31Z,XAUUSD,0,Neutral,finnhub | 10-year Treasury yield falls to 4% then snaps back as traders assess inflation data,True,news_v2
+31d9fd,2025-09-11T21:06:03.672155Z,2025-09-11T12:21:00Z,EURUSD,0,Neutral,finnhub | Nomura bets on the dollar against the pound as U.K. fiscal predicament grabs spotlight,True,news_v2
+31d9fd,2025-09-11T21:06:03.672155Z,2025-09-11T12:03:50Z,XAUUSD,1,Neutral,finnhub | Family offices double down on stocks and dial back on private equity,True,news_v2
+31d9fd,2025-09-11T21:06:03.672155Z,2025-09-11T11:35:00Z,XAUUSD,1,Neutral,finnhub | Gold has a September trading pattern that could surprise investors this time,True,news_v2
+31d9fd,2025-09-11T21:06:03.672155Z,2025-09-11T09:03:00Z,EURUSD,0,Neutral,finnhub | ‘Today’ host Dylan Dreyer and estranged husband Brian Fichera discount New York apartment by $500K,True,news_v2
+31d9fd,2025-09-11T21:06:03.672155Z,2025-09-10T23:12:46Z,EURUSD,0,Neutral,finnhub | Jim Cramer reflects on 30 years of 'Squawk Box',True,news_v2
+31d9fd,2025-09-11T21:06:03.672155Z,2025-09-10T23:12:46Z,XAUUSD,0,Neutral,finnhub | Jim Cramer reflects on 30 years of 'Squawk Box',True,news_v2
+31d9fd,2025-09-11T21:06:03.672155Z,2025-09-10T20:28:00Z,EURUSD,0,Neutral,finnhub | Stablecoins could help the dollar remain the world’s No. 1 reserve currency — but not through Treasury-bill buying,True,news_v2
+6da484ce,2025-09-11T21:30:05Z,2025-09-11T21:30:05Z,EURUSD,5,Bullish,US CPI (high-impact): USD↑ → EURUSD↓ (news +5),True,news_v1
+6da484ce,2025-09-11T21:30:05Z,2025-09-11T21:30:05Z,XAUUSD,5,Bullish,US FED (high-impact): USD↑ → XAUUSD↓ (news +5),True,news_v1
+ac732a5a,2025-09-11T22:00:19Z,2025-09-11T22:00:19Z,EURUSD,5,Bullish,US CPI (high-impact): USD↑ → EURUSD↓ (news +5),True,news_v1
+ac732a5a,2025-09-11T22:00:19Z,2025-09-11T22:00:19Z,XAUUSD,5,Bullish,US FED (high-impact): USD↑ → XAUUSD↓ (news +5),True,news_v1
+003e12,2025-09-11T22:06:03.132739Z,2025-09-11T21:52:00Z,EURUSD,5,Bearish,"finnhub | RH CEO: ‘Significant inflation’ to hit this year, and gather speed in 2026 and beyond",True,news_v2
+003e12,2025-09-11T22:06:03.132739Z,2025-09-11T21:52:00Z,XAUUSD,0,Neutral,"finnhub | RH CEO: ‘Significant inflation’ to hit this year, and gather speed in 2026 and beyond",True,news_v2
+003e12,2025-09-11T22:06:03.132739Z,2025-09-11T20:54:21Z,EURUSD,0,Neutral,finnhub | Trump asks appeals court to let him fire Lisa Cook before next week's Fed meeting,True,news_v2
+003e12,2025-09-11T22:06:03.132739Z,2025-09-11T20:54:21Z,XAUUSD,0,Neutral,finnhub | Trump asks appeals court to let him fire Lisa Cook before next week's Fed meeting,True,news_v2
+003e12,2025-09-11T22:06:03.132739Z,2025-09-11T20:54:00Z,EURUSD,0,Neutral,"finnhub | As jobless claims rise, unemployment benefits aren’t keeping up with inflation. Here’s what to know.",True,news_v2
+003e12,2025-09-11T22:06:03.132739Z,2025-09-11T20:54:00Z,XAUUSD,0,Neutral,"finnhub | As jobless claims rise, unemployment benefits aren’t keeping up with inflation. Here’s what to know.",True,news_v2
+003e12,2025-09-11T22:06:03.132739Z,2025-09-11T18:49:00Z,EURUSD,0,Neutral,finnhub | It’s full-speed ahead for stocks going into next week’s Fed meeting,True,news_v2
+003e12,2025-09-11T22:06:03.132739Z,2025-09-11T18:49:00Z,XAUUSD,0,Neutral,finnhub | It’s full-speed ahead for stocks going into next week’s Fed meeting,True,news_v2
+003e12,2025-09-11T22:06:03.132739Z,2025-09-11T18:40:44Z,EURUSD,0,Neutral,"finnhub | Health care inflation rises as patients, employers brace for biggest jump in health spending in 15 years",True,news_v2
+003e12,2025-09-11T22:06:03.132739Z,2025-09-11T18:40:44Z,XAUUSD,0,Neutral,"finnhub | Health care inflation rises as patients, employers brace for biggest jump in health spending in 15 years",True,news_v2
+003e12,2025-09-11T22:06:03.132739Z,2025-09-11T16:35:00Z,EURUSD,0,Neutral,finnhub | Risky mortgages are on the rise again — but don’t panic just yet,True,news_v2
+003e12,2025-09-11T22:06:03.132739Z,2025-09-11T16:35:00Z,XAUUSD,0,Neutral,finnhub | Risky mortgages are on the rise again — but don’t panic just yet,True,news_v2
+003e12,2025-09-11T22:06:03.132739Z,2025-09-11T16:12:38Z,EURUSD,0,Neutral,finnhub | We're buying this stock ahead of lower rates — and would trim a winning name,True,news_v2
+003e12,2025-09-11T22:06:03.132739Z,2025-09-11T16:12:38Z,XAUUSD,0,Neutral,finnhub | We're buying this stock ahead of lower rates — and would trim a winning name,True,news_v2
+003e12,2025-09-11T22:06:03.132739Z,2025-09-11T16:01:00Z,EURUSD,4,Bullish,finnhub | ECB signals it may be done cutting rates as Fed gets ready to resume easing,True,news_v2
+003e12,2025-09-11T22:06:03.132739Z,2025-09-11T16:01:00Z,XAUUSD,2,Bullish,finnhub | ECB signals it may be done cutting rates as Fed gets ready to resume easing,True,news_v2
+003e12,2025-09-11T22:06:03.132739Z,2025-09-11T13:06:24Z,EURUSD,0,Neutral,finnhub | Jim Cramer's top 10 things to watch in the stock market Thursday,True,news_v2
+003e12,2025-09-11T22:06:03.132739Z,2025-09-11T13:06:24Z,XAUUSD,0,Neutral,finnhub | Jim Cramer's top 10 things to watch in the stock market Thursday,True,news_v2
+003e12,2025-09-11T22:06:03.132739Z,2025-09-11T12:55:31Z,EURUSD,4,Bullish,finnhub | 10-year Treasury yield falls to 4% then snaps back as traders assess inflation data,True,news_v2
+003e12,2025-09-11T22:06:03.132739Z,2025-09-11T12:55:31Z,XAUUSD,0,Neutral,finnhub | 10-year Treasury yield falls to 4% then snaps back as traders assess inflation data,True,news_v2
+003e12,2025-09-11T22:06:03.132739Z,2025-09-11T12:21:00Z,EURUSD,0,Neutral,finnhub | Nomura bets on the dollar against the pound as U.K. fiscal predicament grabs spotlight,True,news_v2
+003e12,2025-09-11T22:06:03.132739Z,2025-09-11T12:03:50Z,XAUUSD,1,Neutral,finnhub | Family offices double down on stocks and dial back on private equity,True,news_v2
+003e12,2025-09-11T22:06:03.132739Z,2025-09-11T11:35:00Z,XAUUSD,1,Neutral,finnhub | Gold has a September trading pattern that could surprise investors this time,True,news_v2
+003e12,2025-09-11T22:06:03.132739Z,2025-09-11T09:03:00Z,EURUSD,0,Neutral,finnhub | ‘Today’ host Dylan Dreyer and estranged husband Brian Fichera discount New York apartment by $500K,True,news_v2
+003e12,2025-09-11T22:06:03.132739Z,2025-09-10T23:12:46Z,EURUSD,0,Neutral,finnhub | Jim Cramer reflects on 30 years of 'Squawk Box',True,news_v2
+003e12,2025-09-11T22:06:03.132739Z,2025-09-10T23:12:46Z,XAUUSD,0,Neutral,finnhub | Jim Cramer reflects on 30 years of 'Squawk Box',True,news_v2
+003e12,2025-09-11T22:06:03.132739Z,2025-09-10T20:28:00Z,EURUSD,0,Neutral,finnhub | Stablecoins could help the dollar remain the world’s No. 1 reserve currency — but not through Treasury-bill buying,True,news_v2
+35212bae,2025-09-11T22:30:42Z,2025-09-11T22:30:42Z,EURUSD,5,Bullish,EU ECB: EUR↑ → EURUSD↓ (news +5),False,news_v1
+35212bae,2025-09-11T22:30:42Z,2025-09-11T22:30:42Z,XAUUSD,0,Neutral,-,False,news_v1
+18c7c3a6,2025-09-11T23:00:07Z,2025-09-11T23:00:07Z,EURUSD,5,Bullish,EU ECB (high-impact): EUR↑ → EURUSD↑ (news +5),True,news_v1
+18c7c3a6,2025-09-11T23:00:07Z,2025-09-11T23:00:07Z,XAUUSD,5,Bullish,US FED (high-impact): USD↑ → XAUUSD↓ (news +5),True,news_v1
+026981,2025-09-11T23:06:02.988531Z,2025-09-11T21:52:00Z,EURUSD,5,Bearish,"finnhub | RH CEO: ‘Significant inflation’ to hit this year, and gather speed in 2026 and beyond",True,news_v2
+026981,2025-09-11T23:06:02.988531Z,2025-09-11T21:52:00Z,XAUUSD,0,Neutral,"finnhub | RH CEO: ‘Significant inflation’ to hit this year, and gather speed in 2026 and beyond",True,news_v2
+026981,2025-09-11T23:06:02.988531Z,2025-09-11T20:54:21Z,EURUSD,0,Neutral,finnhub | Trump asks appeals court to let him fire Lisa Cook before next week's Fed meeting,True,news_v2
+026981,2025-09-11T23:06:02.988531Z,2025-09-11T20:54:21Z,XAUUSD,0,Neutral,finnhub | Trump asks appeals court to let him fire Lisa Cook before next week's Fed meeting,True,news_v2
+026981,2025-09-11T23:06:02.988531Z,2025-09-11T20:54:00Z,EURUSD,0,Neutral,"finnhub | As jobless claims rise, unemployment benefits aren’t keeping up with inflation. Here’s what to know.",True,news_v2
+026981,2025-09-11T23:06:02.988531Z,2025-09-11T20:54:00Z,XAUUSD,0,Neutral,"finnhub | As jobless claims rise, unemployment benefits aren’t keeping up with inflation. Here’s what to know.",True,news_v2
+026981,2025-09-11T23:06:02.988531Z,2025-09-11T18:49:00Z,EURUSD,0,Neutral,finnhub | It’s full-speed ahead for stocks going into next week’s Fed meeting,True,news_v2
+026981,2025-09-11T23:06:02.988531Z,2025-09-11T18:49:00Z,XAUUSD,0,Neutral,finnhub | It’s full-speed ahead for stocks going into next week’s Fed meeting,True,news_v2
+026981,2025-09-11T23:06:02.988531Z,2025-09-11T18:40:44Z,EURUSD,0,Neutral,"finnhub | Health care inflation rises as patients, employers brace for biggest jump in health spending in 15 years",True,news_v2
+026981,2025-09-11T23:06:02.988531Z,2025-09-11T18:40:44Z,XAUUSD,0,Neutral,"finnhub | Health care inflation rises as patients, employers brace for biggest jump in health spending in 15 years",True,news_v2
+026981,2025-09-11T23:06:02.988531Z,2025-09-11T16:35:00Z,EURUSD,0,Neutral,finnhub | Risky mortgages are on the rise again — but don’t panic just yet,True,news_v2
+026981,2025-09-11T23:06:02.988531Z,2025-09-11T16:35:00Z,XAUUSD,0,Neutral,finnhub | Risky mortgages are on the rise again — but don’t panic just yet,True,news_v2
+026981,2025-09-11T23:06:02.988531Z,2025-09-11T16:12:38Z,EURUSD,0,Neutral,finnhub | We're buying this stock ahead of lower rates — and would trim a winning name,True,news_v2
+026981,2025-09-11T23:06:02.988531Z,2025-09-11T16:12:38Z,XAUUSD,0,Neutral,finnhub | We're buying this stock ahead of lower rates — and would trim a winning name,True,news_v2
+026981,2025-09-11T23:06:02.988531Z,2025-09-11T16:01:00Z,EURUSD,4,Bullish,finnhub | ECB signals it may be done cutting rates as Fed gets ready to resume easing,True,news_v2
+026981,2025-09-11T23:06:02.988531Z,2025-09-11T16:01:00Z,XAUUSD,2,Bullish,finnhub | ECB signals it may be done cutting rates as Fed gets ready to resume easing,True,news_v2
+026981,2025-09-11T23:06:02.988531Z,2025-09-11T13:06:24Z,EURUSD,0,Neutral,finnhub | Jim Cramer's top 10 things to watch in the stock market Thursday,True,news_v2
+026981,2025-09-11T23:06:02.988531Z,2025-09-11T13:06:24Z,XAUUSD,0,Neutral,finnhub | Jim Cramer's top 10 things to watch in the stock market Thursday,True,news_v2
+026981,2025-09-11T23:06:02.988531Z,2025-09-11T12:55:31Z,EURUSD,4,Bullish,finnhub | 10-year Treasury yield falls to 4% then snaps back as traders assess inflation data,True,news_v2
+026981,2025-09-11T23:06:02.988531Z,2025-09-11T12:55:31Z,XAUUSD,0,Neutral,finnhub | 10-year Treasury yield falls to 4% then snaps back as traders assess inflation data,True,news_v2
+026981,2025-09-11T23:06:02.988531Z,2025-09-11T12:21:00Z,EURUSD,0,Neutral,finnhub | Nomura bets on the dollar against the pound as U.K. fiscal predicament grabs spotlight,True,news_v2
+026981,2025-09-11T23:06:02.988531Z,2025-09-11T12:03:50Z,XAUUSD,1,Neutral,finnhub | Family offices double down on stocks and dial back on private equity,True,news_v2
+026981,2025-09-11T23:06:02.988531Z,2025-09-11T11:35:00Z,XAUUSD,1,Neutral,finnhub | Gold has a September trading pattern that could surprise investors this time,True,news_v2
+026981,2025-09-11T23:06:02.988531Z,2025-09-11T09:03:00Z,EURUSD,0,Neutral,finnhub | ‘Today’ host Dylan Dreyer and estranged husband Brian Fichera discount New York apartment by $500K,True,news_v2
+026981,2025-09-11T23:06:02.988531Z,2025-09-10T23:12:46Z,EURUSD,0,Neutral,finnhub | Jim Cramer reflects on 30 years of 'Squawk Box',True,news_v2
+026981,2025-09-11T23:06:02.988531Z,2025-09-10T23:12:46Z,XAUUSD,0,Neutral,finnhub | Jim Cramer reflects on 30 years of 'Squawk Box',True,news_v2
+026981,2025-09-11T23:06:02.988531Z,2025-09-10T20:28:00Z,EURUSD,0,Neutral,finnhub | Stablecoins could help the dollar remain the world’s No. 1 reserve currency — but not through Treasury-bill buying,True,news_v2

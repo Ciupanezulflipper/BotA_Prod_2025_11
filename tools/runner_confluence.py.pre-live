@@ -1,0 +1,156 @@
+#!/usr/bin/env python3
+# tools/runner_confluence.py  — minimal, PRD-safe runner for Bot A (EURUSD focus)
+# - Loads .env.runtime via tools.env_loader
+# - Fetches OHLC rows via data.ohlcv.fetch(...)
+# - Adapts list[dict{t,o,h,l,c,v}] -> DataFrame with UTC index
+# - Basic QC for H1/M15
+# - Scores (stub) and prints a DRY summary (no Telegram send)
+
+import argparse
+import os
+from datetime import datetime, timezone
+
+# 0) Load env + aliases early (no side edits)
+from tools.env_loader import _loaded  # noqa: F401
+# Import retry wrapper
+import sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from fetch_with_retry import retry_with_backoff
+
+
+import pandas as pd
+from data.ohlcv import fetch
+
+
+# ---------- helpers ----------
+
+def _to_df(rows):
+    """rows: list of {'t', 'o','h','l','c','v'}; returns DataFrame indexed by UTC datetime."""
+    if not isinstance(rows, list) or len(rows) == 0:
+        return pd.DataFrame()
+
+    df = pd.DataFrame(rows)
+    # Normalize columns to lower
+    df.columns = [str(c).lower() for c in df.columns]
+
+    # Map common variants if ever needed (already o/h/l/c/t/v present)
+    rename = {}
+    for a, b in (("open", "o"), ("high", "h"), ("low", "l"), ("close", "c"), ("volume", "v"), ("time", "t"), ("datetime", "t"), ("timestamp", "t")):
+        if a in df.columns and b not in df.columns:
+            rename[a] = b
+    if rename:
+        df = df.rename(columns=rename)
+
+    if "t" not in df.columns:
+        return pd.DataFrame()
+
+    # Parse 't' -> UTC index (supports str or epoch seconds)
+    tcol = df["t"]
+    if pd.api.types.is_numeric_dtype(tcol):
+        idx = pd.to_datetime(tcol, unit="s", utc=True, errors="coerce")
+    else:
+        idx = pd.to_datetime(tcol, utc=True, errors="coerce")
+    df.index = idx
+
+    # Keep only needed cols
+    for col in ("o", "h", "l", "c"):
+        if col not in df.columns:
+            return pd.DataFrame()
+
+    # Dedup/sort
+    df = df[~df.index.isna()].copy()
+    df = df[~df.index.duplicated(keep="first")].sort_index()
+
+    # Ensure numeric
+    for col in ("o", "h", "l", "c", "v"):
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+
+    keep = ["o", "h", "l", "c"]
+    if "v" in df.columns:
+        keep.append("v")
+    return df[keep]
+
+
+def _validate(df: pd.DataFrame, tf: str, want_bars: int) -> tuple[bool, str]:
+    if df is None or df.empty:
+        return False, "empty dataframe"
+
+    if len(df) < want_bars:
+        return False, f"rows[{len(df)}<{want_bars}] not enough bars"
+
+    # time spacing sanity (tight to our strategy: H1=3600s, M15=900s)
+    tf = tf.upper()
+    expected = 3600 if tf == "H1" else 900 if tf == "M15" else None
+    if expected:
+        s = df.index.sort_values()
+        diffs = s.to_series().diff().dropna()
+        if not diffs.empty:
+            bad = int((diffs.dt.total_seconds() != expected).sum())
+            total = int(diffs.shape[0])
+            if total > 0 and bad / total > 0.10:
+                return False, f"time spacing anomaly: {bad}/{total} gaps"
+    return True, "ok"
+
+
+def _score_stub(df: pd.DataFrame) -> tuple[str, float, str]:
+    """
+    Minimal, deterministic placeholder that doesn’t change strategy.
+    We keep signals conservative: WAIT unless a very simple momentum passes.
+    """
+    if len(df) < 20:
+        return "WAIT", 0.0, "insufficient for SMA(20)"
+    sma20 = df["c"].tail(20).mean()
+    last = float(df["c"].iloc[-1])
+    delta = (last - sma20) / max(sma20, 1e-12)
+    if delta > 0.0015:
+        return "BUY", round(delta * 100, 2), "last > SMA20 by >0.15%"
+    if delta < -0.0015:
+        return "SELL", round(delta * 100, 2), "last < SMA20 by >0.15%"
+    return "WAIT", round(delta * 100, 2), "near SMA20"
+
+
+# ---------- main ----------
+
+def run(pair: str, tf: str, bars: int, dry: bool) -> int:
+    @retry_with_backoff(max_retries=3, initial_delay=2.0, check_empty_df=False)
+    def fetch_with_retry():
+        return fetch(pair, tf, bars)
+    rows = fetch_with_retry()
+    df = _to_df(rows)
+
+    ok, why = _validate(df, tf, bars)
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+
+    if not ok:
+        print(f"✗ Data quality failed: {why}")
+        return 2
+
+    action, score, reason = _score_stub(df)
+
+    print(f"📊 {pair} ({tf})")
+    print(f"🕒 {now}")
+    print(f"📈 Action: {action}")
+    print(f"📊 Score: {score}")
+    print(f"🧠 Reason: {reason}")
+    print(f"Price source: close")
+    print(f"Source: twelvedata")
+    if dry:
+        print("[DRY RUN] Would send:", action)
+    return 0
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--pair", required=True)
+    ap.add_argument("--tf", required=True, help="Timeframe like M15, H1, etc.")
+    ap.add_argument("--bars", type=int, default=200)
+    ap.add_argument("--dry-run", action="store_true")
+    args = ap.parse_args()
+
+    return_code = run(args.pair, args.tf.upper(), args.bars, args.dry_run)
+    raise SystemExit(return_code)
+
+
+if __name__ == "__main__":
+    main()

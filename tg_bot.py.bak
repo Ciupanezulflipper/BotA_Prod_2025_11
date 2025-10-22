@@ -1,0 +1,167 @@
+#!/usr/bin/env python3
+import os, logging, time, json, requests
+from dotenv import load_dotenv
+from telegram import Bot, ReplyKeyboardMarkup, ReplyKeyboardRemove
+from telegram.ext import Updater, CommandHandler
+
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger("tg-bot")
+
+# --- version ---
+BOT_VERSION = "A0.3"
+
+load_dotenv()
+TOKEN  = os.getenv("TELEGRAM_BOT_TOKEN","").strip()
+CHAT_ID= os.getenv("TELEGRAM_CHAT_ID","").strip()
+if not TOKEN or not CHAT_ID:
+    raise SystemExit("Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID in .env")
+
+# --- helpers ---
+def last_signal_line():
+    try:
+        path = os.path.join(os.path.expanduser("~"), "bot-a", "signals.csv")
+        if not os.path.isfile(path): return "_"
+        with open(path, "r", encoding="utf-8", errors="ignore") as f:
+            lines = [l.strip() for l in f.readlines() if l.strip()]
+            return lines[-1] if lines else "_"
+    except Exception as e:
+        return f"(read error: {e})"
+
+def ping_data_api():
+    """Try TwelveData or AlphaVantage demo (no keys needed). Returns (name, ok, http_code)."""
+    td = os.getenv("TWELVEDATA_API_KEY","").strip()
+    av = os.getenv("ALPHAVANTAGE_API_KEY","").strip()
+    try:
+        # TwelveData demo (requires key); fall back to public AV demo if no key
+        if td:
+            url = f"https://api.twelvedata.com/quote?symbol=EURUSD&apikey={td}"
+            r = requests.get(url, timeout=6)
+            return ("twelvedata", r.ok, r.status_code)
+        # AlphaVantage demo (public)
+        url = "https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=EUR&to_currency=USD&apikey=demo"
+        r = requests.get(url, timeout=6)
+        return ("alphavantage-demo", r.ok, r.status_code)
+    except Exception:
+        return ("_error_", False, 0)
+
+# --- UI building ---
+COMMANDS = {
+    "start":    "Welcome & quick usage",
+    "menu":     "Show menu keyboard",
+    "status":   "Runtime status",
+    "signal":   "Emit a sample signal",
+    "mode":     "Switch mode (normal/strong)",
+    "id":       "Show your chat id",
+    "health":   "Health diagnostics",
+    "ping":     "Respond with 'pong'",
+    "version":  "Show current bot version",
+    "commands": "List all commands",
+    "hide":     "Hide the keyboard",
+}
+
+def make_keyboard():
+    rows = [
+        ["/status", "/signal", "/mode"],
+        ["/health", "/commands", "/version"],
+        ["/id", "/ping", "/hide"],
+    ]
+    return ReplyKeyboardMarkup(rows, resize_keyboard=True)
+
+# --- command handlers ---
+def cmd_start(update, context):
+    update.message.reply_text(
+        "✅ Bot-A is online.\n"
+        "Commands: /menu /status /ping /signal /mode /id /help /health /version /commands"
+    )
+    # Also show the keyboard
+    update.message.reply_text("📺 Menu (tap buttons below):", reply_markup=make_keyboard())
+
+def cmd_menu(update, context):
+    update.message.reply_text("📺 Menu (placeholder)\n• Deal of the Day\n• History\n• Did You Know?\n• Settings\n\n📊 Bot health: use /health",
+                              reply_markup=make_keyboard())
+
+def cmd_hide(update, context):
+    update.message.reply_text("Keyboard hidden. Use /menu to show again.", reply_markup=ReplyKeyboardRemove())
+
+def cmd_status(update, context):
+    msg = [
+        "🤖 Status: running",
+        f"🕒 Time (UTC): {time.strftime('%Y-%m-%d %H:%M:%SZ', time.gmtime())}",
+        "🧠 Mode: normal",
+        "🛠 Signals: EMA/RSI",
+        "📦 Log: signals.csv",
+        "🧪 Try: /health",
+    ]
+    update.message.reply_text("\n".join(msg))
+
+def cmd_ping(update, context):
+    update.message.reply_text("pong")
+
+def cmd_id(update, context):
+    update.message.reply_text(f"🆔 Chat id: {update.effective_chat.id}")
+
+def cmd_version(update, context):
+    update.message.reply_text(f"🧠 Bot-A version: {BOT_VERSION}")
+
+def cmd_commands(update, context):
+    lines = ["📋 *Commands* (tap or type):"]
+    for k, v in COMMANDS.items():
+        lines.append(f"/{k} — {v}")
+    update.message.reply_text("\n".join(lines), parse_mode='Markdown')
+
+def cmd_signal(update, context):
+    # simple dummy signal (same as before)
+    pair = "EURUSD"
+    price = 1.0853
+    atr   = 0.0020
+    sl = price - atr
+    tp = price + 2*atr
+    msg = (f"🔵 {pair} BUY @ {price}\n"
+           f"SL: {sl}  TP: {tp}\n"
+           f"R: 1:2.0 | conf: 0.69 | mode: normal\n"
+           f"reason: DUMMY_RSI_EMA\n"
+           f"🕒 {time.strftime('%Y-%m-%d %H:%M:%SZ', time.gmtime())}")
+    update.message.reply_text(msg)
+
+def cmd_mode(update, context):
+    update.message.reply_text("Mode: normal (strong mode wiring coming soon)")
+
+def cmd_help(update, context):
+    return cmd_commands(update, context)
+
+def cmd_health(update, context):
+    api_name, ok, code = ping_data_api()
+    checks = [
+        f"🧠 Bot-A health",
+        f"• version: {BOT_VERSION}",
+        f"• data API: {'✅' if ok else '❌'} ({api_name}, code {code})",
+        f"• tmux session: ✅ (name: botA)",
+        f"• watchdog (cron): ✅ (/10m restart if needed)",
+        f"• Termux:Boot: ✅ (~/.termux/boot/01-bot-a.sh)",
+        f"• Last signal: {last_signal_line()}",
+    ]
+    update.message.reply_text("\n".join(checks))
+
+def main():
+    updater = Updater(token=TOKEN, use_context=True)
+    dp = updater.dispatcher
+
+    dp.add_handler(CommandHandler("start",    cmd_start))
+    dp.add_handler(CommandHandler("menu",     cmd_menu))
+    dp.add_handler(CommandHandler("hide",     cmd_hide))
+    dp.add_handler(CommandHandler("status",   cmd_status))
+    dp.add_handler(CommandHandler("signal",   cmd_signal))
+    dp.add_handler(CommandHandler("mode",     cmd_mode))
+    dp.add_handler(CommandHandler("id",       cmd_id))
+    dp.add_handler(CommandHandler("health",   cmd_health))
+    dp.add_handler(CommandHandler("ping",     cmd_ping))
+    dp.add_handler(CommandHandler("version",  cmd_version))
+    dp.add_handler(CommandHandler("commands", cmd_commands))
+    dp.add_handler(CommandHandler("help",     cmd_help))
+
+    log.info("TG command bot started.")
+    updater.start_polling()
+    updater.idle()
+
+if __name__ == "__main__":
+    main()

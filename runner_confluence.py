@@ -1,0 +1,1 @@
+/data/data/com.termux/files/home/bot-a/tools/runner_confluence.py

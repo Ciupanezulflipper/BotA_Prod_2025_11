@@ -1,0 +1,15 @@
+🧾 Daily Digest (2025-09-20)
+Signals: BUY=95, SELL=87, NEUTRAL=48
+Strong signals (conf≥thr & s6≥thr): 0
+Average confidence: 4.5/10
+Δ vs yesterday: BUY 0, SELL 0, STRONG 0
+
+Per-pair:
+• BUY: BUY=0, SELL=0, NEUTRAL=4
+• EURUSD: BUY=95, SELL=87, NEUTRAL=1
+• NEUTRAL: BUY=0, SELL=0, NEUTRAL=4
+• SELL: BUY=0, SELL=0, NEUTRAL=39
+
+Longest streak: 4× BUY
+
+⚙️ Source: signals.csv (230 rows) • digest-v2.0

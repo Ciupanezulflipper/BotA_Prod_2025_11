@@ -1,0 +1,17 @@
+# ~/bot-a/tools/scan_and_send.sh
+#!/data/data/com.termux/files/usr/bin/bash
+set -e
+
+PAIR="${1:-EURUSD}"
+TF="${2:-M15}"
+
+LINE=$(python3 "$HOME/bot-a/tools/runner_confluence.py" --pair "$PAIR" --tf "$TF" --force --dry-run=false)
+echo "$LINE"
+
+score=$(echo "$LINE" | awk -F'Score ' '{print $2}' | awk '{print $1}')
+min=${CONF_MIN:-3.0}
+
+# send only if |score| >= min
+awk -v s="$score" -v m="$min" 'BEGIN{ exit !( (s >= m) || (s <= -m) ) }' || exit 0
+
+python3 "$HOME/bot-a/tools/status_cmd.py" --alert "$LINE" >/dev/null 2>&1 || true

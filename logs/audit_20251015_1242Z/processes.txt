@@ -1,0 +1,1 @@
+u0_a24   23527 22388  0  1970 pts/1    00:00:00 bash /data/data/com.termux/files/usr/bin/bash /data/data/com.termux/files/home/bot-a/tools/auto_h1.sh

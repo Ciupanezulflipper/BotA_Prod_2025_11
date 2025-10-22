@@ -1,0 +1,69 @@
+🚀 MONDAY LAUNCH - READY TO GO!
+
+═══════════════════════════════════════════════════════════
+
+✅ CONFIGURATION LOCKED:
+   • Position: 0.01 lots (xTB minimum)
+   • Risk per trade: $5 (2.5%)
+   • Trade cap: 2 trades/day
+   • Daily stop: $10 (5%)
+   • Strategy: V2 Bollinger Mean Reversion
+
+✅ SAFETY SYSTEMS ACTIVE:
+   • Risk manager: Blocked 7 weak signals Fri/Sat ✅
+   • Daily loss limit: Working ✅
+   • Trade cap: 2/day (reset for Monday) ✅
+   • News blackout: Active ✅
+   • Volatility filter: 0.25% minimum ✅
+
+✅ PLATFORM VERIFIED:
+   • xTB minimum: 0.01 lots confirmed
+   • Spread: 0.8 pips (excellent)
+   • Margin: ~$39 per trade
+   • Available: $197.70
+
+═══════════════════════════════════════════════════════════
+
+⏰ MARKET OPENS: Monday 07:30 Adelaide (Sunday 22:00 UTC)
+
+📱 WHEN SIGNAL ARRIVES:
+
+1. Open xTB → EURUSD
+2. Volume: 0.01 lots
+3. Toggle SL ON → Enter price from bot
+4. Toggle TP ON → Enter price from bot
+5. Verify Risk shows ~$5
+6. Place order
+
+📊 FIRST WEEK MONITORING:
+
+Daily checks:
+• bash ~/bot-a/tools/final_check.sh
+• Check Telegram for signals
+• Log each trade in spreadsheet
+• Monitor PF, WR, DD
+
+Stop if:
+• 3 consecutive losses
+• Daily loss > $10
+• Bot malfunction
+
+═══════════════════════════════════════════════════════════
+
+🎯 EXPECTATIONS:
+
+Realistic targets:
+• 1-3 signals per week
+• 40-55% win rate (not 50%!)
+• $3-8 profit per week if working
+• Will know in 2 weeks if viable
+
+Remember:
+• This is data collection phase
+• Small sample (4 backtest trades)
+• Focus on stability, not profit
+• Be ready to adjust/stop
+
+═══════════════════════════════════════════════════════════
+
+✅ YOU'RE READY! GOOD LUCK! 🚀

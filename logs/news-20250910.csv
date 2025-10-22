@@ -1,0 +1,20 @@
+run_id,time_utc,asof_utc,symbol,score,bias,why,event_risk,version
+dd3fab5a,2025-09-10T17:40:02Z,2025-09-10T17:40:02Z,EURUSD,5,Bullish,US CPI (high-impact): USD↑ → EURUSD↓ (news +5),True,news_v1
+50ad95ba,2025-09-10T18:00:00Z,2025-09-10T18:00:00Z,EURUSD,0,Neutral,-,False,news_v1
+3ac3a5d3,2025-09-10T18:30:01Z,2025-09-10T18:30:01Z,EURUSD,0,Neutral,-,False,news_v1
+49c5ba28,2025-09-10T19:00:00Z,2025-09-10T19:00:00Z,EURUSD,0,Neutral,-,False,news_v1
+158db958,2025-09-10T19:30:00Z,2025-09-10T19:30:00Z,EURUSD,0,Neutral,-,False,news_v1
+9ec55fe2,2025-09-10T20:00:00Z,2025-09-10T20:00:00Z,EURUSD,0,Neutral,-,False,news_v1
+52b5f233,2025-09-10T20:30:01Z,2025-09-10T20:30:01Z,EURUSD,0,Neutral,-,False,news_v1
+32fe27a4,2025-09-10T21:00:08Z,2025-09-10T21:00:08Z,EURUSD,5,Bullish,US CPI (high-impact): USD↑ → EURUSD↓ (news +5),True,news_v1
+8d4527bb,2025-09-10T21:30:14Z,2025-09-10T21:30:14Z,EURUSD,5,Bullish,US CPI (high-impact): USD↑ → EURUSD↓ (news +5),True,news_v1
+e07d9fd2,2025-09-10T22:00:03Z,2025-09-10T22:00:03Z,EURUSD,0,Neutral,-,False,news_v1
+9d927173,2025-09-10T22:30:05Z,2025-09-10T22:30:05Z,EURUSD,5,Bullish,US CPI (high-impact): USD↑ → EURUSD↓ (news +5),True,news_v1
+ecbec8,2025-09-10T22:51:00.963823Z,2025-09-10T00:30:00Z,EURUSD,0,Neutral,newsapi | Supreme Court to quickly consider if President Donald Trump has power to impose sweeping tariffs - AP News,True,news_v2
+ecbec8,2025-09-10T22:51:00.963823Z,2025-09-10T00:30:00Z,XAUUSD,0,Neutral,newsapi | Supreme Court to quickly consider if President Donald Trump has power to impose sweeping tariffs - AP News,True,news_v2
+ecbec8,2025-09-10T22:51:00.963823Z,2025-09-09T23:10:46Z,XAUUSD,1,Neutral,newsapi | 3 things to know about RFK Jr.’s MAHA report on children’s health - PBS,True,news_v2
+ecbec8,2025-09-10T22:51:00.963823Z,2025-09-09T21:11:15Z,EURUSD,0,Neutral,"newsapi | Suspect in Charlotte train stabbing facing federal charges, possible death penalty: DOJ - ABC News",True,news_v2
+ecbec8,2025-09-10T22:51:00.963823Z,2025-09-09T21:11:15Z,XAUUSD,0,Neutral,"newsapi | Suspect in Charlotte train stabbing facing federal charges, possible death penalty: DOJ - ABC News",True,news_v2
+c5432813,2025-09-10T23:00:05Z,2025-09-10T23:00:05Z,EURUSD,5,Bullish,US CPI (high-impact): USD↑ → EURUSD↓ (news +5),True,news_v1
+3f6a78e1,2025-09-10T23:30:50Z,2025-09-10T23:30:50Z,EURUSD,5,Bullish,US CPI (high-impact): USD↑ → EURUSD↓ (news +5),True,news_v1
+3f6a78e1,2025-09-10T23:30:50Z,2025-09-10T23:30:50Z,XAUUSD,5,Bullish,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5),True,news_v1

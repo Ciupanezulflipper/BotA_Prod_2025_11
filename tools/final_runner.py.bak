@@ -1,0 +1,77 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+final_runner.py
+Builds a Telegram-ready message using tech_engine.analyse(),
+which in turn fetches data using the resilient rotating fetcher.
+"""
+
+from __future__ import annotations
+import os, sys, argparse, datetime as dt
+
+from tools.tech_engine import analyse
+
+# try optional telegram sender if you have one; otherwise just print
+def _send(msg: str) -> None:
+    try:
+        from tools.telegram_out import send_message  # your existing helper (optional)
+        send_message(msg)
+    except Exception:
+        print(msg)
+
+def _stars(score_0_10: float) -> str:
+    # 10-star string
+    stars = int(round(max(0.0, min(10.0, score_0_10))))
+    return "★" * stars + "☆" * (10 - stars)
+
+def build_message(p: dict) -> str:
+    symbol = p["symbol"]
+    bucket = p["tech_bucket"]
+    score  = p["tech_score"]
+    entry  = p["entry"]
+    sl     = p["sl"]
+    tp     = p["tp"]
+
+    now = dt.datetime.utcnow().strftime("UTC %H:%M")
+    lines = []
+    lines.append(f"*{symbol} Signal*")
+    lines.append(f"🕒 {now}")
+    lines.append(f"• Direction: {'🟢 *BUY*' if bucket=='BUY' else ('🔴 *SELL*' if bucket=='SELL' else '🟡 *HOLD*')}")
+    lines.append(f"📊 Tech: *{bucket}*")
+    lines.append(f"⭐ Confidence: *{score:.1f}/10*")
+    lines.append(f"{_stars(score)}  |  *Medium*")
+    lines.append("")
+    lines.append(f"🎯 Entry: *{entry:.5f}*  •  TP: *{tp:.5f}*")
+    lines.append(f"•  SL: *{sl:.5f}*")
+    lines.append("")
+    lines.append("*MTF*")
+    for tf in ("1h","4h","1d"):
+        t = p["mtf"][tf]
+        lines.append(
+            f"• {tf}: ema9={t['ema9']:.5f} ema21={t['ema21']:.5f} rsi14={t['rsi14']:.1f} "
+            f"macd={t['macd']:.5f}/{t['macd_sig']:.5f} vote={t['vote']}"
+        )
+    return "\n".join(lines)
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--symbol", required=True, help="e.g. EURUSD, XAUUSD")
+    ap.add_argument("--send", action="store_true", help="send to Telegram (if configured)")
+    ap.add_argument("--dry", action="store_true", help="print only")
+    args = ap.parse_args()
+
+    # Analyse (tech_engine → data_rotator underneath)
+    payload = analyse(args.symbol)
+
+    # Preview log to stdout
+    print("*preview* payload:", {k: payload[k] for k in ["symbol","tech_bucket","tech_score","entry","tp","sl"]})
+
+    msg = build_message(payload)
+
+    if args.send and not args.dry:
+        _send(msg)
+    else:
+        print(msg)
+
+if __name__ == "__main__":
+    sys.exit(main())

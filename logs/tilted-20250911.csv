@@ -1,0 +1,32 @@
+run_id,time_utc,symbol,tf,orig_score,news_score,combined_score,orig_side,news_bias,combined_side,with_news,why
+c3bdba6d,2025-09-11T06:30:03Z,,5min,0.0,0.0,0.0,,Neutral,HOLD,0,
+06125d63,2025-09-11T06:30:12Z,2025-09-11T06:30:12Z,EURUSD,0,5,5,-,Bullish,BUY,True,US CPI (high-impact): USD↑ → EURUSD↓ (news +5) • (news-only),news_signals_v1
+06125d63,2025-09-11T06:30:12Z,2025-09-11T06:30:12Z,XAUUSD,0,5,5,-,Bullish,BUY,True,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5) • (news-only),news_signals_v1
+9b8b172e,2025-09-11T08:00:01Z,,5min,0.0,0.0,0.0,,Neutral,HOLD,0,
+b35ac9a4,2025-09-11T09:30:02Z,,5min,0.0,0.0,0.0,,Neutral,HOLD,0,
+ccdbcc37,2025-09-11T11:00:02Z,,5min,0.0,0.0,0.0,,Neutral,HOLD,0,
+655005e4,2025-09-11T11:30:03Z,,5min,0.0,0.0,0.0,,Neutral,HOLD,0,
+5d69de97,2025-09-11T12:00:04Z,,5min,0.0,0.0,0.0,,Neutral,HOLD,0,
+5648ebea,2025-09-11T12:00:06Z,2025-09-11T12:00:06Z,EURUSD,0,5,5,-,Bullish,BUY,True,US CPI (high-impact): USD↑ → EURUSD↓ (news +5) • (news-only),news_signals_v1
+5648ebea,2025-09-11T12:00:06Z,2025-09-11T12:00:06Z,XAUUSD,0,5,5,-,Bullish,BUY,True,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5) • (news-only),news_signals_v1
+9adda0bc,2025-09-11T13:30:06Z,2025-09-11T13:30:06Z,EURUSD,0,5,5,-,Bullish,BUY,True,US CPI (high-impact): USD↑ → EURUSD↓ (news +5) • (news-only),news_signals_v1
+9adda0bc,2025-09-11T13:30:06Z,2025-09-11T13:30:06Z,XAUUSD,0,5,5,-,Bullish,BUY,True,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5) • (news-only),news_signals_v1
+5374607d,2025-09-11T14:00:05Z,2025-09-11T14:00:05Z,EURUSD,0,5,5,-,Bullish,BUY,True,US CPI (high-impact): USD↑ → EURUSD↓ (news +5) • (news-only),news_signals_v1
+5374607d,2025-09-11T14:00:05Z,2025-09-11T14:00:05Z,XAUUSD,0,5,5,-,Bullish,BUY,True,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5) • (news-only),news_signals_v1
+7ab4b978,2025-09-11T14:30:06Z,2025-09-11T14:30:06Z,EURUSD,0,5,5,-,Bullish,BUY,True,US CPI (high-impact): USD↑ → EURUSD↓ (news +5) • (news-only),news_signals_v1
+7ab4b978,2025-09-11T14:30:06Z,2025-09-11T14:30:06Z,XAUUSD,0,5,5,-,Bullish,BUY,True,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5) • (news-only),news_signals_v1
+13817d40,2025-09-11T15:00:06Z,2025-09-11T15:00:06Z,EURUSD,0,5,5,-,Bullish,BUY,True,US CPI (high-impact): USD↑ → EURUSD↓ (news +5) • (news-only),news_signals_v1
+13817d40,2025-09-11T15:00:06Z,2025-09-11T15:00:06Z,XAUUSD,0,5,5,-,Bullish,BUY,True,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5) • (news-only),news_signals_v1
+32a1c7e0,2025-09-11T15:30:06Z,2025-09-11T15:30:06Z,EURUSD,0,5,5,-,Bullish,BUY,True,US CPI (high-impact): USD↑ → EURUSD↓ (news +5) • (news-only),news_signals_v1
+32a1c7e0,2025-09-11T15:30:06Z,2025-09-11T15:30:06Z,XAUUSD,0,5,5,-,Bullish,BUY,True,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5) • (news-only),news_signals_v1
+bf29c7f0,2025-09-11T18:30:18Z,2025-09-11T18:30:18Z,EURUSD,0,5,5,-,Bullish,BUY,True,US CPI (high-impact): USD↑ → EURUSD↓ (news +5) • (news-only),news_signals_v1
+bf29c7f0,2025-09-11T18:30:18Z,2025-09-11T18:30:18Z,XAUUSD,0,5,5,-,Bullish,BUY,True,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5) • (news-only),news_signals_v1
+5e84d127,2025-09-11T21:00:45Z,2025-09-11T21:00:45Z,EURUSD,0,4,4,-,Bullish,BUY,True,EU ECB (high-impact): EUR↑ → EURUSD↑ (news +4) • (news-only),news_signals_v1
+5e84d127,2025-09-11T21:00:45Z,2025-09-11T21:00:45Z,XAUUSD,0,5,5,-,Bullish,BUY,True,US FED (high-impact): USD↑ → XAUUSD↓ (news +5) • (news-only),news_signals_v1
+6da484ce,2025-09-11T21:30:05Z,2025-09-11T21:30:05Z,EURUSD,0,5,5,-,Bullish,BUY,True,US CPI (high-impact): USD↑ → EURUSD↓ (news +5) • (news-only),news_signals_v1
+6da484ce,2025-09-11T21:30:05Z,2025-09-11T21:30:05Z,XAUUSD,0,5,5,-,Bullish,BUY,True,US FED (high-impact): USD↑ → XAUUSD↓ (news +5) • (news-only),news_signals_v1
+ac732a5a,2025-09-11T22:00:19Z,2025-09-11T22:00:19Z,EURUSD,0,5,5,-,Bullish,BUY,True,US CPI (high-impact): USD↑ → EURUSD↓ (news +5) • (news-only),news_signals_v1
+ac732a5a,2025-09-11T22:00:19Z,2025-09-11T22:00:19Z,XAUUSD,0,5,5,-,Bullish,BUY,True,US FED (high-impact): USD↑ → XAUUSD↓ (news +5) • (news-only),news_signals_v1
+35212bae,2025-09-11T22:30:42Z,2025-09-11T22:30:42Z,EURUSD,0,5,5,-,Bullish,BUY,True,EU ECB: EUR↑ → EURUSD↓ (news +5) • (news-only),news_signals_v1
+18c7c3a6,2025-09-11T23:00:07Z,2025-09-11T23:00:07Z,EURUSD,0,5,5,-,Bullish,BUY,True,EU ECB (high-impact): EUR↑ → EURUSD↑ (news +5) • (news-only),news_signals_v1
+18c7c3a6,2025-09-11T23:00:07Z,2025-09-11T23:00:07Z,XAUUSD,0,5,5,-,Bullish,BUY,True,US FED (high-impact): USD↑ → XAUUSD↓ (news +5) • (news-only),news_signals_v1

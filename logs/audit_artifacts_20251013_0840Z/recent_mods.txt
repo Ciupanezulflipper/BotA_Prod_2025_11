@@ -1,0 +1,7 @@
+  2430584      4 -rwx------   1 u0_a24   u0_a24       1944 Oct 13 19:18 /data/data/com.termux/files/home/bot-a/tools/auto_h1.sh
+  2519883      8 -rwx------   1 u0_a24   u0_a24       4165 Oct 11 10:40 /data/data/com.termux/files/home/bot-a/tools/tg_menu.py
+  2497604      4 -rwx------   1 u0_a24   u0_a24        221 Oct 11 11:08 /data/data/com.termux/files/home/bot-a/tools/start_botA.sh
+  2497621      4 -rwx------   1 u0_a24   u0_a24        313 Oct 11 11:08 /data/data/com.termux/files/home/bot-a/tools/start_profitlab_menu.sh
+  2562931      8 -rwx------   1 u0_a24   u0_a24       6912 Oct 13 19:28 /data/data/com.termux/files/home/bot-a/tools/audit_readonly.sh
+  1673320      4 -rw-------   1 u0_a24   u0_a24          5 Oct 13 06:49 /data/data/com.termux/files/home/bot-a/data/tg_control.lock
+  1676170      4 -rw-------   1 u0_a24   u0_a24         18 Oct 13 18:51 /data/data/com.termux/files/home/bot-a/data/last_alert_heartbeat.txt

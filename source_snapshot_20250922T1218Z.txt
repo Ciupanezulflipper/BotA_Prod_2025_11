@@ -1,0 +1,1472 @@
+
+
+===== FILE: runner_confluence.py =====
+
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+runner_confluence.py
+--------------------
+Consolidates the most-recent signals per timeframe for a pair from
+~/bot-a/data/signal_journal.csv, computes a confluence decision, and
+emits a compact summary suitable for Telegram or for a downstream sender.
+
+Safe-by-default:
+- Tolerates missing files/columns
+- Ignores malformed rows
+- Never assumes dicts: every `.get()` is guarded
+- Produces HOLD if not enough agreement
+
+CLI examples:
+  python3 runner_confluence.py --pair EURUSD --tf M15 --force --dry-run=false
+  python3 runner_confluence.py --pair EURUSD --dry-run=true
+
+Outputs:
+- Prints a one-line result to stdout
+- If --dry-run=false and passes thresholds, writes JSON to:
+    ~/bot-a/data/last_decision.json
+"""
+
+import os
+import sys
+import csv
+import json
+import time
+import math
+import argparse
+from datetime import datetime, timezone
+
+HOME = os.path.expanduser("~")
+BOT_HOME = os.path.join(HOME, "bot-a")
+DATA_DIR = os.path.join(BOT_HOME, "data")
+JOURNAL_CSV = os.path.join(DATA_DIR, "signal_journal.csv")
+DECISION_JSON = os.path.join(DATA_DIR, "last_decision.json")
+
+# --- Environment thresholds with sensible defaults ---
+CONF_MIN = float(os.environ.get("CONF_MIN", os.environ.get("CONFIDENCE_MIN", 3.0)))
+STRONG_SEND_THRESHOLD = float(os.environ.get("STRONG_SEND_THRESHOLD", 6.0))
+PAIR_DEFAULT = os.environ.get("PAIR_DEFAULT", "EURUSD")
+
+# Some timeframes we care about (ordered low->high TF)
+TF_ORDER = ["M1", "M5", "M15", "M30", "H1", "H4", "D1", "W1"]
+
+# --- Utils -------------------------------------------------------------------
+
+def now_utc_iso():
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+def safe_float(x, default=0.0):
+    try:
+        return float(x)
+    except Exception:
+        return default
+
+def safe_upper(x):
+    try:
+        return str(x).strip().upper()
+    except Exception:
+        return ""
+
+def pick_latest_per_tf(rows):
+    """
+    rows: list of dicts from the CSV (already filtered by pair).
+    Returns dict tf -> row (latest by 'ts' if present, else by file order).
+    """
+    latest = {}
+    for r in rows:
+        tf = r.get("tf") or r.get("timeframe") or ""
+        if not tf:
+            continue
+        # ts may be float epoch or iso; try both
+        ts = r.get("ts") or r.get("timestamp") or r.get("time") or ""
+        try:
+            # epoch seconds?
+            tscore = float(ts)
+        except Exception:
+            try:
+                # ISO time
+                tscore = datetime.fromisoformat(str(ts).replace("Z","")).timestamp()
+            except Exception:
+                # fallback: file order tick
+                tscore = time.time()
+        prev = latest.get(tf)
+        if prev is None or tscore >= prev["_tscore"]:
+            r_copy = dict(r)
+            r_copy["_tscore"] = tscore
+            latest[tf] = r_copy
+    return latest
+
+def load_latest_signals_for_pair(pair):
+    """
+    Read JOURNAL_CSV and build tf_data = {tf: {signal, strength, score, ...}}
+    Malformed lines are ignored.
+    """
+    tf_data = {}
+    if not os.path.exists(JOURNAL_CSV):
+        return tf_data
+
+    rows = []
+    with open(JOURNAL_CSV, "r", newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            if safe_upper(row.get("pair")) != safe_upper(pair):
+                continue
+            rows.append(row)
+
+    latest = pick_latest_per_tf(rows)
+    for tf, r in latest.items():
+        entry = {
+            "tf": tf,
+            "signal": safe_upper(r.get("signal") or r.get("direction") or r.get("side") or ""),
+            "strength": safe_float(r.get("strength") or r.get("conf") or r.get("confidence"), 0.0),
+            "score": safe_float(r.get("score") or r.get("base_score"), 0.0),
+            "raw": r,
+        }
+        tf_data[tf] = entry
+    return tf_data
+
+def confluence_decision(tf_data, prefer_tf=None):
+    """
+    Compute BUY/SELL/HOLD based on summed strengths of most recent TF entries.
+    prefer_tf: a single TF to emphasize (optional), e.g. "M15".
+    Returns (decision, total_score, buy_sum, sell_sum, used_tfs:list)
+    """
+    # Weighting scheme: higher TFs get slightly more weight
+    weights = {}
+    for i, tf in enumerate(TF_ORDER, start=1):
+        weights[tf] = 1.0 + (i - 1) * 0.05  # gentle slope
+    if prefer_tf:
+        weights[prefer_tf] = weights.get(prefer_tf, 1.0) + 0.25
+
+    buy_sum = 0.0
+    sell_sum = 0.0
+    used_tfs = []
+
+    # Defensive: tf_data can contain strings; only use dict entries
+    for tf, d in tf_data.items():
+        if not isinstance(d, dict):
+            continue
+        sig = safe_upper(d.get("signal", ""))
+        strength = safe_float(d.get("strength", 0.0))
+        w = weights.get(tf, 1.0)
+        if sig == "BUY":
+            buy_sum += strength * w
+            used_tfs.append(tf)
+        elif sig == "SELL":
+            sell_sum += strength * w
+            used_tfs.append(tf)
+        # HOLD or unknown => ignored
+
+    delta = buy_sum - sell_sum
+    total = abs(delta)
+
+    if total < 1e-9:
+        decision = "HOLD"
+    else:
+        decision = "BUY" if delta > 0 else "SELL"
+
+    return decision, round(total, 3), round(buy_sum, 3), round(sell_sum, 3), sorted(set(used_tfs), key=lambda x: TF_ORDER.index(x) if x in TF_ORDER else 999)
+
+def format_brief(pair, prefer_tf, decision, score, buy_sum, sell_sum, used_tfs):
+    arrow = "🔺" if decision == "BUY" else "🔻" if decision == "SELL" else "⏸️"
+    tf_tag = f" {prefer_tf}" if prefer_tf else ""
+    tf_list = ", ".join(used_tfs) if used_tfs else "—"
+    return (f"{arrow} {pair}{tf_tag} • Score {score:.2f} "
+            f"| BUY Σ {buy_sum:.2f} • SELL Σ {sell_sum:.2f} "
+            f"| TFs [{tf_list}]")
+
+def write_decision_json(pair, prefer_tf, decision, score, buy_sum, sell_sum, used_tfs, tf_data):
+    os.makedirs(DATA_DIR, exist_ok=True)
+    payload = {
+        "ts": now_utc_iso(),
+        "pair": pair,
+        "prefer_tf": prefer_tf,
+        "decision": decision,
+        "score": score,
+        "buy_sum": buy_sum,
+        "sell_sum": sell_sum,
+        "tfs": used_tfs,
+        "inputs": tf_data,  # for transparency/debug
+    }
+    with open(DECISION_JSON, "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False, indent=2)
+
+# --- Main --------------------------------------------------------------------
+
+def parse_args():
+    p = argparse.ArgumentParser(description="Confluence runner (safe, CSV-backed).")
+    p.add_argument("--pair", default=PAIR_DEFAULT, help="Symbol (default from env or EURUSD)")
+    p.add_argument("--tf", "--timeframe", dest="tf", default="M15", help="Preferred TF hint (e.g., M15)")
+    p.add_argument("--force", action="store_true", help="Ignore freshness / always compute")
+    p.add_argument("--dry-run", default="true", help="true/false (string). If false, write decision JSON when score passes thresholds.")
+    return p.parse_args()
+
+def main():
+    args = parse_args()
+    pair = safe_upper(args.pair) or "EURUSD"
+    prefer_tf = safe_upper(args.tf) if args.tf else "M15"
+    dry_run = str(args["dry_run"] if isinstance(args, dict) and "dry_run" in args else args.dry_run).lower() in ("false","0","no","off") == False
+    # The line above is a bit dense; make it explicit:
+    dry_run = not (str(args.dry_run).lower() in ("false", "0", "no", "off"))
+
+    # Load most recent entries per TF for this pair
+    tf_data = load_latest_signals_for_pair(pair)
+
+    # Compute decision
+    decision, score, buy_sum, sell_sum, used_tfs = confluence_decision(tf_data, prefer_tf=prefer_tf)
+
+    # Gate by thresholds
+    strong = score >= STRONG_SEND_THRESHOLD
+    confident = score >= CONF_MIN
+
+    summary = format_brief(pair, prefer_tf, decision, score, buy_sum, sell_sum, used_tfs)
+    print(summary)
+
+    # Persist only if not a dry-run AND we’re confident enough to be actionable.
+    if not dry_run and confident:
+        try:
+            write_decision_json(pair, prefer_tf, decision, score, buy_sum, sell_sum, used_tfs, tf_data)
+        except Exception as e:
+            print(f"[WARN] Failed to write decision JSON: {e}", file=sys.stderr)
+
+    # Exit code semantics: 0 = ok; 2 = not confident (skipped); 1 = error
+    if confident:
+        return 0
+    else:
+        return 2
+
+if __name__ == "__main__":
+    try:
+        sys.exit(main())
+    except KeyboardInterrupt:
+        sys.exit(130)
+    except Exception as e:
+        print(f"[FATAL] {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+===== FILE: policy_hook.py =====
+
+#!/usr/bin/env python3
+"""
+Unified strategy policy hook:
+- MACD direction veto (already present)
+- ADX trend bonus
+- RSI regime filter (optional)
+- Higher-timeframe (HTF) alignment (optional, by resample)
+- News mute (optional) via data/news_schedule.csv
+- Per-pair cooldown (optional), file-based
+
+Inputs:
+    apply_policy(candles, dir_hint, base_score, pair, tf, now_utc=None)
+
+Outputs (dict):
+    {
+      "score_delta": float,
+      "veto": bool,
+      "tags": [..],
+      "notes": [..],
+      "telemetry": {...}
+    }
+"""
+
+from __future__ import annotations
+import os, csv, math, time
+from datetime import datetime, timedelta, timezone
+from typing import List, Dict, Any, Optional
+
+# --------- small utils (no external deps) ----------
+def ema(series: List[float], span: int) -> List[float]:
+    if not series or span <= 1: return series[:]
+    k = 2 / (span + 1)
+    out = [series[0]]
+    for x in series[1:]:
+        out.append(out[-1] + k * (x - out[-1]))
+    return out
+
+def rsi(closes: List[float], period: int=14) -> List[float]:
+    if len(closes) < period + 1: return [50.0]*len(closes)
+    gains, losses = [], []
+    for i in range(1, period+1):
+        ch = closes[i] - closes[i-1]
+        gains.append(max(ch,0)); losses.append(max(-ch,0))
+    avg_gain = sum(gains)/period
+    avg_loss = sum(losses)/period
+    rsis = [50.0]*(period)  # pad
+    for i in range(period+1, len(closes)):
+        ch = closes[i] - closes[i-1]
+        gain = max(ch,0); loss = max(-ch,0)
+        avg_gain = (avg_gain*(period-1) + gain)/period
+        avg_loss = (avg_loss*(period-1) + loss)/period
+        rs = (avg_gain / avg_loss) if avg_loss>1e-12 else 1e9
+        val = 100 - (100/(1+rs))
+        rsis.append(val)
+    # ensure same length
+    while len(rsis) < len(closes):
+        rsis.append(rsis[-1] if rsis else 50.0)
+    return rsis[:len(closes)]
+
+def macd(closes: List[float], fast=12, slow=26, signal=9):
+    if len(closes) < slow+signal+5:
+        return ([0.0]*len(closes), [0.0]*len(closes))
+    ema_fast = ema(closes, fast)
+    ema_slow = ema(closes, slow)
+    macd_line = [f-s for f,s in zip(ema_fast, ema_slow)]
+    sig_line  = ema(macd_line, signal)
+    return (macd_line, sig_line)
+
+def adx_from_hlcl(highs: List[float], lows: List[float], closes: List[float], period: int=14) -> List[float]:
+    # very compact ADX (Wilder)
+    n = len(closes)
+    if n < period+2: return [18.0]*n
+    tr, plus_dm, minus_dm = [0.0]*n, [0.0]*n, [0.0]*n
+    for i in range(1,n):
+        up = highs[i]-highs[i-1]; dn = lows[i-1]-lows[i]
+        plus_dm[i]  = up if (up>dn and up>0) else 0.0
+        minus_dm[i] = dn if (dn>up and dn>0) else 0.0
+        tr[i] = max(highs[i]-lows[i], abs(highs[i]-closes[i-1]), abs(lows[i]-closes[i-1]))
+    def rma(arr):
+        out=[0.0]*n; out[period]=sum(arr[1:period+1])/period
+        alpha=1/period
+        for i in range(period+1,n):
+            out[i]=out[i-1]+alpha*(arr[i]-out[i-1])
+        return out
+    trn = rma(tr); pdm=rma(plus_dm); mdm=rma(minus_dm)
+    plus_di  = [0.0 if trn[i]==0 else 100*pdm[i]/trn[i] for i in range(n)]
+    minus_di = [0.0 if trn[i]==0 else 100*mdm[i]/trn[i] for i in range(n)]
+    dx = [0.0]*n
+    for i in range(n):
+        s=plus_di[i]+minus_di[i]
+        dx[i] = 0.0 if s==0 else 100*abs(plus_di[i]-minus_di[i])/s
+    adx=[0.0]*n; adx[period]=sum(dx[1:period+1])/period
+    for i in range(period+1,n):
+        adx[i]=(adx[i-1]*(period-1)+dx[i])/period
+    return adx
+
+def tf_to_minutes(tf: str) -> int:
+    tf=tf.upper()
+    if tf.startswith("M"): return int(tf[1:])
+    if tf.startswith("H"): return int(tf[1:])*60
+    if tf=="D1": return 1440
+    return 15
+
+def resample_htf(closes, highs, lows, times, mult: int):
+    # group each 'mult' bars to one HTF bar (simple O/H/L/C)
+    if mult<=1 or len(closes)<mult: 
+        return closes, highs, lows, times
+    R = len(closes)//mult
+    rc,rh,rl,rt=[],[],[],[]
+    for k in range(R):
+        s=k*mult; e=s+mult
+        chunk_c = closes[s:e]; chunk_h=highs[s:e]; chunk_l=lows[s:e]; chunk_t=times[s:e]
+        rc.append(chunk_c[-1])
+        rh.append(max(chunk_h)); rl.append(min(chunk_l)); rt.append(chunk_t[-1])
+    return rc,rh,rl,rt
+
+def read_env_bool(name:str, default:bool) -> bool:
+    v=os.environ.get(name, str(int(default))).strip()
+    return v in ("1","true","TRUE","yes","Yes")
+
+def read_env_int(name:str, default:int) -> int:
+    try: return int(os.environ.get(name, str(default)))
+    except: return default
+
+def read_env_float(name:str, default:float) -> float:
+    try: return float(os.environ.get(name, str(default)))
+    except: return default
+
+def now_utc_ts() -> float:
+    return time.time()
+
+def parse_ts_z(s: str) -> Optional[datetime]:
+    try:
+        if s.endswith("Z"): s=s[:-1]+"+00:00"
+        return datetime.fromisoformat(s).astimezone(timezone.utc)
+    except: return None
+
+# cooldown store per pair+tf
+def cooldown_path(pair:str, tf:str) -> str:
+    base = os.path.expanduser("~/bot-a/data")
+    os.makedirs(base, exist_ok=True)
+    return os.path.join(base, f"last_send_{pair}_{tf}.ts")
+
+def last_send_minutes(pair:str, tf:str, now_ts:float) -> Optional[float]:
+    p=cooldown_path(pair,tf)
+    if not os.path.exists(p): return None
+    try:
+        with open(p,"r") as f:
+            t=float(f.read().strip())
+        return (now_ts - t)/60.0
+    except: return None
+
+def save_last_send(pair:str, tf:str, now_ts:float):
+    p=cooldown_path(pair,tf)
+    with open(p,"w") as f:
+        f.write(str(now_ts))
+
+def news_in_window(now_dt: datetime, before_min:int, after_min:int) -> Optional[str]:
+    path=os.path.expanduser("~/bot-a/data/news_schedule.csv")
+    if not os.path.exists(path): return None
+    window_before = timedelta(minutes=before_min)
+    window_after  = timedelta(minutes=after_min)
+    try:
+        with open(path,"r", newline="") as f:
+            rdr=csv.DictReader(f)
+            for row in rdr:
+                ts = parse_ts_z((row.get("ts") or "").strip())
+                if not ts: continue
+                if ts - window_before <= now_dt <= ts + window_after:
+                    ev = row.get("event","news").strip()
+                    imp = (row.get("impact","").strip().lower())
+                    return f"{ev} ({imp or 'n/a'})"
+    except: 
+        return None
+    return None
+
+# ------------- MAIN HOOK ----------------
+def apply_policy(candles: List[Dict[str,Any]],
+                 dir_hint: str,
+                 base_score: float,
+                 pair: str,
+                 tf: str,
+                 now_utc: Optional[datetime]=None) -> Dict[str,Any]:
+
+    tags, notes = [], []
+    veto=False
+    delta=0.0
+    now_dt = now_utc or datetime.now(timezone.utc)
+    now_ts = now_dt.timestamp()
+
+    if not candles or len(candles)<50:
+        return {"score_delta":0.0, "veto":True, "tags":["no-data"], "notes":["insufficient candles"], "telemetry":{}}
+
+    closes=[float(c.get("close",c.get("c"))) for c in candles]
+    highs =[float(c.get("high",c.get("h")))  for c in candles]
+    lows  =[float(c.get("low",c.get("l")))   for c in candles]
+    # support both iso ts and epoch ts
+    times=[]
+    for c in candles:
+        t=c.get("time") or c.get("t")
+        if isinstance(t,(int,float)): times.append(t)
+        else:
+            dt=parse_ts_z(str(t)) or now_dt
+            times.append(dt.timestamp())
+
+    # --- MACD veto & tag ---
+    macd_line, sig = macd(closes)
+    macd_now = macd_line[-1] - sig[-1]
+    macd_dir = "up" if macd_now>=0 else "down"
+    tags.append("MACD↑" if macd_now>=0 else "MACD↓")
+
+    dir_hint = (dir_hint or "").lower()
+    if (dir_hint=="long" and macd_now<0) or (dir_hint=="short" and macd_now>0):
+        veto=True; notes.append("MACD opposes dir_hint → veto")
+
+    # --- ADX bonus ---
+    adx = adx_from_hlcl(highs,lows,closes)
+    adx_now = adx[-1]
+    if adx_now >= 18:
+        b = 0.2 if adx_now<22 else 0.6 if adx_now>=28 else 0.4
+        delta += b
+        tags.append("ADX✓"); notes.append(f"ADX {adx_now:.1f}≥18 → +{b:.2f}")
+    else:
+        notes.append(f"ADX {adx_now:.1f}<18 → no trend bonus")
+
+    # --- RSI regime filter (optional) ---
+    if read_env_bool("POLICY_USE_RSI", True):
+        rsi_now = rsi(closes)[-1]
+        rsi_min = read_env_int("POLICY_RSI_MIN", 50)
+        tags.append(f"RSI{int(round(rsi_now))}")
+        if dir_hint=="long" and rsi_now < rsi_min:
+            veto=True; notes.append(f"RSI {rsi_now:.1f}<{rsi_min} for LONG → veto")
+        if dir_hint=="short" and rsi_now > (100-rsi_min):
+            veto=True; notes.append(f"RSI {rsi_now:.1f}>{100-rsi_min} for SHORT → veto")
+        # strong regime bump
+        strong_bump = read_env_float("POLICY_STRONG_BUMP", 0.3)
+        if rsi_now>=60 and adx_now>=22:
+            delta += strong_bump
+            notes.append(f"Strong regime RSI≥60 & ADX≥22 → +{strong_bump:.2f}")
+
+    # --- HTF alignment (optional, resample N*x TF) ---
+    if read_env_bool("POLICY_USE_HTF", True):
+        mult = read_env_int("POLICY_HTF_MULT", 4)
+        htc, hth, htl, htt = resample_htf(closes, highs, lows, times, mult)
+        if len(htc)>=50:
+            ema50 = ema(htc, 50)[-1]
+            lastc = htc[-1]
+            agree_long  = lastc >= ema50
+            agree_short = lastc <= ema50
+            if dir_hint=="long" and not agree_long:
+                veto=True; notes.append("HTF misaligned (price<EMA50)")
+            if dir_hint=="short" and not agree_short:
+                veto=True; notes.append("HTF misaligned (price>EMA50)")
+            tags.append("HTF✓" if ((dir_hint=="long" and agree_long) or (dir_hint=="short" and agree_short)) else "HTF×")
+        else:
+            notes.append("HTF sample too small, skipping")
+
+    # --- News mute (optional) ---
+    if read_env_bool("POLICY_USE_NEWS_MUTE", True):
+        nb = read_env_int("POLICY_NEWS_BEFORE_MIN", 30)
+        na = read_env_int("POLICY_NEWS_AFTER_MIN", 30)
+        ev = news_in_window(now_dt, nb, na)
+        if ev:
+            veto=True; tags.append("NEWS-MUTE"); notes.append(f"News window: {ev}")
+
+    # --- Cooldown (optional) ---
+    if read_env_bool("POLICY_USE_COOLDOWN", True):
+        mins = read_env_int("POLICY_COOLDOWN_MIN", 20)
+        since = last_send_minutes(pair, tf, now_ts)
+        if since is not None and since < mins:
+            veto=True; tags.append("cooldown"); notes.append(f"Cooldown {since:.1f}min<{mins}min")
+        # NOTE: saving last_send() must be done by the sender AFTER a send.
+        # If your sender already persists last-send, don't do it here.
+
+    return {
+        "score_delta": round(delta, 6),
+        "veto": bool(veto),
+        "tags": tags,
+        "notes": notes,
+        "telemetry": {
+            "last_macd_diff": round(macd_now, 10),
+            "last_adx": round(adx_now, 2),
+            "base_score": base_score,
+            "dir_hint": dir_hint,
+            "pair": pair,
+            "tf": tf
+        }
+    }
+
+
+===== FILE: signal_format.py =====
+
+#!/usr/bin/env python3
+def _join(items, max_items=6):
+    items = [str(x).strip() for x in items if str(x).strip()]
+    if len(items) > max_items:
+        return ", ".join(items[:max_items]) + f", +{len(items)-max_items} more"
+    return ", ".join(items)
+
+def format_brief(pair, tf, direction, score, tags=None, notes=None):
+    tags  = tags  or []
+    notes = notes or []
+    tags_str  = _join(tags, 6)
+    notes_str = _join(notes, 6)
+    right = "Reason: " + (tags_str if tags_str else "—")
+    if notes_str:
+        right += " | " + notes_str
+    return f"🔎 {right}"
+
+
+===== FILE: explain_signal.py =====
+
+#!/usr/bin/env python3
+"""
+explain_signal.py
+Show exactly WHY a signal did or did not trigger for a pair+tf,
+using your existing policy_hook.apply_policy and the latest CSV
+candles saved in ~/bot-a/data/candles/{PAIR}_{TF}.csv
+
+Usage:
+  python3 explain_signal.py EURUSD M15
+  python3 explain_signal.py EURUSD H1
+"""
+
+import sys, os, csv, time
+from datetime import datetime, timezone
+from policy_hook import apply_policy  # uses your current strong policy
+
+DATA_DIR = os.path.expanduser("~/bot-a/data/candles")
+
+def load_csv(pair:str, tf:str, limit:int=200):
+    path = os.path.join(DATA_DIR, f"{pair}_{tf}.csv")
+    if not os.path.exists(path):
+        print(f"[ERROR] No candles file: {path}")
+        sys.exit(2)
+    rows=[]
+    with open(path, "r") as f:
+        r = csv.DictReader(f)
+        for row in r:
+            try:
+                # accept either epoch or ISO-ish
+                t = row.get("time") or row.get("timestamp") or row.get("date")
+                if t is None:
+                    continue
+                if str(t).isdigit():
+                    ts = int(t)
+                else:
+                    # try parse common "%Y-%m-%d %H:%M:%S"
+                    ts = int(datetime.strptime(t.split(".")[0], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc).timestamp())
+                rows.append({
+                    "time": ts,
+                    "open": float(row["open"]),
+                    "high": float(row["high"]),
+                    "low" : float(row["low"]),
+                    "close": float(row["close"])
+                })
+            except Exception as e:
+                # skip bad rows
+                pass
+    if not rows:
+        print(f"[ERROR] Empty/invalid CSV: {path}")
+        sys.exit(2)
+    rows = sorted(rows, key=lambda x: x["time"])
+    return rows[-limit:]
+
+def fmt_ts(ts:int):
+    return datetime.utcfromtimestamp(ts).strftime("%Y-%m-%d %H:%M:%S UTC")
+
+def main():
+    if len(sys.argv)<3:
+        print("Usage: python3 explain_signal.py EURUSD M15")
+        sys.exit(1)
+    pair = sys.argv[1].upper()
+    tf   = sys.argv[2].upper()
+
+    candles = load_csv(pair, tf, limit=240)
+    last = candles[-1]
+    print(f"\n=== Explain {pair} {tf} ===")
+    print(f"Last candle: {fmt_ts(last['time'])}  O={last['open']} H={last['high']} L={last['low']} C={last['close']}")
+
+    # You can keep your base_score as configured in your runner/policy.
+    out = apply_policy(
+        candles=candles,
+        dir_hint=None,
+        base_score=3.2,   # same base you’ve been using
+        pair=pair,
+        tf=tf
+    )
+
+    # Pretty print
+    print("\n--- Decision Snapshot ---")
+    score = out.get("score_delta", 0.0)
+    veto  = out.get("veto", False)
+    tags  = out.get("tags", [])
+    notes = out.get("notes", [])
+    tel   = out.get("telemetry", {})
+
+    print(f"Score delta:  {score}")
+    print(f"Veto:         {veto}")
+    print(f"Tags:         {', '.join(tags) if tags else '-'}")
+    print(f"Notes:        {', '.join(notes) if notes else '-'}")
+    if tel:
+        print("\n--- Telemetry ---")
+        # We expect your policy_hook to include items like ADX, MACD diff, RSI regime, HTF alignment, etc.
+        for k,v in tel.items():
+            print(f"{k:>16}: {v}")
+
+    # Decision interpretation (matches your strong mode mentality)
+    CONF_MIN = float(os.environ.get("CONF_MIN", "3.0"))
+    STRONG_SEND_THRESHOLD = float(os.environ.get("STRONG_SEND_THRESHOLD", "6"))
+    decision = "NO SEND"
+    reason   = []
+    if veto:
+        reason.append("VETO active (risk/filters blocked)")
+    if score < CONF_MIN:
+        reason.append(f"Score {score} < CONF_MIN {CONF_MIN}")
+    elif score < STRONG_SEND_THRESHOLD:
+        reason.append(f"Score {score} < STRONG threshold {STRONG_SEND_THRESHOLD}")
+    else:
+        decision = "SEND-OK (meets strong threshold)"
+
+    print("\n--- Decision ---")
+    print(f"Result:  {decision}")
+    if reason:
+        print("Because: " + " | ".join(reason))
+
+    print("\nTip: if this looks too strict, check ADX/RSI/HTF in telemetry. A single missing gate keeps Score low even in a bullish push.\n")
+
+if __name__ == "__main__":
+    main()
+
+
+===== FILE: fetch_candles.py =====
+
+#!/usr/bin/env python3
+"""
+fetch_candles.py  — robust multi-provider candles fetcher for EURUSD (and others)
+
+Providers order (fastest & most reliable first):
+1) Yahoo Finance (yfinance)     – no API key, intraday + daily
+2) TwelveData                   – needs TWELVE_DATA_API_KEY
+3) AlphaVantage                 – needs ALPHA_VANTAGE_API_KEY (intraday = premium)
+4) Finnhub                      – needs FINNHUB_API_KEY
+5) Stooq                        – public CSV (daily only; intraday not reliable)
+
+Usage examples:
+  python3 fetch_candles.py --pair EURUSD --tf M15 --limit 300
+  python3 fetch_candles.py --pair EURUSD --tf H1  --limit 500
+  python3 fetch_candles.py --pair EURUSD --tf H4  --limit 500
+  python3 fetch_candles.py --pair EURUSD --tf D1  --limit 500
+"""
+
+import os, sys, csv, json, time, math
+import argparse
+from datetime import datetime, timedelta, timezone
+
+OUTDIR = os.path.expanduser("~/bot-a/data/candles")
+os.makedirs(OUTDIR, exist_ok=True)
+
+# ---------- helpers ----------
+
+def log(msg): 
+    print(msg, flush=True)
+
+def utc_fmt(ts):
+    if isinstance(ts, (int, float)):
+        dt = datetime.fromtimestamp(ts, tz=timezone.utc)
+    elif isinstance(ts, datetime):
+        dt = ts.astimezone(timezone.utc)
+    else:
+        return str(ts)
+    return dt.strftime("%Y-%m-%d %H:%M:%S")
+
+def ensure_rows(df_like, limit):
+    """Convert a pandas DataFrame-like OHLC into list[dict] rows with UTC time.
+       Expected columns: 'Open','High','Low','Close'. Index must be datetime."""
+    rows = []
+    try:
+        import pandas as pd
+        df = df_like.copy()
+        # normalize timezone to UTC if tz-aware
+        if getattr(df.index, "tz", None) is not None:
+            df = df.tz_convert("UTC")
+        else:
+            # assume already UTC
+            pass
+        df = df.tail(int(limit))
+        for ts, r in df.iterrows():
+            rows.append({
+                "time": utc_fmt(ts.to_pydatetime().replace(tzinfo=timezone.utc)),
+                "open": float(r["Open"]),
+                "high": float(r["High"]),
+                "low":  float(r["Low"]),
+                "close":float(r["Close"]),
+            })
+    except Exception as e:
+        raise RuntimeError(f"ensure_rows error: {e}")
+    return rows
+
+def write_csv(rows, outpath):
+    tmp = outpath + ".tmp"
+    with open(tmp, "w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["time","open","high","low","close"])
+        for r in rows:
+            w.writerow([r["time"], r["open"], r["high"], r["low"], r["close"]])
+    os.replace(tmp, outpath)
+
+# ---------- provider: yfinance ----------
+
+def map_yf_symbol(pair):
+    """Map FX pair to yfinance ticker."""
+    m = {
+        "EURUSD": "EURUSD=X",
+        "XAUUSD": "XAUUSD=X",
+        "GBPUSD": "GBPUSD=X",
+        "USDJPY": "JPY=X",      # note: yfinance uses JPY=X (USD/JPY inverted display)
+    }
+    return m.get(pair.upper(), f"{pair.upper()}=X")
+
+def yf_interval(tf):
+    # yfinance supported: 1m 2m 5m 15m 30m 60m 90m 1h 1d 5d 1wk 1mo 3mo
+    tf = tf.upper()
+    if tf == "M5":  return "5m"
+    if tf == "M15": return "15m"
+    if tf == "H1":  return "1h"
+    if tf == "H4":  return "1h"   # fetch 1h then resample to 4H
+    if tf == "D1":  return "1d"
+    raise ValueError(f"Unsupported tf for yfinance: {tf}")
+
+def yf_period(tf, limit):
+    tf = tf.upper()
+    # choose a long enough period so yfinance returns >= limit bars
+    if tf in ("M5","M15"):
+        return "60d"   # intraday needs period in days
+    if tf in ("H1","H4"):
+        return "730d"
+    if tf == "D1":
+        return "max"
+    return "60d"
+
+def fetch_yfinance(pair, tf, limit):
+    import pandas as pd
+    import yfinance as yf
+    sym = map_yf_symbol(pair)
+    interval = yf_interval(tf)
+    period = yf_period(tf, limit)
+    log(f"[yfinance] downloading {sym} interval={interval} period={period}")
+    df = yf.download(sym, interval=interval, period=period, auto_adjust=False, progress=False)
+    if df is None or len(df) == 0:
+        raise RuntimeError("yfinance returned empty dataframe")
+    # Rename columns to standard
+    df = df.rename(columns={"Open":"Open","High":"High","Low":"Low","Close":"Close"})
+    # yfinance index tz-aware in UTC or exchange tz; convert
+    if getattr(df.index, "tz", None) is None:
+        df.index = df.index.tz_localize("UTC")
+    else:
+        df = df.tz_convert("UTC")
+
+    if tf.upper() == "H4":
+        # resample 1h → 4h
+        df = df[["Open","High","Low","Close"]].resample("4H", label="right", closed="right").agg({
+            "Open":"first","High":"max","Low":"min","Close":"last"
+        }).dropna()
+
+    rows = ensure_rows(df[["Open","High","Low","Close"]], limit)
+    return rows, "yfinance"
+
+# ---------- provider: TwelveData ----------
+
+def fetch_twelvedata(pair, tf, limit):
+    import urllib.parse, urllib.request
+    key = os.environ.get("TWELVE_DATA_API_KEY","")
+    if not key:
+        raise RuntimeError("no TWELVE_DATA_API_KEY")
+    tfmap = {"M5":"5min","M15":"15min","H1":"1h","H4":"4h","D1":"1day"}
+    interval = tfmap.get(tf.upper())
+    if not interval:
+        raise RuntimeError(f"twelvedata unsupported tf: {tf}")
+    params = {
+        "symbol": f"{pair.upper()}/USD" if len(pair)==6 and pair.upper().endswith("USD") else pair.upper(),
+        "interval": interval,
+        "apikey": key,
+        "outputsize": str(limit*2),   # fetch more then tail
+        "format": "JSON",
+        "timezone": "UTC",
+    }
+    url = "https://api.twelvedata.com/time_series?" + urllib.parse.urlencode(params)
+    with urllib.request.urlopen(url, timeout=20) as r:
+        j = json.loads(r.read().decode())
+    if "values" not in j:
+        raise RuntimeError(f"twelvedata bad response: {j}")
+    vals = j["values"]
+    vals = vals[::-1]  # ascending
+    rows = []
+    for v in vals[-limit:]:
+        # v["datetime"] like "2025-09-22 20:15:00"
+        rows.append({
+            "time": v["datetime"],
+            "open": float(v["open"]),
+            "high": float(v["high"]),
+            "low":  float(v["low"]),
+            "close":float(v["close"]),
+        })
+    return rows, "twelvedata"
+
+# ---------- provider: AlphaVantage (intraday often premium) ----------
+
+def fetch_alphavantage(pair, tf, limit):
+    import urllib.parse, urllib.request
+    key = os.environ.get("ALPHA_VANTAGE_API_KEY","")
+    if not key:
+        raise RuntimeError("no ALPHA_VANTAGE_API_KEY")
+    tf = tf.upper()
+    if tf in ("M5","M15","H1"):
+        intramap = {"M5":"5min","M15":"15min","H1":"60min"}
+        function = "FX_INTRADAY"
+        params = {
+            "function": function,
+            "from_symbol": pair[:3].upper(),
+            "to_symbol": pair[3:].upper(),
+            "interval": intramap[tf],
+            "apikey": key,
+            "outputsize": "full"
+        }
+    elif tf in ("H4","D1"):
+        # Use FX_DAILY, then resample to 4H isn't possible => for H4 AV is not suitable
+        function = "FX_DAILY"
+        params = {
+            "function": function,
+            "from_symbol": pair[:3].upper(),
+            "to_symbol": pair[3:].upper(),
+            "apikey": key,
+            "outputsize": "full"
+        }
+    else:
+        raise RuntimeError(f"alphavantage unsupported tf: {tf}")
+
+    url = "https://www.alphavantage.co/query?" + urllib.parse.urlencode(params)
+    with urllib.request.urlopen(url, timeout=20) as r:
+        j = json.loads(r.read().decode())
+
+    # Intraday and Daily have different field names
+    series = None
+    for k in j.keys():
+        if "Time Series" in k:
+            series = j[k]
+            break
+    if not series:
+        raise RuntimeError(f"alphavantage structure unknown: {list(j.keys())}")
+
+    # series dict: time -> {"1. open": "...", "2. high": "...", ...}
+    keys_sorted = sorted(series.keys())
+    rows_all = []
+    for t in keys_sorted:
+        o = float(series[t]["1. open"]); h = float(series[t]["2. high"])
+        l = float(series[t]["3. low"]);  c = float(series[t]["4. close"])
+        rows_all.append({"time": t.replace("T"," ").replace("Z",""), "open":o,"high":h,"low":l,"close":c})
+
+    if tf == "H4":
+        # AV did daily only here – cannot produce H4 reliably → let caller try another provider
+        raise RuntimeError("alphavantage cannot provide H4 accurately")
+
+    rows = rows_all[-limit:]
+    return rows, "alphavantage"
+
+# ---------- provider: Finnhub ----------
+
+def fetch_finnhub(pair, tf, limit):
+    import urllib.parse, urllib.request
+    key = os.environ.get("FINNHUB_API_KEY","")
+    if not key:
+        raise RuntimeError("no FINNHUB_API_KEY")
+    tfmap = {"M5":"5","M15":"15","H1":"60","H4":"240","D1":"D"}
+    res = tfmap.get(tf.upper())
+    if not res:
+        raise RuntimeError(f"finnhub unsupported tf: {tf}")
+
+    now = int(time.time())
+    # For enough bars, go back roughly limit * tf seconds
+    width_sec = {"5":300, "15":900, "60":3600, "240":14400, "D":86400}[res]
+    _from = now - int(width_sec * (limit*1.5 + 20))
+
+    params = {
+        "symbol": f"OANDA:{pair.upper()}",
+        "resolution": res,
+        "from": _from,
+        "to": now,
+        "token": key
+    }
+    url = "https://finnhub.io/api/v1/forex/candle?" + urllib.parse.urlencode(params)
+    with urllib.request.urlopen(url, timeout=20) as r:
+        j = json.loads(r.read().decode())
+    if j.get("s") != "ok":
+        raise RuntimeError(f"finnhub bad response: {j}")
+    rows = []
+    for ts, o, h, l, c in zip(j["t"], j["o"], j["h"], j["l"], j["c"]):
+        rows.append({"time": utc_fmt(ts), "open":float(o), "high":float(h), "low":float(l), "close":float(c)})
+    rows = rows[-limit:]
+    return rows, "finnhub"
+
+# ---------- provider: Stooq (daily only) ----------
+
+def fetch_stooq(pair, tf, limit):
+    if tf.upper() != "D1":
+        raise RuntimeError("stooq supports D1 only in this script")
+    import pandas as pd
+    import urllib.request
+    sym = pair.lower()
+    url = f"https://stooq.com/q/d/l/?s={sym}=i&i=d"  # FX daily
+    with urllib.request.urlopen(url, timeout=20) as r:
+        csvb = r.read().decode()
+    from io import StringIO
+    df = pd.read_csv(StringIO(csvb))
+    if "Date" not in df.columns:
+        raise RuntimeError("stooq: DATE is not in list")
+    df.rename(columns={"Date":"time","Open":"open","High":"high","Low":"low","Close":"close"}, inplace=True)
+    df["time"] = pd.to_datetime(df["time"]).dt.tz_localize("UTC").dt.strftime("%Y-%m-%d %H:%M:%S")
+    rows = []
+    for _, r in df.tail(limit).iterrows():
+        rows.append({"time": r["time"], "open": float(r["open"]), "high": float(r["high"]),
+                     "low": float(r["low"]), "close": float(r["close"])})
+    return rows, "stooq"
+
+# ---------- main ----------
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--pair", default="EURUSD")
+    ap.add_argument("--tf", default="M15", help="M5/M15/H1/H4/D1")
+    ap.add_argument("--limit", type=int, default=300)
+    args = ap.parse_args()
+
+    pair = args.pair.upper()
+    tf = args.tf.upper()
+    limit = int(args.limit)
+
+    providers = [
+        fetch_yfinance,
+        fetch_twelvedata,
+        fetch_alphavantage,
+        fetch_finnhub,
+        fetch_stooq,
+    ]
+
+    errors = []
+    for fn in providers:
+        try:
+            rows, who = fn(pair, tf, limit)
+            if not rows:
+                raise RuntimeError("no rows")
+            out = os.path.join(OUTDIR, f"{pair}_{tf}.csv")
+            write_csv(rows, out)
+            log(f"Saved {len(rows)} candles to {out} via {who}")
+            return
+        except Exception as e:
+            errors.append(f"[{fn.__name__}] {e}")
+
+    log("All providers failed.")
+    for e in errors:
+        log(" - " + e)
+    sys.exit(2)
+
+if __name__ == "__main__":
+    main()
+
+
+===== FILE: status_card.py =====
+
+#!/data/data/com.termux/files/usr/bin/python3
+# -*- coding: utf-8 -*-
+"""
+status_card.py — Bot-A Status + Market Context card
+
+What it shows:
+- Bot health: PID running, last heartbeat, last error
+- Signal overview: analyzed today, strong sent, avg confidence
+- Market context: forex open/closed, session countdowns (Sydney/Tokyo/London/NY)
+- Next holiday (optional, from config/holidays.json)
+- Config snapshot: thresholds, digest guard
+- Security check: tele.env present and usable
+
+Usage:
+  python3 tools/status_card.py            # print card
+  python3 tools/status_card.py --send     # print + send to Telegram (if TG env is set)
+
+Notes:
+- No external libs. Pure stdlib.
+- Time is UTC. Session open times are approximate UTC anchors:
+    Sydney  = 22:00 UTC
+    Tokyo   = 00:00 UTC
+    London  = 08:00 UTC
+    NewYork = 13:00 UTC
+- Holidays file is optional: ~/bot-a/config/holidays.json
+  Format: [{"date":"2025-12-25","label":"Christmas (major closure)"}]
+"""
+
+import os, sys, json, time, traceback
+from datetime import datetime, timezone, timedelta
+
+# ---------- Paths ----------
+BOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+LOGS_DIR = os.path.join(BOT_DIR, "logs")
+DATA_DIR = os.path.join(BOT_DIR, "data")
+CONFIG_DIR = os.path.join(BOT_DIR, "config")
+
+PID_FILE        = os.path.join(LOGS_DIR, "auto_conf.pid")
+HEARTBEAT_FILE  = os.path.join(LOGS_DIR, "last_heartbeat.txt")
+MAIN_LOG        = os.path.join(LOGS_DIR, "auto_conf.log")
+SIGNALS_CSV     = os.path.join(DATA_DIR, "signals.csv")
+POLICY_JSON     = os.path.join(CONFIG_DIR, "policy.json")
+TELE_ENV        = os.path.join(CONFIG_DIR, "tele.env")
+HOLIDAYS_JSON   = os.path.join(CONFIG_DIR, "holidays.json")  # optional
+
+# ---------- Helpers ----------
+def now_utc():
+    return datetime.now(timezone.utc)
+
+def load_json_safe(path, default=None):
+    try:
+        with open(path, "r") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return default
+    except Exception:
+        return default
+
+def read_first_env(file_path):
+    """source-like read: key=value lines into env (no export)."""
+    if not os.path.exists(file_path):
+        return False
+    try:
+        with open(file_path, "r") as f:
+            for raw in f:
+                line = raw.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                k, v = line.split("=", 1)
+                os.environ[k.strip()] = v.strip().strip('"').strip("'")
+        return True
+    except Exception:
+        return False
+
+def file_tail_lines(path, max_bytes=100_000):
+    """Read end of file safely (last ~max_bytes)."""
+    if not os.path.exists(path):
+        return ""
+    try:
+        size = os.path.getsize(path)
+        with open(path, "rb") as f:
+            if size > max_bytes:
+                f.seek(-max_bytes, os.SEEK_END)
+            data = f.read().decode("utf-8", errors="ignore")
+        return data
+    except Exception:
+        return ""
+
+def format_td(delta):
+    """Format timedelta as 'Xd Yh Zm' or 'Hh Mm'."""
+    if delta.total_seconds() < 0:
+        delta = -delta
+        sign = "-"
+    else:
+        sign = ""
+    minutes = int(delta.total_seconds() // 60)
+    days, minutes = divmod(minutes, 1440)
+    hours, minutes = divmod(minutes, 60)
+    parts = []
+    if days: parts.append(f"{days}d")
+    if hours: parts.append(f"{hours}h")
+    parts.append(f"{minutes}m")
+    return sign + " ".join(parts)
+
+# ---------- Health ----------
+def check_pid_running(pid_file):
+    try:
+        with open(pid_file, "r") as f:
+            pid_str = f.read().strip()
+        if not pid_str.isdigit():
+            return ("Unknown", False)
+        pid = int(pid_str)
+        # On Android/Termux, /proc/<pid> exists if running
+        running = os.path.exists(f"/proc/{pid}")
+        return (pid_str, running)
+    except FileNotFoundError:
+        return ("Not found", False)
+    except Exception:
+        return ("Unknown", False)
+
+def read_heartbeat(hb_file):
+    try:
+        with open(hb_file, "r") as f:
+            txt = f.read().strip()
+        # If text is a datetime string, show it raw; otherwise show file mtime
+        return txt
+    except FileNotFoundError:
+        return "None"
+    except Exception:
+        return "Unknown"
+
+def last_error_from_log(log_path):
+    tail = file_tail_lines(log_path, max_bytes=80_000)
+    if not tail:
+        return "None"
+    lines = tail.splitlines()
+    # search latest line with error markers
+    for line in reversed(lines):
+        low = line.lower()
+        if "error" in low or "traceback" in low or "send-fail" in low or "failed" in low:
+            return line.strip()[:200]
+    return "None"
+
+# ---------- Signals ----------
+def parse_signals_today(csv_path):
+    today = now_utc().date()
+    analyzed = 0
+    strong_sent = 0
+    conf_sum = 0.0
+    try:
+        if not os.path.exists(csv_path):
+            return (0, 0, 0.0)
+        with open(csv_path, "r") as f:
+            for raw in f:
+                line = raw.strip()
+                if not line:
+                    continue
+                parts = line.split(",")
+                # Expected: iso_ts,bias,confidence,sentiment,notes...
+                if len(parts) < 3:
+                    continue
+                ts = parts[0]
+                try:
+                    dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                except Exception:
+                    continue
+                if dt.date() != today:
+                    continue
+                analyzed += 1
+                try:
+                    conf = float(parts[2])
+                except Exception:
+                    conf = 0.0
+                conf_sum += conf
+                # Treat “strong” as conf >= strong_threshold if available; else >=6
+                # We will fetch strong threshold from policy below and recompute there.
+        # avg later after threshold read for strong count
+        return (analyzed, -1, conf_sum)  # strong placeholder
+    except Exception:
+        return (0, 0, 0.0)
+
+# ---------- Market context ----------
+SESSION_ANCHORS_UTC = {
+    "Sydney":  (22, 0),
+    "Tokyo":   (0, 0),
+    "London":  (8, 0),
+    "NewYork": (13, 0),
+}
+
+def next_session_delta(anchor_h, anchor_m, ref):
+    session_time = ref.replace(hour=anchor_h, minute=anchor_m, second=0, microsecond=0)
+    if session_time <= ref:
+        session_time += timedelta(days=1)
+    return session_time - ref
+
+def forex_open_status(ref):
+    # Simple model:
+    # Closed: from Friday 21:00 UTC until Sunday ~21:00 UTC
+    wd = ref.weekday()  # Mon=0 ... Sun=6
+    hour = ref.hour
+    if wd == 5:  # Saturday
+        return "CLOSED"
+    if wd == 6 and hour < 21:
+        return "CLOSED"
+    if wd == 4 and hour >= 21:
+        return "CLOSED"
+    return "OPEN"
+
+def next_holiday_note(path, ref_date):
+    h = load_json_safe(path, default=[])
+    if not h:
+        return "None configured"
+    upcoming = []
+    for item in h:
+        try:
+            d = datetime.fromisoformat(item["date"]).date()
+            if d >= ref_date:
+                upcoming.append((d, item.get("label", "Holiday")))
+        except Exception:
+            continue
+    if not upcoming:
+        return "None soon"
+    upcoming.sort(key=lambda x: x[0])
+    d, label = upcoming[0]
+    return f"{d.isoformat()} — {label}"
+
+# ---------- Config / Security ----------
+def load_policy_snapshot(path):
+    pol = load_json_safe(path, default={})
+    # Defaults
+    conf_th  = pol.get("confidence_threshold", pol.get("conf_gate", 3.2))
+    strong_th = pol.get("strong_send_threshold", pol.get("strong_threshold", 6))
+    throttle_min = pol.get("throttle_minutes", pol.get("throttle_seconds", 1800) / 60 if pol.get("throttle_seconds") else 15)
+    digest_guard = pol.get("digest_guard", pol.get("digest", {}).get("weekend_guard_on", False))
+    return (conf_th, strong_th, float(throttle_min), bool(digest_guard))
+
+def security_check(tele_env_path):
+    ok_env = read_first_env(tele_env_path)
+    tok = os.getenv("TG_BOT_TOKEN", "")
+    cid = os.getenv("TG_CHAT_ID", "")
+    if not ok_env:
+        return (False, "tele.env missing")
+    if not tok or not cid:
+        return (False, "Telegram vars not loaded")
+    return (True, "Config & token loaded")
+
+# ---------- Card ----------
+def build_status_card():
+    ref = now_utc()
+
+    # Health
+    pid_text, pid_running = check_pid_running(PID_FILE)
+    hb_text = read_heartbeat(HEARTBEAT_FILE)
+    last_err = last_error_from_log(MAIN_LOG)
+
+    # Config snapshot
+    conf_th, strong_th, throttle_min, digest_guard = load_policy_snapshot(POLICY_JSON)
+
+    # Signals
+    analyzed, strong_placeholder, conf_sum = parse_signals_today(SIGNALS_CSV)
+    avg_conf = (conf_sum / analyzed) if analyzed else 0.0
+    # Count strong sent by scanning log for "send-OK" lines today
+    strong_count = 0
+    tail = file_tail_lines(MAIN_LOG, max_bytes=200_000)
+    if tail:
+        today_str = ref.strftime("%Y-%m-%d")
+        for line in tail.splitlines():
+            if today_str in line and ("send-OK" in line or "Strong signal sent" in line):
+                strong_count += 1
+
+    # Market context
+    fx_status = forex_open_status(ref)
+    session_lines = []
+    for name, (h, m) in SESSION_ANCHORS_UTC.items():
+        delta = next_session_delta(h, m, ref)
+        session_lines.append(f"• {name} opens in {format_td(delta)}")
+
+    # Holiday
+    hol_note = next_holiday_note(HOLIDAYS_JSON, ref.date())
+
+    # Security
+    sec_ok, sec_msg = security_check(TELE_ENV)
+
+    # Build HTML card
+    parts = []
+    parts.append("🤖 <b>BOT STATUS</b>")
+    parts.append("")
+    parts.append(f"{'✅' if pid_running else '❌'} Health: {'Running' if pid_running else 'Stopped'} (PID {pid_text})")
+    parts.append(f"🫀 Last heartbeat: {hb_text}")
+    parts.append(f"⚠️ Last error: {last_err}")
+    parts.append("")
+    parts.append("📊 <b>Signals Today</b>")
+    parts.append(f"• Analyzed: {analyzed}")
+    parts.append(f"• Strong Signals Sent: {strong_count}")
+    parts.append(f"• Avg Confidence: {avg_conf:.1f}/10")
+    parts.append("")
+    parts.append("📅 <b>Market Context</b>")
+    parts.append(f"• Forex: <b>{fx_status}</b> (Weekend guard may mute sends)")
+    parts.extend(session_lines)
+    parts.append(f"• Next holiday: {hol_note}")
+    parts.append("")
+    parts.append("⚙️ <b>Config</b>")
+    parts.append(f"• Confidence threshold: {conf_th}")
+    parts.append(f"• Strong send threshold: {strong_th}")
+    parts.append(f"• Throttle: {throttle_min:.0f} min")
+    parts.append(f"• Digest Guard: {'ON' if digest_guard else 'OFF'}")
+    parts.append("")
+    parts.append(f"🔒 Security: {sec_msg}")
+    parts.append("")
+    parts.append(f"🕒 {ref.strftime('%Y-%m-%d %H:%M UTC')}")
+    return "\n".join(parts)
+
+# ---------- Telegram ----------
+def send_telegram(html_text):
+    tok = os.getenv("TG_BOT_TOKEN", "")
+    cid = os.getenv("TG_CHAT_ID", "")
+    if not tok or not cid:
+        print("Telegram send skipped: TG_BOT_TOKEN / TG_CHAT_ID not loaded")
+        return False
+    import requests
+    url = f"https://api.telegram.org/bot{tok}/sendMessage"
+    data = {"chat_id": cid, "text": html_text, "parse_mode": "HTML", "disable_web_page_preview": True}
+    try:
+        r = requests.post(url, data=data, timeout=20)
+        ok = (r.status_code == 200)
+        if not ok:
+            print(f"Telegram send error: HTTP {r.status_code} {r.text[:200]}")
+        return ok
+    except Exception as e:
+        print(f"Telegram send exception: {e}")
+        return False
+
+# ---------- Main ----------
+def main():
+    # make sure dirs exist
+    for p in (LOGS_DIR, DATA_DIR, CONFIG_DIR):
+        os.makedirs(p, exist_ok=True)
+
+    card = build_status_card()
+    print(card)
+
+    if "--send" in sys.argv:
+        # ensure env loaded
+        read_first_env(TELE_ENV)
+        ok = send_telegram(card)
+        print("Sent to Telegram" if ok else "Failed to send")
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception as e:
+        # Never crash silently; print minimal info
+        print(f"Status card error: {e}")
+        traceback.print_exc()
+        sys.exit(1)
+
+
+===== FILE: smoke_pairs.sh =====
+
+#!/data/data/com.termux/files/usr/bin/bash
+# Lightweight smoke test for multiple pairs/TFs with a Telegram summary
+
+set -euo pipefail
+
+BOT="$HOME/bot-a"
+TOOLS="$BOT/tools"
+LOGDIR="$BOT/logs"
+mkdir -p "$LOGDIR"
+
+# ——— Settings you can tweak ———
+PAIRS=(EURUSD XAUUSD)         # Add/remove pairs if you like
+TFS=(M15 H1 H4 D1)            # Timeframes to probe
+DRY_RUN=false                 # Use false to exercise the full code path
+# ————————————————
+
+STAMP="$(date -Is)"
+RUNLOG="$LOGDIR/smoke_$(date +%Y%m%d-%H%M%S).log"
+
+echo "=== SMOKE START $STAMP ===" | tee -a "$RUNLOG"
+printf "Pairs: %s | TFs: %s | dry_run=%s\n" "${PAIRS[*]}" "${TFS[*]}" "$DRY_RUN" | tee -a "$RUNLOG"
+
+summary_lines=()
+had_error=0
+had_signal=0
+
+run_one () {
+  local pair="$1" tf="$2"
+  # Capture single-line result from runner_confluence (already formatted)
+  if out="$(python3 "$TOOLS/runner_confluence.py" --pair "$pair" --tf "$tf" --force --dry-run="$DRY_RUN" 2>&1)"; then
+    # Keep a clean one-liner for the summary and the full log for diagnostics
+    local line="$(echo "$out" | tail -n 1)"
+    echo "$out" >> "$RUNLOG"
+    summary_lines+=("• ${line}")
+    # Detect non-zero BUY/SELL sums in the line (very lightweight parse)
+    if echo "$line" | awk '/BUY/ && /SELL/ { if ($0 ~ /BUY [^0-9]*([0-9]+\.[0-9]+|[1-9][0-9]*\.*[0-9]*)/ || $0 ~ /SELL [^0-9]*([0-9]+\.[0-9]+|[1-9][0-9]*\.*[0-9]*)/) print "hit" }' | grep -q hit; then
+      had_signal=1
+    fi
+  else
+    had_error=1
+    echo "[ERROR] $pair $tf" | tee -a "$RUNLOG"
+    echo "$out" >> "$RUNLOG"
+    summary_lines+=("• ${pair} ${tf} – ERROR (see log)")
+  fi
+}
+
+for p in "${PAIRS[@]}"; do
+  for tf in "${TFS[@]}"; do
+    run_one "$p" "$tf"
+  done
+done
+
+echo "=== SMOKE END $(date -Is) ===" | tee -a "$RUNLOG"
+
+# Build Telegram message (short + readable)
+title="🧪 Smoke: $(date -u +%Y-%m-%dT%H:%MZ) • Pairs ${#PAIRS[@]} × TFs ${#TFS[@]}"
+status="OK"
+[[ $had_error -eq 1 ]] && status="Issues"
+[[ $had_signal -eq 1 ]] && status="$status • Signals"
+
+msg="$title
+Status: $status
+
+$(printf "%s\n" "${summary_lines[@]}")"
+
+# Send to Telegram using your existing notifier
+python3 "$TOOLS/status_cmd.py" --alert "$msg" >/dev/null 2>&1 || true
+
+# Also print to terminal
+printf "\n%s\n" "$msg"
+
+# Exit non-zero if any runner errored (useful for future CI/cron checks)
+exit $had_error
+
+
+===== FILE: scan_and_send.sh =====
+
+# ~/bot-a/tools/scan_and_send.sh
+#!/data/data/com.termux/files/usr/bin/bash
+set -e
+
+PAIR="${1:-EURUSD}"
+TF="${2:-M15}"
+
+LINE=$(python3 "$HOME/bot-a/tools/runner_confluence.py" --pair "$PAIR" --tf "$TF" --force --dry-run=false)
+echo "$LINE"
+
+score=$(echo "$LINE" | awk -F'Score ' '{print $2}' | awk '{print $1}')
+min=${CONF_MIN:-3.0}
+
+# send only if |score| >= min
+awk -v s="$score" -v m="$min" 'BEGIN{ exit !( (s >= m) || (s <= -m) ) }' || exit 0
+
+python3 "$HOME/bot-a/tools/status_cmd.py" --alert "$LINE" >/dev/null 2>&1 || true

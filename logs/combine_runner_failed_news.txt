@@ -1,0 +1,2 @@
+[news_sentiment] SKIP: risk gate (stop too small: 0.0p < 50.0p; tp too small: 0.0p < 80.0p)
+[skip] XAUUSD BUY — stop too small: 0.0p < 50.0p; tp too small: 0.0p < 80.0p

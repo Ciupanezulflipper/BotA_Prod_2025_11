@@ -1,0 +1,2 @@
+botA_h1 dead=0 cmd=bash path=/data/data/com.termux/files/home/bot-a
+botA_watch dead=0 cmd=bash path=/data/data/com.termux/files/home/bot-a

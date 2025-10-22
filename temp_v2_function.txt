@@ -1,0 +1,39 @@
+def _score_stub(df: pd.DataFrame) -> tuple[str, float, str]:
+    """V2: Bollinger Bands Mean Reversion Strategy"""
+    
+    if len(df) < 50:
+        return "WAIT", 0.0, "insufficient data for BB"
+    
+    # Calculate Bollinger Bands
+    sma20 = df['c'].rolling(20).mean().iloc[-1]
+    std20 = df['c'].rolling(20).std().iloc[-1]
+    bb_upper = sma20 + (std20 * 2)
+    bb_lower = sma20 - (std20 * 2)
+    
+    current_price = float(df['c'].iloc[-1])
+    bb_position = (current_price - bb_lower) / (bb_upper - bb_lower)
+    
+    # Calculate RSI(14)
+    delta = df['c'].diff()
+    gain = (delta.where(delta > 0, 0)).rolling(14).mean()
+    loss = (-delta.where(delta < 0, 0)).rolling(14).mean()
+    rs = gain / loss
+    rsi = (100 - (100 / (1 + rs))).iloc[-1]
+    
+    # Volatility filter
+    volatility = (df['c'].rolling(20).std() / df['c'].rolling(20).mean()).iloc[-1] * 100
+    
+    if volatility < 0.25:
+        return "WAIT", 0.0, f"Vol too low ({volatility:.3f}%)"
+    
+    # BUY: Oversold at lower BB
+    if bb_position < 0.2 and rsi < 40:
+        score = (0.2 - bb_position) * 2
+        return "BUY", round(score, 2), f"BB oversold ({bb_position:.2f}, RSI {rsi:.0f})"
+    
+    # SELL: Overbought at upper BB
+    if bb_position > 0.8 and rsi > 60:
+        score = (bb_position - 0.8) * 2
+        return "SELL", round(score, 2), f"BB overbought ({bb_position:.2f}, RSI {rsi:.0f})"
+    
+    return "WAIT", 0.0, f"No extreme (BB pos={bb_position:.2f})"

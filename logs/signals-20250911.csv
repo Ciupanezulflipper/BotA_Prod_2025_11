@@ -1,0 +1,51 @@
+run_id,time_utc,symbol,tf,type,score,bias,side,entry,stop,target,why,cadence,watchlist,engine
+c3bdba6d,2025-09-11 06:30:03Z,,5min,heartbeat,,,,,,,15,,"EURUSD,XAUUSD",v2b
+c3bdba6d,2025-09-11 06:30:03Z,,5min,skip,,,,,,,outside trading hours | 15,,"EURUSD,XAUUSD",v2b
+9b8b172e,2025-09-11 08:00:01Z,,5min,heartbeat,,,,,,,15,,"EURUSD,XAUUSD",v2b
+9b8b172e,2025-09-11 08:00:02Z,,,ping,,,,,,,yfinance ok=False code=500 empty | 15,,"EURUSD,XAUUSD",v2b
+9b8b172e,2025-09-11 08:00:02Z,EURUSD,5min,ok,0,0,,,,,no data | 15,,"EURUSD,XAUUSD",v2b
+9b8b172e,2025-09-11 08:00:03Z,XAUUSD,5min,ok,0,0,,,,,no data | 15,,"EURUSD,XAUUSD",v2b
+b35ac9a4,2025-09-11 09:30:02Z,,5min,heartbeat,,,,,,,15,,"EURUSD,XAUUSD",v2b
+b35ac9a4,2025-09-11 09:30:04Z,,,ping,,,,,,,yfinance ok=False code=500 empty | 15,,"EURUSD,XAUUSD",v2b
+b35ac9a4,2025-09-11 09:30:04Z,EURUSD,5min,ok,0,0,,,,,no data | 15,,"EURUSD,XAUUSD",v2b
+b35ac9a4,2025-09-11 09:30:05Z,XAUUSD,5min,ok,0,0,,,,,no data | 15,,"EURUSD,XAUUSD",v2b
+ccdbcc37,2025-09-11 11:00:02Z,,5min,heartbeat,,,,,,,15,,"EURUSD,XAUUSD",v2b
+ccdbcc37,2025-09-11 11:00:03Z,,,ping,,,,,,,yfinance ok=False code=500 empty | 15,,"EURUSD,XAUUSD",v2b
+ccdbcc37,2025-09-11 11:00:03Z,EURUSD,5min,ok,0,0,,,,,no data | 15,,"EURUSD,XAUUSD",v2b
+ccdbcc37,2025-09-11 11:00:03Z,XAUUSD,5min,ok,0,0,,,,,no data | 15,,"EURUSD,XAUUSD",v2b
+655005e4,2025-09-11 11:30:03Z,,5min,heartbeat,,,,,,,15,,"EURUSD,XAUUSD",v2b
+655005e4,2025-09-11 11:30:04Z,,,ping,,,,,,,yfinance ok=False code=500 empty | 15,,"EURUSD,XAUUSD",v2b
+655005e4,2025-09-11 11:30:04Z,EURUSD,5min,ok,0,0,,,,,no data | 15,,"EURUSD,XAUUSD",v2b
+655005e4,2025-09-11 11:30:05Z,XAUUSD,5min,ok,0,0,,,,,no data | 15,,"EURUSD,XAUUSD",v2b
+5d69de97,2025-09-11 12:00:04Z,,5min,heartbeat,,,,,,,15,,"EURUSD,XAUUSD",v2b
+5d69de97,2025-09-11 12:00:14Z,,,ping,,,,,,,yfinance ok=False code=500 empty | 15,,"EURUSD,XAUUSD",v2b
+5d69de97,2025-09-11 12:00:19Z,EURUSD,5min,ok,0,0,,,,,no data | 15,,"EURUSD,XAUUSD",v2b
+5d69de97,2025-09-11 12:00:27Z,XAUUSD,5min,ok,0,0,,,,,no data | 15,,"EURUSD,XAUUSD",v2b
+2bd67b41,2025-09-11 13:30:02Z,,5min,heartbeat,,,,,,,15,,"EURUSD,XAUUSD",v2b
+2bd67b41,2025-09-11 13:30:12Z,,,ping,,,,,,,yfinance ok=False code=500 empty | 15,,"EURUSD,XAUUSD",v2b
+2bd67b41,2025-09-11 13:30:16Z,EURUSD,5min,ok,0,0,,,,,no data | 15,,"EURUSD,XAUUSD",v2b
+2bd67b41,2025-09-11 13:30:24Z,XAUUSD,5min,ok,0,0,,,,,no data | 15,,"EURUSD,XAUUSD",v2b
+f8ab5ed0,2025-09-11 14:00:02Z,,5min,heartbeat,,,,,,,15,,"EURUSD,XAUUSD",v2b
+f8ab5ed0,2025-09-11 14:00:11Z,,,ping,,,,,,,yfinance ok=False code=500 empty | 15,,"EURUSD,XAUUSD",v2b
+f8ab5ed0,2025-09-11 14:00:15Z,EURUSD,5min,ok,0,0,,,,,no data | 15,,"EURUSD,XAUUSD",v2b
+f8ab5ed0,2025-09-11 14:00:22Z,XAUUSD,5min,ok,0,0,,,,,no data | 15,,"EURUSD,XAUUSD",v2b
+8fc727a6,2025-09-11 14:30:02Z,,5min,heartbeat,,,,,,,15,,"EURUSD,XAUUSD",v2b
+8fc727a6,2025-09-11 14:30:12Z,,,ping,,,,,,,yfinance ok=False code=500 empty | 15,,"EURUSD,XAUUSD",v2b
+8fc727a6,2025-09-11 14:30:16Z,EURUSD,5min,ok,0,0,,,,,no data | 15,,"EURUSD,XAUUSD",v2b
+8fc727a6,2025-09-11 14:30:24Z,XAUUSD,5min,ok,0,0,,,,,no data | 15,,"EURUSD,XAUUSD",v2b
+10f521ed,2025-09-11 15:00:02Z,,5min,heartbeat,,,,,,,15,,"EURUSD,XAUUSD",v2b
+10f521ed,2025-09-11 15:00:12Z,,,ping,,,,,,,yfinance ok=False code=500 empty | 15,,"EURUSD,XAUUSD",v2b
+10f521ed,2025-09-11 15:00:18Z,EURUSD,5min,ok,0,0,,,,,no data | 15,,"EURUSD,XAUUSD",v2b
+10f521ed,2025-09-11 15:00:26Z,XAUUSD,5min,ok,0,0,,,,,no data | 15,,"EURUSD,XAUUSD",v2b
+40f208bf,2025-09-11 15:30:02Z,,5min,heartbeat,,,,,,,15,,"EURUSD,XAUUSD",v2b
+40f208bf,2025-09-11 15:30:11Z,,,ping,,,,,,,yfinance ok=False code=500 empty | 15,,"EURUSD,XAUUSD",v2b
+40f208bf,2025-09-11 15:30:16Z,EURUSD,5min,ok,0,0,,,,,no data | 15,,"EURUSD,XAUUSD",v2b
+40f208bf,2025-09-11 15:30:24Z,XAUUSD,5min,ok,0,0,,,,,no data | 15,,"EURUSD,XAUUSD",v2b
+bf5c8577,2025-09-11 18:00:02Z,,5min,heartbeat,,,,,,,15,,"EURUSD,XAUUSD",v2b
+bf5c8577,2025-09-11 18:00:03Z,,,ping,,,,,,,yfinance ok=False code=500 empty | 15,,"EURUSD,XAUUSD",v2b
+bf5c8577,2025-09-11 18:00:03Z,EURUSD,5min,ok,0,0,,,,,no data | 15,,"EURUSD,XAUUSD",v2b
+bf5c8577,2025-09-11 18:00:04Z,XAUUSD,5min,ok,0,0,,,,,no data | 15,,"EURUSD,XAUUSD",v2b
+76274797,2025-09-11 18:30:02Z,,5min,heartbeat,,,,,,,15,,"EURUSD,XAUUSD",v2b
+76274797,2025-09-11 18:30:47Z,,,ping,,,,,,,yfinance ok=False code=500 empty | 15,,"EURUSD,XAUUSD",v2b
+76274797,2025-09-11 18:30:59Z,EURUSD,5min,ok,0,0,,,,,no data | 15,,"EURUSD,XAUUSD",v2b
+76274797,2025-09-11 18:31:12Z,XAUUSD,5min,ok,0,0,,,,,no data | 15,,"EURUSD,XAUUSD",v2b

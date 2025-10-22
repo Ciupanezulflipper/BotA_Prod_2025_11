@@ -1,0 +1,41 @@
+#!/usr/bin/env python3
+from datetime import datetime, timezone, timedelta
+from tz_helper import resolve_display_zone
+from market_hours import fx_market_state, fmt_eta
+
+# Approximate session lengths (keeps things simple and robust)
+SESSION_LEN = {
+    "Sydney": timedelta(hours=9),
+    "Tokyo": timedelta(hours=9),
+    "London": timedelta(hours=9),
+    "NewYork": timedelta(hours=9),
+}
+
+def render_market_block():
+    now_utc = datetime.now(timezone.utc)
+    disp_tz  = resolve_display_zone()
+    st = fx_market_state(now_utc)  # must return {"is_open": bool, "sessions_utc":[(name,next_open_utc),...]}
+
+    lines = []
+    lines.append(f"Forex: {'<b>OPEN</b>' if st['is_open'] else '<b>CLOSED</b>'} (Weekend guard may mute sends)")
+
+    # For each session, decide OPEN vs opens in…
+    for name, next_open in st["sessions_utc"]:
+        # assume last open was ~1 day before next open
+        last_open = next_open - timedelta(days=1)
+        close_at  = last_open + SESSION_LEN.get(name, timedelta(hours=9))
+
+        if last_open <= now_utc < close_at:
+            # currently trading
+            eta_close = fmt_eta(close_at, now_utc)
+            local_close = close_at.astimezone(disp_tz).strftime("%H:%M")
+            lines.append(f"{name}: OPEN (closes in {eta_close}, local {local_close})")
+        else:
+            # not trading right now
+            eta_open = fmt_eta(next_open, now_utc)
+            local_open = next_open.astimezone(disp_tz).strftime("%H:%M")
+            lines.append(f"{name} opens in {eta_open} (local {local_open})")
+    return "\n".join(lines)
+
+if __name__ == "__main__":
+    print(render_market_block())

@@ -1,0 +1,16 @@
+# --- Sanity: required tools ---
+for t in python3 flock; do
+  command -v "$t" >/dev/null 2>&1 || { echo "[$(date -u +'%Y-%m-%d %H:%M:%S')] ERROR: '$t' not found"; exit 1; }
+done
+
+trap 'printf "[%(%Y-%m-%d %H:%M:%S)T] INFO: stopping auto_h1
+" -1; exit 0' INT TERM
+
+cd "$PROJECT_ROOT"
+
+echo "[$(date -u +'%Y-%m-%d %H:%M:%S')] Entering hourly loop… (EURUSD H1)"
+
+while true; do
+  start_ts="$(date -u +'%Y-%m-%d %H:%M:%S')"
+  echo ""
+  echo "--- Iteration start: $start_ts ---"

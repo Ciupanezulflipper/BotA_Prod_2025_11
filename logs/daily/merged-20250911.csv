@@ -1,0 +1,12 @@
+_type,asof_utc,bias,event_risk,run_id,score,symbol,time_utc,version,why
+news,2025-09-11T00:00:08Z,Bullish,True,35a3e9fa,5,EURUSD,2025-09-11T00:00:08Z,news_v1,US CPI (high-impact): USD↑ → EURUSD↓ (news +5)
+news,2025-09-11T00:00:08Z,Bullish,True,35a3e9fa,5,XAUUSD,2025-09-11T00:00:08Z,news_v1,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5)
+news,2025-09-10T23:12:46Z,Neutral,True,df28b3,0,EURUSD,2025-09-11T00:09:25.552566Z,news_v2,finnhub | Jim Cramer reflects on 30 years of 'Squawk Box'
+news,2025-09-10T23:12:46Z,Neutral,True,df28b3,0,XAUUSD,2025-09-11T00:09:25.552566Z,news_v2,finnhub | Jim Cramer reflects on 30 years of 'Squawk Box'
+news,2025-09-10T20:28:00Z,Neutral,True,df28b3,0,EURUSD,2025-09-11T00:09:25.552566Z,news_v2,finnhub | Stablecoins could help the dollar remain the world’s No. 1 reserve currency — but not through Treasury-bill buying
+news,2025-09-10T17:35:00Z,Neutral,True,df28b3,0,EURUSD,2025-09-11T00:09:25.552566Z,news_v2,finnhub | Investors are chasing bond yields ahead of the Fed’s rate decision. Here’s the opportunity.
+news,2025-09-10T17:35:00Z,Neutral,True,df28b3,0,XAUUSD,2025-09-11T00:09:25.552566Z,news_v2,finnhub | Investors are chasing bond yields ahead of the Fed’s rate decision. Here’s the opportunity.
+news,2025-09-10T17:32:00Z,Bullish,True,df28b3,4,EURUSD,2025-09-11T00:09:25.552566Z,news_v2,"finnhub | Family offices favor this area of bonds ahead of potential Fed rate cuts, Goldman Sachs finds"
+news,2025-09-10T17:32:00Z,Bullish,True,df28b3,4,XAUUSD,2025-09-11T00:09:25.552566Z,news_v2,"finnhub | Family offices favor this area of bonds ahead of potential Fed rate cuts, Goldman Sachs finds"
+news,2025-09-10T16:26:00Z,Bullish,True,df28b3,4,EURUSD,2025-09-11T00:09:25.552566Z,news_v2,finnhub | What many investors are looking for in the August CPI data coming out tomorrow
+news,2025-09-10T16:26:00Z,Bullish,True,df28b3,2,XAUUSD,2025-09-11T00:09:25.552566Z,news_v2,finnhub | What many investors are looking for in the August CPI data coming out tomorrow

@@ -1,0 +1,97 @@
+=== BotA H1 Auto-Loop START ===
+[2025-10-13 08:10:20] PID=13573  CWD=/data/data/com.termux/files/home/bot-a  LOG=/data/data/com.termux/files/home/bot-a/logs/auto_h1.log
+[2025-10-13 08:10:20] Env loaded from .env.botA (BOT_TOKEN masked, CHAT_ID present=yes)
+/data/data/com.termux/files/home/bot-a/tools/auto_h1.sh: line 45: trap: %H:%M:%S)] INFO: stopping auto_h1"; exit 0: invalid signal specification
+=== BotA H1 Auto-Loop START ===
+[2025-10-13 08:11:00] PID=14101  CWD=/data/data/com.termux/files/home/bot-a  LOG=/data/data/com.termux/files/home/bot-a/logs/auto_h1.log
+[2025-10-13 08:11:00] Env loaded from .env.botA (BOT_TOKEN masked, CHAT_ID present=yes)
+/data/data/com.termux/files/home/bot-a/tools/auto_h1.sh: line 45: trap: %H:%M:%S)] INFO: stopping auto_h1"; exit 0: invalid signal specification
+=== BotA H1 Auto-Loop START ===
+[2025-10-13 08:11:24] PID=14462  CWD=/data/data/com.termux/files/home/bot-a  LOG=/data/data/com.termux/files/home/bot-a/logs/auto_h1.log
+[2025-10-13 08:11:24] Env loaded from .env.botA (BOT_TOKEN masked, CHAT_ID present=yes)
+/data/data/com.termux/files/home/bot-a/tools/auto_h1.sh: line 45: trap: %H:%M:%S)] INFO: stopping auto_h1"; exit 0: invalid signal specification
+=== BotA H1 Auto-Loop START ===
+[2025-10-13 08:11:59] PID=14781  CWD=/data/data/com.termux/files/home/bot-a  LOG=/data/data/com.termux/files/home/bot-a/logs/auto_h1.log
+[2025-10-13 08:11:59] Env loaded from .env.botA (BOT_TOKEN masked, CHAT_ID present=yes)
+/data/data/com.termux/files/home/bot-a/tools/auto_h1.sh: line 45: trap: %H:%M:%S)] INFO: stopping auto_h1"; exit 0: invalid signal specification
+=== BotA H1 Auto-Loop START ===
+[2025-10-13 08:12:39] PID=15128  CWD=/data/data/com.termux/files/home/bot-a  LOG=/data/data/com.termux/files/home/bot-a/logs/auto_h1.log
+[2025-10-13 08:12:39] Env loaded from .env.botA (BOT_TOKEN masked, CHAT_ID present=yes)
+/data/data/com.termux/files/home/bot-a/tools/auto_h1.sh: line 45: trap: %H:%M:%S)] INFO: stopping auto_h1"; exit 0: invalid signal specification
+=== BotA H1 Auto-Loop START ===
+[2025-10-13 08:13:19] PID=15249  CWD=/data/data/com.termux/files/home/bot-a  LOG=/data/data/com.termux/files/home/bot-a/logs/auto_h1.log
+[2025-10-13 08:13:19] Env loaded from .env.botA (BOT_TOKEN masked, CHAT_ID present=yes)
+/data/data/com.termux/files/home/bot-a/tools/auto_h1.sh: line 45: trap: %H:%M:%S)] INFO: stopping auto_h1"; exit 0: invalid signal specification
+=== BotA H1 Auto-Loop START ===
+[2025-10-13 08:13:59] PID=15470  CWD=/data/data/com.termux/files/home/bot-a  LOG=/data/data/com.termux/files/home/bot-a/logs/auto_h1.log
+[2025-10-13 08:13:59] Env loaded from .env.botA (BOT_TOKEN masked, CHAT_ID present=yes)
+/data/data/com.termux/files/home/bot-a/tools/auto_h1.sh: line 45: trap: %H:%M:%S)] INFO: stopping auto_h1"; exit 0: invalid signal specification
+=== BotA H1 Auto-Loop START ===
+[2025-10-13 08:14:40] PID=15539  CWD=/data/data/com.termux/files/home/bot-a  LOG=/data/data/com.termux/files/home/bot-a/logs/auto_h1.log
+[2025-10-13 08:14:40] Env loaded from .env.botA (BOT_TOKEN masked, CHAT_ID present=yes)
+/data/data/com.termux/files/home/bot-a/tools/auto_h1.sh: line 45: trap: %H:%M:%S)] INFO: stopping auto_h1"; exit 0: invalid signal specification
+=== BotA H1 Auto-Loop START ===
+[2025-10-13 08:15:20] PID=15604  CWD=/data/data/com.termux/files/home/bot-a  LOG=/data/data/com.termux/files/home/bot-a/logs/auto_h1.log
+[2025-10-13 08:15:20] Env loaded from .env.botA (BOT_TOKEN masked, CHAT_ID present=yes)
+/data/data/com.termux/files/home/bot-a/tools/auto_h1.sh: line 45: trap: %H:%M:%S)] INFO: stopping auto_h1"; exit 0: invalid signal specification
+=== BotA H1 Auto-Loop START ===
+[2025-10-13 08:16:00] PID=15697  CWD=/data/data/com.termux/files/home/bot-a  LOG=/data/data/com.termux/files/home/bot-a/logs/auto_h1.log
+[2025-10-13 08:16:00] Env loaded from .env.botA (BOT_TOKEN masked, CHAT_ID present=yes)
+/data/data/com.termux/files/home/bot-a/tools/auto_h1.sh: line 45: trap: %H:%M:%S)] INFO: stopping auto_h1"; exit 0: invalid signal specification
+=== BotA H1 Auto-Loop START ===
+[2025-10-13 08:16:40] PID=15997  CWD=/data/data/com.termux/files/home/bot-a  LOG=/data/data/com.termux/files/home/bot-a/logs/auto_h1.log
+[2025-10-13 08:16:40] Env loaded from .env.botA (BOT_TOKEN masked, CHAT_ID present=yes)
+/data/data/com.termux/files/home/bot-a/tools/auto_h1.sh: line 45: trap: %H:%M:%S)] INFO: stopping auto_h1"; exit 0: invalid signal specification
+=== BotA H1 Auto-Loop START ===
+[2025-10-13 08:17:19] PID=16137  CWD=/data/data/com.termux/files/home/bot-a  LOG=/data/data/com.termux/files/home/bot-a/logs/auto_h1.log
+[2025-10-13 08:17:19] Env loaded from .env.botA (BOT_TOKEN masked, CHAT_ID present=yes)
+/data/data/com.termux/files/home/bot-a/tools/auto_h1.sh: line 45: trap: %H:%M:%S)] INFO: stopping auto_h1"; exit 0: invalid signal specification
+=== BotA H1 Auto-Loop START ===
+[2025-10-13 08:18:00] PID=16216  CWD=/data/data/com.termux/files/home/bot-a  LOG=/data/data/com.termux/files/home/bot-a/logs/auto_h1.log
+[2025-10-13 08:18:00] Env loaded from .env.botA (BOT_TOKEN masked, CHAT_ID present=yes)
+/data/data/com.termux/files/home/bot-a/tools/auto_h1.sh: line 45: trap: %H:%M:%S)] INFO: stopping auto_h1"; exit 0: invalid signal specification
+=== BotA H1 Auto-Loop START ===
+[2025-10-13 08:18:40] PID=16440  CWD=/data/data/com.termux/files/home/bot-a  LOG=/data/data/com.termux/files/home/bot-a/logs/auto_h1.log
+[2025-10-13 08:18:40] Env loaded from .env.botA (BOT_TOKEN masked, CHAT_ID present=yes)
+[2025-10-13 08:18:40] Entering hourly loop… (EURUSD H1)
+
+--- Iteration start: 2025-10-13 08:18:40 ---
+📊 EURUSD (H1)
+🕒 2025-10-13 08:18 UTC
+📈 Action: WAIT
+📊 Score: -0.12
+🧠 Reason: near SMA20
+Price source: close
+Source: twelvedata
+[2025-10-13 08:18:42] ✓ run ok
+[2025-10-13 08:18:42] Sleeping 3600s
+=== BotA H1 Auto-Loop START ===
+[2025-10-13 08:19:05] PID=16769  CWD=/data/data/com.termux/files/home/bot-a  LOG=/data/data/com.termux/files/home/bot-a/logs/auto_h1.log
+[2025-10-13 08:19:05] Env loaded from .env.botA (BOT_TOKEN masked, CHAT_ID present=yes)
+[2025-10-13 08:19:05] Entering hourly loop… (EURUSD H1)
+
+--- Iteration start: 2025-10-13 08:19:05 ---
+📊 EURUSD (H1)
+🕒 2025-10-13 08:19 UTC
+📈 Action: WAIT
+📊 Score: -0.12
+🧠 Reason: near SMA20
+Price source: close
+Source: twelvedata
+[2025-10-13 08:19:07] ✓ run ok
+[2025-10-13 08:19:07] Sleeping 3600s
+=== BotA H1 Auto-Loop START ===
+[2025-10-13 08:22:12] PID=17702  CWD=/data/data/com.termux/files/home/bot-a  LOG=/data/data/com.termux/files/home/bot-a/logs/auto_h1.log
+[2025-10-13 08:22:12] Env loaded from .env.botA (BOT_TOKEN masked, CHAT_ID present=yes)
+[2025-10-13 08:22:12] Entering hourly loop… (EURUSD H1)
+
+--- Iteration start: 2025-10-13 08:22:12 ---
+📊 EURUSD (H1)
+🕒 2025-10-13 08:22 UTC
+📈 Action: SELL
+📊 Score: -0.16
+🧠 Reason: last < SMA20 by >0.15%
+Price source: close
+Source: twelvedata
+[2025-10-13 08:22:14] ✓ run ok
+[2025-10-13 08:22:14] Sleeping 3600s

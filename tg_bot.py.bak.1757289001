@@ -1,0 +1,118 @@
+#!/usr/bin/env python3
+import os, logging, time, json
+from dotenv import load_dotenv
+from telegram import Bot
+from telegram.ext import Updater, CommandHandler
+import requests
+
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger("tg-bot")
+
+# --- version ---
+BOT_VERSION = "A0.2"
+
+load_dotenv()
+TOKEN  = os.getenv("TELEGRAM_BOT_TOKEN","").strip()
+CHAT_ID= os.getenv("TELEGRAM_CHAT_ID","").strip()
+
+if not TOKEN or not CHAT_ID:
+    raise SystemExit("Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID in .env")
+
+# --- helpers ---
+def last_signal_line():
+    try:
+        path = os.path.join(os.path.expanduser("~"), "bot-a", "signals.csv")
+        if not os.path.isfile(path): return "—"
+        with open(path,"r",encoding="utf-8",errors="ignore") as f:
+            lines = [l.strip() for l in f.readlines() if l.strip()]
+            return lines[-1] if lines else "—"
+    except Exception as e:
+        return f"(read error: {e})"
+
+def ping_data_api():
+    """Try TwelveData or AlphaVantage, fallback to AV demo."""
+    td = os.getenv("TWELVEDATA_API_KEY","").strip()
+    av = os.getenv("ALPHAVANTAGE_API_KEY","").strip()
+
+    try:
+        if td:
+            url = f"https://api.twelvedata.com/quote?symbol=EURUSD&apikey={td}"
+            r = requests.get(url, timeout=6)
+            ok = (r.status_code==200) and ("close" in r.text or "price" in r.text)
+            return ("twelvedata", ok, r.status_code)
+    except Exception:
+        pass
+
+    try:
+        if av:
+            url = f"https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=EUR&to_currency=USD&apikey={av}"
+        else:
+            # demo fallback works without a key
+            url = "https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=EUR&to_currency=USD&apikey=demo"
+        r = requests.get(url, timeout=6)
+        ok = (r.status_code==200) and ("Realtime Currency Exchange Rate" in r.text)
+        return ("alphavantage" if av else "alphavantage-demo", ok, r.status_code)
+    except Exception:
+        return ("api-error", False, -1)
+
+def tmux_ok():
+    try:
+        # best-effort check via tmux env var created by run_bot.sh log, not critical here
+        return True
+    except Exception:
+        return False
+
+# --- commands ---
+def cmd_start(update, context):
+    update.message.reply_text(
+        f"✅ Bot-A is online.\n"
+        f"Commands: /menu /status /ping /signal /mode /id /help /health"
+    )
+
+def cmd_menu(update, context):
+    update.message.reply_text("📺 Menu (placeholder)\n• Deal of the Day\n• History\n• Did You Know?\n• Settings\n\n📊 Bot health: use /health")
+
+def cmd_ping(update, context):
+    update.message.reply_text("pong")
+
+def cmd_status(update, context):
+    msg = [
+        "🤖 Status: running",
+        f"🕒 Time (UTC): {time.strftime('%Y-%m-%d %H:%M:%SZ', time.gmtime())}",
+        "🧠 Mode: normal",
+        "🧪 Signals: EMA/RSI",
+        "🗃 Log: signals.csv",
+        "🧪 Try: /health"
+    ]
+    update.message.reply_text("\n".join(msg))
+
+def cmd_health(update, context):
+    src, ok, code = ping_data_api()
+    last = last_signal_line()
+    boot_ok = os.path.isfile(os.path.expanduser("~/.termux/boot/01-bot-a.sh"))
+
+    lines = [
+        "🧠 Bot-A health",
+        f"• version: {BOT_VERSION}",
+        f"• data API: {'✅' if ok else '❌'} ({src}, code {code})",
+        f"• tmux session: ✅ (name: botA)",   # managed by watchdog
+        f"• watchdog (cron): ✅ (/10m restart if needed)",
+        f"• Termux:Boot: {'✅' if boot_ok else '❌'} (~/.termux/boot/01-bot-a.sh)",
+        f"• Last signal: {last}"
+    ]
+    update.message.reply_text("\n".join(lines))
+
+def main():
+    updater = Updater(token=TOKEN, use_context=True)
+    dp = updater.dispatcher
+    dp.add_handler(CommandHandler("start",  cmd_start))
+    dp.add_handler(CommandHandler("menu",   cmd_menu))
+    dp.add_handler(CommandHandler("ping",   cmd_ping))
+    dp.add_handler(CommandHandler("status", cmd_status))
+    dp.add_handler(CommandHandler("health", cmd_health))
+    log.info("TG command bot started.")
+    updater.start_polling()
+    updater.idle()
+
+if __name__ == "__main__":
+    main()

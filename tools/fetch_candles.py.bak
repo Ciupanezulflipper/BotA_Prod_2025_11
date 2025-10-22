@@ -1,0 +1,331 @@
+#!/usr/bin/env python3
+"""
+fetch_candles.py  — robust multi-provider candles fetcher for EURUSD (and others)
+
+Providers order (fastest & most reliable first):
+1) Yahoo Finance (yfinance)     – no API key, intraday + daily
+2) TwelveData                   – needs TWELVE_DATA_API_KEY
+3) AlphaVantage                 – needs ALPHA_VANTAGE_API_KEY (intraday = premium)
+4) Finnhub                      – needs FINNHUB_API_KEY
+5) Stooq                        – public CSV (daily only; intraday not reliable)
+
+Usage examples:
+  python3 fetch_candles.py --pair EURUSD --tf M15 --limit 300
+  python3 fetch_candles.py --pair EURUSD --tf H1  --limit 500
+  python3 fetch_candles.py --pair EURUSD --tf H4  --limit 500
+  python3 fetch_candles.py --pair EURUSD --tf D1  --limit 500
+"""
+
+import os, sys, csv, json, time, math
+import argparse
+from datetime import datetime, timedelta, timezone
+
+OUTDIR = os.path.expanduser("~/bot-a/data/candles")
+os.makedirs(OUTDIR, exist_ok=True)
+
+# ---------- helpers ----------
+
+def log(msg): 
+    print(msg, flush=True)
+
+def utc_fmt(ts):
+    if isinstance(ts, (int, float)):
+        dt = datetime.fromtimestamp(ts, tz=timezone.utc)
+    elif isinstance(ts, datetime):
+        dt = ts.astimezone(timezone.utc)
+    else:
+        return str(ts)
+    return dt.strftime("%Y-%m-%d %H:%M:%S")
+
+def ensure_rows(df_like, limit):
+    """Convert a pandas DataFrame-like OHLC into list[dict] rows with UTC time.
+       Expected columns: 'Open','High','Low','Close'. Index must be datetime."""
+    rows = []
+    try:
+        import pandas as pd
+        df = df_like.copy()
+        # normalize timezone to UTC if tz-aware
+        if getattr(df.index, "tz", None) is not None:
+            df = df.tz_convert("UTC")
+        else:
+            # assume already UTC
+            pass
+        df = df.tail(int(limit))
+        for ts, r in df.iterrows():
+            rows.append({
+                "time": utc_fmt(ts.to_pydatetime().replace(tzinfo=timezone.utc)),
+                "open": float(r["Open"]),
+                "high": float(r["High"]),
+                "low":  float(r["Low"]),
+                "close":float(r["Close"]),
+            })
+    except Exception as e:
+        raise RuntimeError(f"ensure_rows error: {e}")
+    return rows
+
+def write_csv(rows, outpath):
+    tmp = outpath + ".tmp"
+    with open(tmp, "w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["time","open","high","low","close"])
+        for r in rows:
+            w.writerow([r["time"], r["open"], r["high"], r["low"], r["close"]])
+    os.replace(tmp, outpath)
+
+# ---------- provider: yfinance ----------
+
+def map_yf_symbol(pair):
+    """Map FX pair to yfinance ticker."""
+    m = {
+        "EURUSD": "EURUSD=X",
+        "XAUUSD": "XAUUSD=X",
+        "GBPUSD": "GBPUSD=X",
+        "USDJPY": "JPY=X",      # note: yfinance uses JPY=X (USD/JPY inverted display)
+    }
+    return m.get(pair.upper(), f"{pair.upper()}=X")
+
+def yf_interval(tf):
+    # yfinance supported: 1m 2m 5m 15m 30m 60m 90m 1h 1d 5d 1wk 1mo 3mo
+    tf = tf.upper()
+    if tf == "M5":  return "5m"
+    if tf == "M15": return "15m"
+    if tf == "H1":  return "1h"
+    if tf == "H4":  return "1h"   # fetch 1h then resample to 4H
+    if tf == "D1":  return "1d"
+    raise ValueError(f"Unsupported tf for yfinance: {tf}")
+
+def yf_period(tf, limit):
+    tf = tf.upper()
+    # choose a long enough period so yfinance returns >= limit bars
+    if tf in ("M5","M15"):
+        return "60d"   # intraday needs period in days
+    if tf in ("H1","H4"):
+        return "730d"
+    if tf == "D1":
+        return "max"
+    return "60d"
+
+def fetch_yfinance(pair, tf, limit):
+    import pandas as pd
+    import yfinance as yf
+    sym = map_yf_symbol(pair)
+    interval = yf_interval(tf)
+    period = yf_period(tf, limit)
+    log(f"[yfinance] downloading {sym} interval={interval} period={period}")
+    df = yf.download(sym, interval=interval, period=period, auto_adjust=False, progress=False)
+    if df is None or len(df) == 0:
+        raise RuntimeError("yfinance returned empty dataframe")
+    # Rename columns to standard
+    df = df.rename(columns={"Open":"Open","High":"High","Low":"Low","Close":"Close"})
+    # yfinance index tz-aware in UTC or exchange tz; convert
+    if getattr(df.index, "tz", None) is None:
+        df.index = df.index.tz_localize("UTC")
+    else:
+        df = df.tz_convert("UTC")
+
+    if tf.upper() == "H4":
+        # resample 1h → 4h
+        df = df[["Open","High","Low","Close"]].resample("4H", label="right", closed="right").agg({
+            "Open":"first","High":"max","Low":"min","Close":"last"
+        }).dropna()
+
+    rows = ensure_rows(df[["Open","High","Low","Close"]], limit)
+    return rows, "yfinance"
+
+# ---------- provider: TwelveData ----------
+
+def fetch_twelvedata(pair, tf, limit):
+    import urllib.parse, urllib.request
+    key = os.environ.get("TWELVE_DATA_API_KEY","")
+    if not key:
+        raise RuntimeError("no TWELVE_DATA_API_KEY")
+    tfmap = {"M5":"5min","M15":"15min","H1":"1h","H4":"4h","D1":"1day"}
+    interval = tfmap.get(tf.upper())
+    if not interval:
+        raise RuntimeError(f"twelvedata unsupported tf: {tf}")
+    params = {
+        "symbol": f"{pair.upper()}/USD" if len(pair)==6 and pair.upper().endswith("USD") else pair.upper(),
+        "interval": interval,
+        "apikey": key,
+        "outputsize": str(limit*2),   # fetch more then tail
+        "format": "JSON",
+        "timezone": "UTC",
+    }
+    url = "https://api.twelvedata.com/time_series?" + urllib.parse.urlencode(params)
+    with urllib.request.urlopen(url, timeout=20) as r:
+        j = json.loads(r.read().decode())
+    if "values" not in j:
+        raise RuntimeError(f"twelvedata bad response: {j}")
+    vals = j["values"]
+    vals = vals[::-1]  # ascending
+    rows = []
+    for v in vals[-limit:]:
+        # v["datetime"] like "2025-09-22 20:15:00"
+        rows.append({
+            "time": v["datetime"],
+            "open": float(v["open"]),
+            "high": float(v["high"]),
+            "low":  float(v["low"]),
+            "close":float(v["close"]),
+        })
+    return rows, "twelvedata"
+
+# ---------- provider: AlphaVantage (intraday often premium) ----------
+
+def fetch_alphavantage(pair, tf, limit):
+    import urllib.parse, urllib.request
+    key = os.environ.get("ALPHA_VANTAGE_API_KEY","")
+    if not key:
+        raise RuntimeError("no ALPHA_VANTAGE_API_KEY")
+    tf = tf.upper()
+    if tf in ("M5","M15","H1"):
+        intramap = {"M5":"5min","M15":"15min","H1":"60min"}
+        function = "FX_INTRADAY"
+        params = {
+            "function": function,
+            "from_symbol": pair[:3].upper(),
+            "to_symbol": pair[3:].upper(),
+            "interval": intramap[tf],
+            "apikey": key,
+            "outputsize": "full"
+        }
+    elif tf in ("H4","D1"):
+        # Use FX_DAILY, then resample to 4H isn't possible => for H4 AV is not suitable
+        function = "FX_DAILY"
+        params = {
+            "function": function,
+            "from_symbol": pair[:3].upper(),
+            "to_symbol": pair[3:].upper(),
+            "apikey": key,
+            "outputsize": "full"
+        }
+    else:
+        raise RuntimeError(f"alphavantage unsupported tf: {tf}")
+
+    url = "https://www.alphavantage.co/query?" + urllib.parse.urlencode(params)
+    with urllib.request.urlopen(url, timeout=20) as r:
+        j = json.loads(r.read().decode())
+
+    # Intraday and Daily have different field names
+    series = None
+    for k in j.keys():
+        if "Time Series" in k:
+            series = j[k]
+            break
+    if not series:
+        raise RuntimeError(f"alphavantage structure unknown: {list(j.keys())}")
+
+    # series dict: time -> {"1. open": "...", "2. high": "...", ...}
+    keys_sorted = sorted(series.keys())
+    rows_all = []
+    for t in keys_sorted:
+        o = float(series[t]["1. open"]); h = float(series[t]["2. high"])
+        l = float(series[t]["3. low"]);  c = float(series[t]["4. close"])
+        rows_all.append({"time": t.replace("T"," ").replace("Z",""), "open":o,"high":h,"low":l,"close":c})
+
+    if tf == "H4":
+        # AV did daily only here – cannot produce H4 reliably → let caller try another provider
+        raise RuntimeError("alphavantage cannot provide H4 accurately")
+
+    rows = rows_all[-limit:]
+    return rows, "alphavantage"
+
+# ---------- provider: Finnhub ----------
+
+def fetch_finnhub(pair, tf, limit):
+    import urllib.parse, urllib.request
+    key = os.environ.get("FINNHUB_API_KEY","")
+    if not key:
+        raise RuntimeError("no FINNHUB_API_KEY")
+    tfmap = {"M5":"5","M15":"15","H1":"60","H4":"240","D1":"D"}
+    res = tfmap.get(tf.upper())
+    if not res:
+        raise RuntimeError(f"finnhub unsupported tf: {tf}")
+
+    now = int(time.time())
+    # For enough bars, go back roughly limit * tf seconds
+    width_sec = {"5":300, "15":900, "60":3600, "240":14400, "D":86400}[res]
+    _from = now - int(width_sec * (limit*1.5 + 20))
+
+    params = {
+        "symbol": f"OANDA:{pair.upper()}",
+        "resolution": res,
+        "from": _from,
+        "to": now,
+        "token": key
+    }
+    url = "https://finnhub.io/api/v1/forex/candle?" + urllib.parse.urlencode(params)
+    with urllib.request.urlopen(url, timeout=20) as r:
+        j = json.loads(r.read().decode())
+    if j.get("s") != "ok":
+        raise RuntimeError(f"finnhub bad response: {j}")
+    rows = []
+    for ts, o, h, l, c in zip(j["t"], j["o"], j["h"], j["l"], j["c"]):
+        rows.append({"time": utc_fmt(ts), "open":float(o), "high":float(h), "low":float(l), "close":float(c)})
+    rows = rows[-limit:]
+    return rows, "finnhub"
+
+# ---------- provider: Stooq (daily only) ----------
+
+def fetch_stooq(pair, tf, limit):
+    if tf.upper() != "D1":
+        raise RuntimeError("stooq supports D1 only in this script")
+    import pandas as pd
+    import urllib.request
+    sym = pair.lower()
+    url = f"https://stooq.com/q/d/l/?s={sym}=i&i=d"  # FX daily
+    with urllib.request.urlopen(url, timeout=20) as r:
+        csvb = r.read().decode()
+    from io import StringIO
+    df = pd.read_csv(StringIO(csvb))
+    if "Date" not in df.columns:
+        raise RuntimeError("stooq: DATE is not in list")
+    df.rename(columns={"Date":"time","Open":"open","High":"high","Low":"low","Close":"close"}, inplace=True)
+    df["time"] = pd.to_datetime(df["time"]).dt.tz_localize("UTC").dt.strftime("%Y-%m-%d %H:%M:%S")
+    rows = []
+    for _, r in df.tail(limit).iterrows():
+        rows.append({"time": r["time"], "open": float(r["open"]), "high": float(r["high"]),
+                     "low": float(r["low"]), "close": float(r["close"])})
+    return rows, "stooq"
+
+# ---------- main ----------
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--pair", default="EURUSD")
+    ap.add_argument("--tf", default="M15", help="M5/M15/H1/H4/D1")
+    ap.add_argument("--limit", type=int, default=300)
+    args = ap.parse_args()
+
+    pair = args.pair.upper()
+    tf = args.tf.upper()
+    limit = int(args.limit)
+
+    providers = [
+        fetch_yfinance,
+        fetch_twelvedata,
+        fetch_alphavantage,
+        fetch_finnhub,
+        fetch_stooq,
+    ]
+
+    errors = []
+    for fn in providers:
+        try:
+            rows, who = fn(pair, tf, limit)
+            if not rows:
+                raise RuntimeError("no rows")
+            out = os.path.join(OUTDIR, f"{pair}_{tf}.csv")
+            write_csv(rows, out)
+            log(f"Saved {len(rows)} candles to {out} via {who}")
+            return
+        except Exception as e:
+            errors.append(f"[{fn.__name__}] {e}")
+
+    log("All providers failed.")
+    for e in errors:
+        log(" - " + e)
+    sys.exit(2)
+
+if __name__ == "__main__":
+    main()

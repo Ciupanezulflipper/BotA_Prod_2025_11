@@ -1,0 +1,70 @@
+utc_time,provider,status,symbol,interval,limit,rows,last_index,error
+2025-09-16 14:20:26,finnhub,fail,EURUSD,1h,10,0,,RuntimeError('All providers failed: finnhub: finnhub: fail')
+2025-09-16 14:20:27,twelvedata,ok,EURUSD,1h,10,10,2025-09-17 11:00:00,
+2025-09-16 14:20:28,finnhub,fail,XAUUSD,1h,10,0,,RuntimeError('All providers failed: finnhub: finnhub: fail')
+2025-09-16 14:20:28,twelvedata,rate_skip,XAUUSD,1h,10,0,,
+2025-09-16 14:20:29,alphavantage,fail,XAUUSD,1h,10,0,,RuntimeError('All providers failed: alphavantage: alphavantage: Invalid API call. Please retry or visit the documentation (https://www.alphavantage.co/documentation/) for TIME_SERI...
+2025-09-16 14:20:29,yahoo,fail,XAUUSD,1h,10,0,,RuntimeError('All providers failed: yahoo: yahoo: not implemented')
+2025-09-16 14:22:12,twelvedata,ok,EURUSD,1h,5,5,2025-09-17 11:00:00,
+2025-09-16 14:22:12,twelvedata,rate_skip,XAUUSD,1h,5,0,,
+2025-09-16 14:22:13,finnhub,fail,XAUUSD,1h,5,0,,RuntimeError('All providers failed: finnhub: finnhub: fail')
+2025-09-16 14:22:14,alphavantage,fail,XAUUSD,1h,5,0,,RuntimeError('All providers failed: alphavantage: alphavantage: Invalid API call. Please retry or visit the documentation (https://www.alphavantage.co/documentation/) for TIME_SERI...
+2025-09-16 14:34:58,twelvedata,ok,EURUSD,1h,10,10,2025-09-17 11:00:00,
+2025-09-16 14:34:58,twelvedata,rate_skip,XAUUSD,1h,10,0,,
+2025-09-16 14:34:59,finnhub,fail,XAUUSD,1h,10,0,,RuntimeError('All providers failed: finnhub: finnhub: fail')
+2025-09-16 14:34:59,eodhd,fail,XAUUSD,1h,10,0,,RuntimeError('All providers failed: eodhd: eodhd: not implemented')
+2025-09-16 14:35:00,alphavantage,fail,XAUUSD,1h,10,0,,RuntimeError('All providers failed: alphavantage: alphavantage: Invalid API call. Please retry or visit the documentation (https://www.alphavantage.co/documentation/) for TIME_SERI...
+2025-09-16 14:36:42,twelvedata,ok,EURUSD,1h,5,5,2025-09-17 11:00:00,
+2025-09-16 14:36:42,twelvedata,rate_skip,EURUSD,4h,5,0,,
+2025-09-16 14:36:42,finnhub,fail,EURUSD,4h,5,0,,RuntimeError('All providers failed: finnhub: finnhub: fail')
+2025-09-16 14:36:42,eodhd,fail,EURUSD,4h,5,0,,RuntimeError('All providers failed: eodhd: eodhd: not implemented')
+2025-09-16 14:36:45,alphavantage,ok,EURUSD,4h,5,5,2025-09-16 00:00:00,
+2025-09-16 14:36:45,twelvedata,rate_skip,EURUSD,1d,5,0,,
+2025-09-16 14:36:46,finnhub,fail,EURUSD,1d,5,0,,RuntimeError('All providers failed: finnhub: finnhub: fail')
+2025-09-16 14:36:46,eodhd,rate_skip,EURUSD,1d,5,0,,
+2025-09-16 14:36:46,alphavantage,ok,EURUSD,1d,5,5,2025-09-16 00:00:00,
+2025-09-16 14:36:46,twelvedata,rate_skip,XAUUSD,1h,5,0,,
+2025-09-16 14:36:46,finnhub,rate_skip,XAUUSD,1h,5,0,,
+2025-09-16 14:36:46,eodhd,rate_skip,XAUUSD,1h,5,0,,
+2025-09-16 14:36:47,alphavantage,fail,XAUUSD,1h,5,0,,RuntimeError('All providers failed: alphavantage: alphavantage: Invalid API call. Please retry or visit the documentation (https://www.alphavantage.co/documentation/) for TIME_SERI...
+2025-09-16 14:36:47,twelvedata,rate_skip,XAUUSD,4h,5,0,,
+2025-09-16 14:36:47,finnhub,rate_skip,XAUUSD,4h,5,0,,
+2025-09-16 14:36:47,eodhd,rate_skip,XAUUSD,4h,5,0,,
+2025-09-16 14:36:48,alphavantage,ok,XAUUSD,4h,5,5,2025-09-16 00:00:00,
+2025-09-16 14:36:48,twelvedata,rate_skip,XAUUSD,1d,5,0,,
+2025-09-16 14:36:48,finnhub,rate_skip,XAUUSD,1d,5,0,,
+2025-09-16 14:36:48,eodhd,rate_skip,XAUUSD,1d,5,0,,
+2025-09-16 14:36:48,alphavantage,rate_skip,XAUUSD,1d,5,0,,
+2025-09-16 14:38:17,twelvedata,ok,EURUSD,1h,5,5,2025-09-17 11:00:00,
+2025-09-16 14:38:17,twelvedata,rate_skip,EURUSD,4h,5,0,,
+2025-09-16 14:38:18,finnhub,fail,EURUSD,4h,5,0,,RuntimeError('All providers failed: finnhub: finnhub: fail')
+2025-09-16 14:38:18,eodhd,fail,EURUSD,4h,5,0,,RuntimeError('All providers failed: eodhd: eodhd: not implemented')
+2025-09-16 14:38:21,alphavantage,ok,EURUSD,4h,5,5,2025-09-16 00:00:00,
+2025-09-16 14:38:21,twelvedata,rate_skip,EURUSD,1d,5,0,,
+2025-09-16 14:38:22,finnhub,fail,EURUSD,1d,5,0,,RuntimeError('All providers failed: finnhub: finnhub: fail')
+2025-09-16 14:38:22,eodhd,rate_skip,EURUSD,1d,5,0,,
+2025-09-16 14:38:23,alphavantage,ok,EURUSD,1d,5,5,2025-09-16 00:00:00,
+2025-09-16 14:38:23,twelvedata,rate_skip,XAUUSD,1h,5,0,,
+2025-09-16 14:38:23,finnhub,rate_skip,XAUUSD,1h,5,0,,
+2025-09-16 14:38:23,eodhd,rate_skip,XAUUSD,1h,5,0,,
+2025-09-16 14:38:24,alphavantage,fail,XAUUSD,1h,5,0,,RuntimeError('All providers failed: alphavantage: alphavantage: Invalid API call. Please retry or visit the documentation (https://www.alphavantage.co/documentation/) for TIME_SERI...
+2025-09-16 14:38:24,twelvedata,rate_skip,XAUUSD,4h,5,0,,
+2025-09-16 14:38:24,finnhub,rate_skip,XAUUSD,4h,5,0,,
+2025-09-16 14:38:24,eodhd,rate_skip,XAUUSD,4h,5,0,,
+2025-09-16 14:38:25,alphavantage,ok,XAUUSD,4h,5,5,2025-09-16 00:00:00,
+2025-09-16 14:38:25,twelvedata,rate_skip,XAUUSD,1d,5,0,,
+2025-09-16 14:38:25,finnhub,rate_skip,XAUUSD,1d,5,0,,
+2025-09-16 14:38:25,eodhd,rate_skip,XAUUSD,1d,5,0,,
+2025-09-16 14:38:25,alphavantage,rate_skip,XAUUSD,1d,5,0,,
+2025-09-16T14:41:06+00:00,twelvedata,ok,rows=10
+2025-09-16T14:41:06+00:00,twelvedata,fail,All providers failed: 
+2025-09-16T14:41:06+00:00,finnhub,skip_unsupported,finnhub unsupported symbol XAUUSD
+2025-09-16T14:41:06+00:00,eodhd,skip_unsupported,eodhd not implemented
+2025-09-16T14:41:06+00:00,alphavantage,skip_unsupported,alphavantage unsupported interval 1h
+2025-09-16T14:41:09+00:00,twelvedata,fail,All providers failed: 
+2025-09-16T14:41:10+00:00,finnhub,fail,All providers failed: finnhub: finnhub: fail
+2025-09-16T14:41:10+00:00,eodhd,skip_unsupported,eodhd not implemented
+2025-09-16T14:41:10+00:00,alphavantage,skip_unsupported,alphavantage unsupported interval 4h
+2025-09-16T14:42:35+00:00,twelvedata,ok,rows=5
+2025-09-16T14:42:36+00:00,twelvedata,fail,All providers failed: 
+2025-09-16T14:42:37+00:00,alphavantage,ok,rows=5

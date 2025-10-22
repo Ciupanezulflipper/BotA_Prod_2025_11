@@ -1,0 +1,69 @@
+time_utc,symbol,dir,score,why
+2025-09-11T13:20:22.363547+00:00,EURUSD,BUY,5,US CPI (high-impact): USD↑ → EURUSD↓ (news +5)
+2025-09-11T13:20:22.363547+00:00,XAUUSD,BUY,5,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5)
+2025-09-11T13:30:00.687056+00:00,EURUSD,BUY,5,US CPI (high-impact): USD↑ → EURUSD↓ (news +5)
+2025-09-11T13:30:00.687056+00:00,XAUUSD,BUY,5,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5)
+2025-09-11T13:45:00.372493+00:00,EURUSD,BUY,5,US CPI (high-impact): USD↑ → EURUSD↓ (news +5)
+2025-09-11T13:45:00.372493+00:00,XAUUSD,BUY,5,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5)
+2025-09-11T14:00:00.153872+00:00,EURUSD,BUY,5,US CPI (high-impact): USD↑ → EURUSD↓ (news +5)
+2025-09-11T14:00:00.153872+00:00,XAUUSD,BUY,5,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5)
+2025-09-11T14:15:00.399893+00:00,EURUSD,SELL,5,"finnhub | RH CEO: ‘Significant inflation’ to hit this year, and gather speed in 2026 and beyond"
+2025-09-11T14:15:00.399893+00:00,XAUUSD,BUY,5,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5)
+2025-09-11T14:30:00.536215+00:00,EURUSD,SELL,5,"finnhub | RH CEO: ‘Significant inflation’ to hit this year, and gather speed in 2026 and beyond"
+2025-09-11T14:30:00.536215+00:00,XAUUSD,BUY,5,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5)
+2025-09-11T14:45:00.554611+00:00,EURUSD,SELL,5,"finnhub | RH CEO: ‘Significant inflation’ to hit this year, and gather speed in 2026 and beyond"
+2025-09-11T14:45:00.554611+00:00,XAUUSD,BUY,5,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5)
+2025-09-11T15:00:00.901166+00:00,EURUSD,SELL,5,"finnhub | RH CEO: ‘Significant inflation’ to hit this year, and gather speed in 2026 and beyond"
+2025-09-11T15:00:00.901166+00:00,XAUUSD,BUY,5,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5)
+2025-09-11T15:15:00.992726+00:00,EURUSD,BUY,5,US CPI (high-impact): USD↑ → EURUSD↓ (news +5)
+2025-09-11T15:15:00.992726+00:00,XAUUSD,BUY,5,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5)
+2025-09-11T15:30:00.683545+00:00,EURUSD,BUY,5,US CPI (high-impact): USD↑ → EURUSD↓ (news +5)
+2025-09-11T15:30:00.683545+00:00,XAUUSD,BUY,5,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5)
+2025-09-11T15:45:00.532239+00:00,EURUSD,BUY,5,US CPI (high-impact): USD↑ → EURUSD↓ (news +5)
+2025-09-11T15:45:00.532239+00:00,XAUUSD,BUY,5,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5)
+2025-09-11T16:00:00.164654+00:00,EURUSD,BUY,5,US CPI (high-impact): USD↑ → EURUSD↓ (news +5)
+2025-09-11T16:00:00.164654+00:00,XAUUSD,BUY,5,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5)
+2025-09-11T16:15:00.937830+00:00,EURUSD,BUY,5,US CPI (high-impact): USD↑ → EURUSD↓ (news +5)
+2025-09-11T16:15:00.937830+00:00,XAUUSD,BUY,5,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5)
+2025-09-11T16:30:00.311572+00:00,EURUSD,BUY,5,US CPI (high-impact): USD↑ → EURUSD↓ (news +5)
+2025-09-11T16:30:00.311572+00:00,XAUUSD,BUY,5,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5)
+2025-09-11T16:45:00.747822+00:00,EURUSD,BUY,5,US CPI (high-impact): USD↑ → EURUSD↓ (news +5)
+2025-09-11T16:45:00.747822+00:00,XAUUSD,BUY,5,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5)
+2025-09-11T17:00:01.127554+00:00,EURUSD,BUY,5,US CPI (high-impact): USD↑ → EURUSD↓ (news +5)
+2025-09-11T17:00:01.127554+00:00,XAUUSD,BUY,5,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5)
+2025-09-11T17:15:01.085754+00:00,EURUSD,BUY,5,US CPI (high-impact): USD↑ → EURUSD↓ (news +5)
+2025-09-11T17:15:01.085754+00:00,XAUUSD,BUY,5,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5)
+2025-09-11T17:30:00.467231+00:00,EURUSD,BUY,5,US CPI (high-impact): USD↑ → EURUSD↓ (news +5)
+2025-09-11T17:30:00.467231+00:00,XAUUSD,BUY,5,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5)
+2025-09-11T18:45:00.466930+00:00,EURUSD,BUY,5,US CPI (high-impact): USD↑ → EURUSD↓ (news +5)
+2025-09-11T18:45:00.466930+00:00,XAUUSD,BUY,5,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5)
+2025-09-11T19:00:00.890746+00:00,EURUSD,BUY,5,US CPI (high-impact): USD↑ → EURUSD↓ (news +5)
+2025-09-11T19:00:00.890746+00:00,XAUUSD,BUY,5,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5)
+2025-09-11T19:15:00.625083+00:00,EURUSD,BUY,5,US CPI (high-impact): USD↑ → EURUSD↓ (news +5)
+2025-09-11T19:15:00.625083+00:00,XAUUSD,BUY,5,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5)
+2025-09-11T19:30:01.001607+00:00,EURUSD,BUY,5,US CPI (high-impact): USD↑ → EURUSD↓ (news +5)
+2025-09-11T19:30:01.001607+00:00,XAUUSD,BUY,5,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5)
+2025-09-11T19:45:00.512711+00:00,EURUSD,BUY,5,US CPI (high-impact): USD↑ → EURUSD↓ (news +5)
+2025-09-11T19:45:00.512711+00:00,XAUUSD,BUY,5,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5)
+2025-09-11T20:00:00.841273+00:00,EURUSD,BUY,5,US CPI (high-impact): USD↑ → EURUSD↓ (news +5)
+2025-09-11T20:00:00.841273+00:00,XAUUSD,BUY,5,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5)
+2025-09-11T20:15:00.464421+00:00,EURUSD,BUY,5,US CPI (high-impact): USD↑ → EURUSD↓ (news +5)
+2025-09-11T20:15:00.464421+00:00,XAUUSD,BUY,5,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5)
+2025-09-11T20:30:00.865794+00:00,EURUSD,BUY,5,US CPI (high-impact): USD↑ → EURUSD↓ (news +5)
+2025-09-11T20:30:00.865794+00:00,XAUUSD,BUY,5,US CPI (high-impact): USD↑ → XAUUSD↓ (news +5)
+2025-09-11T21:15:01.198789+00:00,EURUSD,SELL,5,"finnhub | RH CEO: ‘Significant inflation’ to hit this year, and gather speed in 2026 and beyond"
+2025-09-11T21:15:01.198789+00:00,XAUUSD,BUY,5,US FED (high-impact): USD↑ → XAUUSD↓ (news +5)
+2025-09-11T21:30:00.422796+00:00,EURUSD,SELL,5,"finnhub | RH CEO: ‘Significant inflation’ to hit this year, and gather speed in 2026 and beyond"
+2025-09-11T21:30:00.422796+00:00,XAUUSD,BUY,5,US FED (high-impact): USD↑ → XAUUSD↓ (news +5)
+2025-09-11T21:45:01.017479+00:00,EURUSD,SELL,5,"finnhub | RH CEO: ‘Significant inflation’ to hit this year, and gather speed in 2026 and beyond"
+2025-09-11T21:45:01.017479+00:00,XAUUSD,BUY,5,US FED (high-impact): USD↑ → XAUUSD↓ (news +5)
+2025-09-11T22:00:01.043853+00:00,EURUSD,SELL,5,"finnhub | RH CEO: ‘Significant inflation’ to hit this year, and gather speed in 2026 and beyond"
+2025-09-11T22:00:01.043853+00:00,XAUUSD,BUY,5,US FED (high-impact): USD↑ → XAUUSD↓ (news +5)
+2025-09-11T22:15:00.802714+00:00,EURUSD,SELL,5,"finnhub | RH CEO: ‘Significant inflation’ to hit this year, and gather speed in 2026 and beyond"
+2025-09-11T22:15:00.802714+00:00,XAUUSD,BUY,5,US FED (high-impact): USD↑ → XAUUSD↓ (news +5)
+2025-09-11T22:30:00.526658+00:00,EURUSD,SELL,5,"finnhub | RH CEO: ‘Significant inflation’ to hit this year, and gather speed in 2026 and beyond"
+2025-09-11T22:30:00.526658+00:00,XAUUSD,BUY,5,US FED (high-impact): USD↑ → XAUUSD↓ (news +5)
+2025-09-11T22:45:00.675438+00:00,EURUSD,SELL,5,"finnhub | RH CEO: ‘Significant inflation’ to hit this year, and gather speed in 2026 and beyond"
+2025-09-11T22:45:00.675438+00:00,XAUUSD,BUY,5,US FED (high-impact): USD↑ → XAUUSD↓ (news +5)
+2025-09-11T23:00:00.868196+00:00,EURUSD,SELL,5,"finnhub | RH CEO: ‘Significant inflation’ to hit this year, and gather speed in 2026 and beyond"
+2025-09-11T23:00:00.868196+00:00,XAUUSD,BUY,5,US FED (high-impact): USD↑ → XAUUSD↓ (news +5)
