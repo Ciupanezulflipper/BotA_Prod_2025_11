@@ -22,3 +22,6 @@ run.log
 heartbeat.txt
 tmp/
 *.log
+
+# runtime data
+cache/
