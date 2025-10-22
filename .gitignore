@@ -1,15 +1,16 @@
-# secrets
-TomaMobileForexBot/.env
-**/.env
+# secrets / runtime
+.env.runtime
+*.key
+*.pem
 
-# logs / pids
-bot-a/logs/*
+# logs & state
+BotA/run.log
+BotA/heartbeat.txt
+logs/
 *.log
-*.pid
 
-# data
-bot-a/tools/eurusd_m15.csv
-
-# python cache
+# caches / py artifacts
 __pycache__/
 *.pyc
+.venv/
+.venv*/
