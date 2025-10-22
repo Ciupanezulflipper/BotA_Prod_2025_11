@@ -1,10 +1,17 @@
 #!/data/data/com.termux/files/usr/bin/bash
 set -euo pipefail
-LOG="$HOME/BotA/run.log"
-MAX=10000
-[ -f "$LOG" ] || exit 0
-LINES=$(wc -l < "$LOG")
-if [ "$LINES" -gt "$MAX" ]; then
-  tail -n "$MAX" "$LOG" > "$LOG.tmp" && mv "$LOG.tmp" "$LOG"
-  echo "[rotate_logs] truncated to $MAX lines at $(date -u +"%F %T")" >> "$LOG"
+cd "$HOME/BotA"
+
+# Rotate run.log -> run-YYYYmmdd.log and truncate current
+if [ -s run.log ]; then
+  stamp="$(date -u +%Y%m%d)"
+  mv run.log "logs/run-$stamp.log" 2>/dev/null || {
+    mkdir -p logs
+    mv run.log "logs/run-$stamp.log"
+  }
 fi
+: > run.log
+
+# Fresh heartbeat file (not tracked)
+date -u +%s > heartbeat.txt
+echo "[rotate_logs] done at $(date -u +'%F %T')"
