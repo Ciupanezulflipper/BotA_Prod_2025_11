@@ -25,3 +25,5 @@ tmp/
 
 # runtime data
 cache/
+
+# runtime hook\ n/sitecustomize.py
