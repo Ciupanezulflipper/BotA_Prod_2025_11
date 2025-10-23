@@ -1,32 +1,46 @@
 #!/data/data/com.termux/files/usr/bin/bash
+# --------------------------------------------------------
+#  Bot A : run_pair.sh  (Safe Execution + Auto Guard)
+# --------------------------------------------------------
+#  Usage: run_pair.sh PAIR
+# --------------------------------------------------------
+
 set -euo pipefail
-PAIR="${1:-EURUSD}"
+PAIR="${1:-}"
 
-PREFIX=/data/data/com.termux/files/usr
-HOME=/data/data/com.termux/files/home
-export HOME PREFIX PATH="$PREFIX/bin:/system/bin" PYTHONPATH="$HOME" \
-       LD_LIBRARY_PATH="$PREFIX/lib" LD_PRELOAD="$PREFIX/lib/libtermux-exec.so" \
-       TG_SEND_BUDGET="${TG_SEND_BUDGET:-1}"
-
-cd "$HOME"
-set -a; [ -f "$HOME/.env.runtime" ] && . "$HOME/.env.runtime"; set +a
-mkdir -p "$HOME/BotA/tmp"
-
-LOCK="$HOME/BotA/tmp/${PAIR}.lock"
-echo "[RUN $(date -u +'%F %T') UTC] $PAIR starting" | tee -a "$HOME/BotA/run.log"
-
-if command -v flock >/dev/null 2>&1; then
-  # Proper flock usage: no -c; give it the program and args directly
-  if ! flock -n "$LOCK" "$PREFIX/bin/python3" -m BotA.tools.final_runner --symbol "$PAIR" --send; then
-    echo "[LOCK] $PAIR already running, skipping." | tee -a "$HOME/BotA/run.log"
-    exit 0
-  fi
-else
-  # Fallback lock via mkdir
-  if mkdir "$LOCK".d 2>/dev/null; then
-    trap 'rmdir "$LOCK".d' EXIT
-    "$PREFIX/bin/python3" -m BotA.tools.final_runner --symbol "$PAIR" --send
-  else
-    echo "[LOCK] $PAIR already running (mkdir), skipping." | tee -a "$HOME/BotA/run.log"
-  fi
+if [ -z "$PAIR" ]; then
+  echo "[ERROR] Usage: run_pair.sh PAIR"
+  exit 1
 fi
+
+echo "[RUN $(date -u +'%Y-%m-%d %H:%M:%S UTC')] $PAIR starting"
+
+# 1️⃣ Run core analysis and capture outputs
+python3 "$HOME/BotA/core/analyze_pair.py" "$PAIR" >"$HOME/BotA/tmp_${PAIR}.out" 2>&1 || true
+
+# 2️⃣ Extract key values
+ENTRY=$(grep -m1 '^Entry:' "$HOME/BotA/tmp_${PAIR}.out" | awk '{print $2}')
+TP=$(grep -m1 '^TP:' "$HOME/BotA/tmp_${PAIR}.out" | awk '{print $2}')
+SL=$(grep -m1 '^SL:' "$HOME/BotA/tmp_${PAIR}.out" | awk '{print $2}')
+ATR=$(grep -m1 '^ATR:' "$HOME/BotA/tmp_${PAIR}.out" | awk '{print $2}')
+SIDE=$(grep -m1 '^Signal:' "$HOME/BotA/tmp_${PAIR}.out" | awk '{print $2}')
+WEIGHTED=$(grep -m1 '^Weighted:' "$HOME/BotA/tmp_${PAIR}.out" | awk '{print $2}')
+
+# 3️⃣ Validation helpers
+is_num() { awk "BEGIN{exit ($1+0==$1)?0:1}" 2>/dev/null || return 1; }
+
+# 4️⃣ Conditional logging
+if [ -n "${SIDE:-}" ] && [ "$SIDE" != "No" ] && \
+   [ -n "${ENTRY:-}" ] && [ -n "${TP:-}" ] && [ -n "${SL:-}" ] && [ -n "${ATR:-}" ] && \
+   is_num "$ENTRY" && is_num "$TP" && is_num "$SL" && is_num "$ATR"; then
+    echo "[SITE] Valid signal detected ($PAIR $SIDE)"
+    python3 "$HOME/BotA/tools/sep_sidewrite.py" "$PAIR" "$SIDE" "$ENTRY" "$TP" "$SL" "$ATR" "${WEIGHTED:-0}"
+else
+    echo "[SITE] No valid signal ($PAIR)"
+fi
+
+# 5️⃣ Optional Telegram echo (already inside analysis)
+grep -q "Telegram sent" "$HOME/BotA/tmp_${PAIR}.out" && echo "[SITE] Telegram confirmation seen"
+
+# 6️⃣ Cleanup
+rm -f "$HOME/BotA/tmp_${PAIR}.out"
