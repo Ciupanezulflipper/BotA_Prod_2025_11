@@ -1,0 +1,23 @@
+Phase 3 — Cache Population & Watcher Thresholds (Operator Guide)
+
+Goal:
+- Ensure cache is populated from latest run.log snapshots for target pairs.
+- Validate cache completeness (H1/H4/D1 present).
+- Run early_watch to surface WATCH candidates.
+
+Run sequence:
+1) Populate cache:
+   python3 $HOME/BotA/tools/cache_update.py EURUSD GBPUSD
+
+2) Verify cache:
+   $HOME/BotA/tools/cache_verify.sh EURUSD GBPUSD
+
+3) Watcher summary:
+   $HOME/BotA/tools/watchlist_run.sh
+
+One-shot:
+   $HOME/BotA/tools/phase3.sh EURUSD GBPUSD
+
+Exit criteria:
+- cache_verify.sh prints: "[OK] {PAIR}: cache has H1/H4/D1" for all pairs (no FAIL).
+- early_watch output runs without error; summary shows either "(no active WATCH signals)" or explicit WATCH lines.

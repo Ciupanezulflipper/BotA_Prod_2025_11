@@ -1,48 +1,43 @@
-import csv, os, sys, math, statistics as st
-p = os.path.expanduser('~/BotA/trades.csv')
-if not os.path.exists(p):
-    print("No trades.csv yet"); sys.exit(0)
+# -*- coding: utf-8 -*-
+import os, csv, math, statistics as st
+from collections import defaultdict
+
+P = os.environ.get("SEP_CSV_PATH", os.path.expanduser("~/BotA/trades_sep.csv"))
+if not os.path.exists(P):
+    print("No SEP CSV found at", P); raise SystemExit
 
 rows = []
-with open(p) as f:
+with open(P) as f:
     for r in csv.reader(f):
-        rows.append(r)
+        if r: rows.append(r)
 
-# Try to autodetect format (your file has both test-injection rows and SEP rows)
-# SEP rows look like: ts, pair, dir, entry, tp, sl, atr, weighted
 def parse_sep(r):
+    # ts,pair,side,entry,tp,sl,atr,weighted
     try:
         ts, pair, side, entry, tp, sl, atr, weighted = r[:8]
-        return {'ts':ts,'pair':pair,'side':side,'entry':float(entry),'tp':float(tp),
-                'sl':float(sl),'atr':float(atr or '0'), 'weighted':float(weighted)}
+        return dict(ts=ts, pair=pair, side=side, entry=float(entry), tp=float(tp),
+                    sl=float(sl), atr=float(atr or 0), weighted=float(weighted or 0))
     except Exception:
         return None
 
 sep = [x for x in map(parse_sep, rows) if x]
 
-print(f"Total rows: {len(rows)} | SEP rows detected: {len(sep)}")
-if sep:
-    last = sep[-1]
-    rr = abs((last['tp']-last['entry'])/(last['entry']-last['sl'])) if last['entry']!=last['sl'] else float('nan')
-    print(f"Last SEP: {last['ts']} {last['pair']} {last['side']}  ATR={last['atr']}  weighted={last['weighted']}  RR≈{rr:.2f}")
+print(f"SEP rows: {len(sep)}  (from {P})")
 
-# Basic counts by side
-from collections import Counter
-by_pair = Counter([s['pair'] for s in sep])
-print("By pair:", dict(by_pair))
-
-# Rolling R estimates (theoretical) just to eyeball sizing consistency
-def rr_est(s):
+def rr(s):
     try:
         return abs((s['tp']-s['entry'])/(s['entry']-s['sl']))
     except ZeroDivisionError:
         return float('nan')
 
-rrs = [rr_est(s) for s in sep if not math.isnan(rr_est(s))]
+rrs = [rr(s) for s in sep if not math.isnan(rr(s))]
 if rrs:
-    print(f"RR mean={st.mean(rrs):.2f}  median={st.median(rrs):.2f}  n={len(rrs)}")
+    print(f"RR: mean={st.mean(rrs):.2f}  median={st.median(rrs):.2f}  n={len(rrs)}")
 
-# Show last 5 SEP rows for quick inspection
-print("\nLast 5 SEP rows:")
+from collections import Counter
+by_pair = Counter([s['pair'] for s in sep])
+print("By pair:", dict(by_pair))
+
+print("\nLast 5:")
 for s in sep[-5:]:
-    print(f"{s['ts']} {s['pair']} {s['side']} entry={s['entry']} tp={s['tp']} sl={s['sl']} atr={s['atr']} weighted={s['weighted']}")
+    print(f"{s['ts']} {s['pair']} {s['side']} E={s['entry']} TP={s['tp']} SL={s['sl']} ATR={s['atr']} W={s['weighted']}  RR≈{rr(s):.2f}")
