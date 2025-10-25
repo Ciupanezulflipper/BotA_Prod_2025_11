@@ -1,130 +1,110 @@
 #!/usr/bin/env python3
-# tools/health_ping.py
-# Send a compact Bot-A health report to Telegram (falls back to stdout).
+"""
+Phase 10: Health ping — summarize BotA status and (optionally) push to Telegram.
 
-import os, subprocess, datetime, glob, re, sys, pathlib
+Env:
+  PAIRS_OVERRIDE="EURUSD GBPUSD"   # optional list; defaults to these two
+  DRY=1                            # print only, do not send
+"""
+from __future__ import annotations
+import os, sys, re, json, subprocess, time
+from datetime import datetime, timezone
+from typing import Dict, List
 
-APP = os.path.expanduser("~/bot-a")
-RUN = os.path.expanduser("~/.bot-a/run")
-LOG = os.path.expanduser("~/.bot-a/logs")
+ROOT = os.path.expanduser("~/BotA")
+RUN_LOG = os.path.join(ROOT, "run.log")
+TOOLS = os.path.join(ROOT, "tools")
 
-def utc_now():
-    return datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+HEADER_RE = re.compile(r"^===\s+([A-Z/]+)\s+snapshot\s+===$")
+TF_RE = re.compile(r"^(H1|H4|D1):\s+t=([0-9:-]+\s?[0-9:]*Z)\s+close=")
 
-def pid_status(name, pidfile):
-    pf = os.path.join(RUN, pidfile)
-    if not os.path.exists(pf):
-        return f"• {name}: stopped"
+def utcnow_str() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+
+def read_log(path: str) -> List[str]:
     try:
-        with open(pf, "r") as f:
-            pid = f.read().strip()
-        # running?
-        os.kill(int(pid), 0)
-        # uptime (ps etime)
-        try:
-            et = subprocess.check_output(["ps", "-o", "etime=", "-p", pid], text=True).strip()
-        except Exception:
-            et = "?"
-        return f"• {name}: RUNNING (pid {pid}, up {et})"
-    except Exception:
-        try:
-            os.remove(pf)
-        except Exception:
-            pass
-        return f"• {name}: STALE (pidfile removed)"
+        with open(path, "r", encoding="utf-8", errors="replace") as f:
+            return f.read().splitlines()
+    except FileNotFoundError:
+        return []
 
-def latest(path_glob):
-    files = sorted(glob.glob(path_glob), key=os.path.getmtime, reverse=True)
-    return files[0] if files else ""
+def last_block_times(lines: List[str]) -> Dict[str, Dict[str, str]]:
+    """
+    Return {PAIR: {H1: ts, H4: ts, D1: ts}} for the latest block of each pair found.
+    """
+    out: Dict[str, Dict[str, str]] = {}
+    i = 0
+    while i < len(lines):
+        m = HEADER_RE.match(lines[i].strip())
+        if m:
+          pair_hdr = m.group(1).replace("/", "").upper()
+          tf_map: Dict[str, str] = {}
+          j = i + 1
+          while j < len(lines):
+              s = lines[j].strip()
+              if HEADER_RE.match(s):
+                  break
+              mm = TF_RE.match(s)
+              if mm:
+                  tf, ts = mm.groups()
+                  tf_map.setdefault(tf, ts)
+              j += 1
+          if tf_map:
+              out[pair_hdr] = tf_map
+          i = j
+        else:
+          i += 1
+    return out
 
-def last_banner(line):
-    # lines like: "========== 2025-09-13 14:00:01 UTC =========="
-    m = re.search(r"(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} UTC)", line or "")
-    return m.group(1) if m else ""
-
-def today_counts(runner_log):
-    if not runner_log or not os.path.exists(runner_log):
-        return "   (no runner log)"
-    day = datetime.datetime.utcnow().strftime("%Y%m%d")
-    base = os.path.basename(runner_log)
-    if day not in base:
-        return f"   (latest not today: {base})"
-    # counts based on our runner summary lines
-    with open(runner_log, "r", errors="ignore") as f:
-        data = f.read()
-    sent = len(re.findall(r"✅ sent", data, flags=re.I))
-    skip = len(re.findall(r"⏭️ skip", data, flags=re.I))
-    prnt = len(re.findall(r"🖨️ printed", data, flags=re.I))
-    err  = len(re.findall(r"❌ error", data, flags=re.I))
-    return f"   today: sent {sent} | skipped {skip} | printed {prnt} | errors {err}"
-
-def tail(path, n=6):
-    if not path or not os.path.exists(path):
-        return ""
+def pgrep(pattern: str) -> int:
     try:
-        out = subprocess.check_output(["tail", "-n", str(n), path], text=True, errors="ignore")
+        p = subprocess.run(["pgrep", "-f", pattern], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if p.returncode != 0:
+            return 0
+        return len([x for x in p.stdout.splitlines() if x.strip()])
     except Exception:
-        out = ""
-    return out.strip()
+        return 0
 
-def send(text):
-    try:
-        sys.path.insert(0, APP)
-        from tools.telegramalert import send_text
-        ok = send_text(text)
-        if not ok:
-            print(text)
-    except Exception:
-        print(text)
+def push(msg: str) -> bool:
+    if os.getenv("DRY","0") in ("1","true","TRUE","yes","YES"):
+        print(msg)
+        print("[health] DRY=1 (not pushed)")
+        return True
+    sender = os.path.join(TOOLS, "telegram_push.py")
+    if not os.path.exists(sender):
+        print("[health] telegram_push.py missing", file=sys.stderr)
+        return False
+    p = subprocess.run(["python3", sender, msg], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    return p.returncode == 0
 
-def build_report():
+def main() -> int:
+    pairs = os.getenv("PAIRS_OVERRIDE", "EURUSD GBPUSD").split()
+    lines = read_log(RUN_LOG)
+    blocks = last_block_times(lines)
+
+    # process state
+    procs = {
+        "alert_loop": pgrep(os.path.join(TOOLS, "alert_loop.sh")),
+        "supervise": pgrep(os.path.join(TOOLS, "supervise_bot.sh")),
+    }
+
+    # compose message (HTML)
     parts = []
-    parts.append(f"🩺 *Bot-A Health* — {utc_now()}")
-    # loops
-    parts.append(pid_status("signal run loop", "signal_runner.pid"))
-    parts.append(pid_status("digest loop",      "digest_loop.pid"))
-    parts.append(pid_status("error monitor",    "error_monitor.pid"))
-
-    # logs
-    rlog = latest(os.path.join(LOG, "runner-*.log"))
-    dlog = latest(os.path.join(LOG, "digest-*.log"))
-
+    parts.append("🩺 <b>BotA — Health</b>")
+    parts.append(utcnow_str())
     parts.append("")
-    parts.append(f"• Latest runner log: {os.path.basename(rlog) if rlog else '(none)'}")
-    if rlog:
-        # last banner
-        lb = ""
-        try:
-            with open(rlog, "r", errors="ignore") as f:
-                for line in f:
-                    if "==========" in line:
-                        lb = line
-            lb = last_banner(lb)
-        except Exception:
-            lb = ""
-        if lb:
-            parts.append(f"   last: {lb}")
-        parts.append(today_counts(rlog))
-
-    parts.append(f"• Latest digest log: {os.path.basename(dlog) if dlog else '(none)'}")
-    if dlog:
-        lb = ""
-        try:
-            with open(dlog, "r", errors="ignore") as f:
-                for line in f:
-                    if "==========" in line:
-                        lb = line
-            lb = last_banner(lb)
-        except Exception:
-            lb = ""
-        if lb:
-            parts.append(f"   last: {lb}")
-
-    return "\n".join(parts)
-
-def main():
-    report = build_report()
-    send(report)
+    parts.append(f"proc: alert_loop={procs['alert_loop']} supervise={procs['supervise']}")
+    parts.append("")
+    for sym in pairs:
+        key = sym.upper()
+        tf = blocks.get(key, {})
+        def vis(p: str) -> str:
+            return p if "/" in p else (p[:3]+"/"+p[3:] if len(p)==6 else p)
+        parts.append(f"<b>{vis(key)}</b>: H1={tf.get('H1','—')}  H4={tf.get('H4','—')}  D1={tf.get('D1','—')}")
+    msg = "\n".join(parts)
+    ok = push(msg)
+    print("[health] pushed" if ok else "[health] push failed", file=sys.stderr if not ok else sys.stdout)
+    return 0 if ok else 1
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

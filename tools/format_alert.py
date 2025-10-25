@@ -1,42 +1,45 @@
 #!/usr/bin/env python3
-"""
-Bot A — Phase 5: Format Telegram alert text.
-
-Reads JSON list (from alert_rules.py) on STDIN and prints a single message.
-Supports HTML (default) or MarkdownV2 via TELEGRAM_PARSE_MODE env (optional).
-"""
 from __future__ import annotations
-import os, sys, json, datetime
+import sys, json
+from datetime import datetime, timezone
 
-BIAS_EMOJI = {
-    "BULLISH": "🟢",
-    "BEARISH": "🔴",
-    "NEUTRAL": "⚪",
-}
+BIAS_EMOJI = {"BULLISH":"🟢", "BEARISH":"🔴", "NEUTRAL":"⚪"}
 
-def fmt_line(it: dict) -> str:
-    pair = it.get("pair", "PAIR")
-    weighted = it.get("weighted", 0)
-    bias = str(it.get("bias", "NEUTRAL")).upper()
-    reason = it.get("reason", "threshold")
+def vis_pair(p: str) -> str:
+    return p if "/" in p else (p[:3]+"/"+p[3:] if len(p)==6 else p)
+
+def fmt_item(it: dict) -> str:
+    pair = vis_pair(it.get("pair","PAIR"))
+    weighted = it.get("weighted",0)
+    bias = str(it.get("bias","NEUTRAL")).upper()
     emoji = BIAS_EMOJI.get(bias, "⚪")
-    # EURUSD -> EUR/USD visual for readability
-    vis = pair if "/" in pair else (pair[:3] + "/" + pair[3:]) if len(pair) == 6 else pair
-    reason_tag = "WATCH" if reason == "watch" else "SIG"
-    return f"{emoji} <b>{vis}</b>  w=<b>{weighted}</b>  bias=<b>{bias}</b>  <i>{reason_tag}</i>"
+    reason = it.get("reason","threshold")
+    strength = it.get("strength", 0)
+    an = it.get("analytics", {})
+    D1 = an.get("D1", {})
+    H4 = an.get("H4", {})
+    H1 = an.get("H1", {})
+    divs = []
+    for tf in ("D1","H4","H1"):
+        d = an.get(tf,{}).get("div_rsi","none")
+        if d != "none":
+            divs.append(f"{tf}:{d}")
+    div_txt = ("  • div(" + ", ".join(divs) + ")") if divs else ""
+    return (f"{emoji} <b>{pair}</b>  w=<b>{weighted}</b>  bias=<b>{bias}</b>  "
+            f"<i>{reason}</i>  S={strength:.2f}{div_txt}")
 
 def main() -> int:
     raw = sys.stdin.read()
     try:
-        items = json.loads(raw) if raw.strip() else []
+        arr = json.loads(raw) if raw.strip() else []
     except Exception:
-        items = []
-    if not items:
+        arr = []
+    if not arr:
         print("BotA — no actionable alerts.")
         return 0
-    ts = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
-    lines = [fmt_line(it) for it in items]
-    msg = "📣 <b>BotA WATCH Alerts</b>\n" + ts + "\n\n" + "\n".join(lines)
+    ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    lines = [fmt_item(it) for it in arr]
+    msg = "📣 <b>BotA Alerts</b>\n" + ts + "\n\n" + "\n".join(lines)
     print(msg)
     return 0
 
