@@ -1,19 +1,34 @@
 #!/data/data/com.termux/files/usr/bin/bash
 set -euo pipefail
-TOOLS="$HOME/BotA/tools"
+ROOT="$HOME/BotA"
+TOOLS="$ROOT/tools"
+LOG="$ROOT/control.log"
 
-echo "=== Phase 11: Preview (MIN_WEIGHT=0, DRY=1) ==="
-DRY=1 MIN_WEIGHT=0 ONCE=1 "$TOOLS/alert_loop.sh" || true
+echo "=== Phase 11: Telegram Control — Smoke ==="
 
-echo
-echo "=== Phase 11: Volatility gate demo (tight threshold to force filter) ==="
-DRY=1 MIN_WEIGHT=0 VOL_MIN_STD=1e9 ONCE=1 "$TOOLS/alert_loop.sh" || true
+# 1) Ensure controller booted
+"$TOOLS/tele_control.sh"
 
-echo
-echo "=== Phase 11: Quiet hours demo (forces suppression) ==="
-# simulate quiet hours covering current hour
-H=$(date -u '+%H'); NEXT=$(( (10#$H + 1) % 24 ))
-DRY=0 QUIET_HOURS="$H-$NEXT" ONCE=1 "$TOOLS/alert_loop.sh" || true
+# 2) Print tail of control log to confirm polling
+echo "--- control.log (tail) ---"
+tail -n 20 "$LOG" || true
 
-echo
-echo "=== Phase 11: PASSED (smoke) ==="
+# 3) Guidance (non-invasive): send these in Telegram:
+cat <<'TXT'
+
+Now send commands to your bot in Telegram (one by one):
+
+  /status        -> should show proc + log ages
+  /audit         -> should return a compact metrics block
+  /pause_alerts  -> should stop the background alert_loop
+  /start_alerts  -> should (re)start the alert_loop
+  /help          -> quick menu
+
+Acceptance:
+- /status responds within ~2s
+- /audit returns metrics text
+- /pause_alerts followed by /status shows proc: alert_loop=0
+- /start_alerts followed by /status shows proc: alert_loop=1
+
+TXT
+echo "=== Phase 11: PASSED (manual chat checks required) ==="
