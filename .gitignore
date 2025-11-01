@@ -1,8 +1,7 @@
 .env
 config/strategy.env
-*.log
-logs/
 cache/
+logs/
+*.log
+*.txt
 __pycache__/
-*.pyc
-.termux/
