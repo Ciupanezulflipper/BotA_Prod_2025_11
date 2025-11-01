@@ -1,0 +1,74 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# FILE: tools/watch_wrap_market.sh
+# DESC: Single-instance market wrapper around signal_watcher_pro.sh.
+#       - No duplicate wrappers (lock)
+#       - No duplicate watchers (pid tracked)
+#       - Stops watcher when market is Closed
+set -euo pipefail
+
+ROOT="${HOME}/BotA"
+TOOLS="${ROOT}/tools"
+CACHE="${ROOT}/cache"
+LOGS="${ROOT}/logs"
+WATCHER="${TOOLS}/signal_watcher_pro.sh"
+LOCK="${CACHE}/watch_wrap.lock"
+LOGFILE="${LOGS}/watcher_nohup.log"
+
+mkdir -p "${CACHE}" "${LOGS}"
+
+log() { printf "%s [WRAP] %s\n" "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" "$*" | tee -a "$LOGFILE" ; }
+hb()  { date +%s > "${CACHE}/watcher.heartbeat"; }
+
+# Single instance lock
+exec 9>"${LOCK}"
+if ! flock -n 9; then
+  log "another wrapper already running; exiting"
+  exit 0
+fi
+
+# On start, clean any stray watchers
+pkill -9 -f "signal_watcher_pro\.sh" 2>/dev/null || true
+
+CHILD_PID=""
+
+cleanup() {
+  log "signal caught — shutting down"
+  if [ -n "${CHILD_PID:-}" ] && kill -0 "$CHILD_PID" 2>/dev/null; then
+    kill -15 "$CHILD_PID" 2>/dev/null || true
+    wait "$CHILD_PID" 2>/dev/null || true
+    log "child ${CHILD_PID} stopped"
+  fi
+  exit 0
+}
+trap cleanup INT TERM
+
+log "start pid=$$"
+
+while :; do
+  hb
+  PHASE="$("${TOOLS}/market_open.sh" 2>/dev/null || echo Unknown)"
+  log "phase: ${PHASE}"
+
+  if [ "${PHASE}" = "Open" ]; then
+    # ensure single child
+    if [ -n "${CHILD_PID:-}" ] && kill -0 "$CHILD_PID" 2>/dev/null; then
+      : # watcher already running
+    else
+      log "starting watcher…"
+      bash "${WATCHER}" &
+      CHILD_PID=$!
+      log "watcher pid=${CHILD_PID}"
+    fi
+    sleep 60
+  else
+    # market closed → stop child if running
+    if [ -n "${CHILD_PID:-}" ] && kill -0 "$CHILD_PID" 2>/dev/null; then
+      log "market closed — stopping watcher ${CHILD_PID}"
+      kill -15 "$CHILD_PID" 2>/dev/null || true
+      wait "$CHILD_PID" 2>/dev/null || true
+      log "watcher stopped"
+      CHILD_PID=""
+    fi
+    sleep 300
+  fi
+done

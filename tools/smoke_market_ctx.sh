@@ -57,7 +57,7 @@ else
 fi
 
 # 6) Optional runner.lock freshness (non-blocking)
-LOCK="/data/data/com.termux/files/usr/tmp/runner.lock"
+LOCK="/data/data/com.termux/files/home/BotA/cache/runner.lock"
 if [[ -e "$LOCK" ]]; then
   age=$(( $(date +%s) - $(stat -c %Y "$LOCK" 2>/dev/null || stat -f %m "$LOCK") ))
   if (( age <= 3600 )); then ok "runner.lock fresh (${age}s)"; else warn "runner.lock stale (${age}s)"; fi

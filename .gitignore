@@ -1,29 +1,8 @@
-# secrets / runtime
-.env.runtime
-*.key
-*.pem
-
-# logs & state
-BotA/run.log
-BotA/heartbeat.txt
-logs/
+.env
+config/strategy.env
 *.log
-
-# caches / py artifacts
+logs/
+cache/
 __pycache__/
 *.pyc
-.venv/
-.venv*/
-
-# local env (keep private)
-.env
-# --- runtime artifacts (do not commit) ---
-run.log
-heartbeat.txt
-tmp/
-*.log
-
-# runtime data
-cache/
-
-# runtime hook\ n/sitecustomize.py
+.termux/

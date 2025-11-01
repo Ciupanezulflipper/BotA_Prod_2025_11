@@ -1,0 +1,317 @@
+#!/data/data/com.termux/files/usr/bin/python
+# FILE: tools/telecontroller.py
+# PURPOSE: Minimal Telegram controller for BotA (polling, stdlib only). ASCII ONLY.
+
+import os
+import sys
+import time
+import json
+import signal
+import urllib.request
+import urllib.parse
+import subprocess
+import datetime
+
+HOME  = os.path.expanduser("~")
+ROOT  = os.path.join(HOME, "BotA")
+TOOLS = os.path.join(ROOT, "tools")
+CACHE = os.path.join(ROOT, "cache")
+LOGS  = os.path.join(ROOT, "logs")
+
+os.makedirs(CACHE, exist_ok=True)
+os.makedirs(LOGS,  exist_ok=True)
+
+OFFSET_FILE = os.path.join(CACHE, "tele.offset")
+START_FILE  = os.path.join(CACHE, "telecontroller.started")
+
+def read_env_from_strategy():
+    cfg_path = os.path.join(ROOT, "config", "strategy.env")
+    env = {}
+    if not os.path.isfile(cfg_path):
+        return env
+    try:
+        with open(cfg_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                k, v = line.split("=", 1)
+                env[k.strip()] = v.strip().strip('"').strip("'")
+    except Exception:
+        pass
+    return env
+
+CFG   = read_env_from_strategy()
+TOKEN = os.environ.get("TELEGRAM_TOKEN") or CFG.get("TELEGRAM_TOKEN")
+API_BASE = ("https://api.telegram.org/bot" + TOKEN) if TOKEN else None
+
+# Authorization (optional but recommended)
+ALLOWED_CHAT_IDS = set()
+chat_id_str = os.environ.get("TELEGRAM_CHAT_ID") or CFG.get("TELEGRAM_CHAT_ID")
+if chat_id_str:
+    try:
+        ALLOWED_CHAT_IDS.add(int(chat_id_str))
+    except ValueError:
+        pass
+
+def http_get(path, params=None, timeout=35):
+    if not API_BASE:
+        raise RuntimeError("TELEGRAM_TOKEN missing")
+    qs = "?" + urllib.parse.urlencode(params) if params else ""
+    req = urllib.request.Request(API_BASE + path + qs)
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return json.loads(r.read().decode("utf-8"))
+
+def http_post(path, data, timeout=35):
+    if not API_BASE:
+        raise RuntimeError("TELEGRAM_TOKEN missing")
+    body = urllib.parse.urlencode(data).encode("utf-8")
+    req = urllib.request.Request(API_BASE + path, data=body)
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return json.loads(r.read().decode("utf-8"))
+
+def send_msg(chat_id, text, parse_mode="Markdown"):
+    try:
+        return http_post("/sendMessage", {
+            "chat_id": str(chat_id),
+            "text": text[:4000],
+            "parse_mode": parse_mode
+        })
+    except Exception as e:
+        print("[telecontroller] send_msg error: {}".format(e), flush=True)
+
+def write_int_file(path, val):
+    try:
+        with open(path, "w") as f:
+            f.write(str(int(val)))
+    except Exception:
+        pass
+
+def read_int_file(path):
+    try:
+        with open(path, "r") as f:
+            content = f.read().strip()
+        return int(content) if content.isdigit() else None
+    except Exception:
+        return None
+
+def heartbeat_age():
+    hb = os.path.join(CACHE, "watcher.heartbeat")
+    try:
+        with open(hb, "r") as f:
+            content = f.read().strip()
+        if not content or not content.isdigit():
+            return None
+        t = int(content)
+        return max(0, int(time.time()) - t)
+    except Exception:
+        return None
+
+def market_phase():
+    cmd = os.path.join(TOOLS, "market_open.sh")
+    if not os.path.isfile(cmd):
+        return "Unknown"
+    try:
+        out = subprocess.check_output(
+            ["bash", cmd],
+            stderr=subprocess.DEVNULL,
+            timeout=8
+        ).decode().strip()
+        last = out.splitlines()[-1].strip()
+        return last if last in ("Open", "Closed", "Unknown") else "Unknown"
+    except Exception:
+        return "Unknown"
+
+def controller_uptime():
+    started = read_int_file(START_FILE)
+    return (int(time.time()) - started) if started else None
+
+def digest_last_hour():
+    path = os.path.join(LOGS, "alerts.csv")
+    counts = {"BUY": 0, "SELL": 0, "HOLD": 0}
+    if not os.path.isfile(path):
+        return counts
+    cutoff = time.time() - 3600
+    try:
+        with open(path, "r", encoding="utf-8", errors="ignore") as f:
+            lines = f.readlines()
+        for line in lines[1:]:
+            parts = line.strip().split(",")
+            if len(parts) < 3:
+                continue
+            ts_str = parts[0].strip().replace("Z", "+00:00")
+            try:
+                dt = datetime.datetime.fromisoformat(ts_str)
+                ts = int(dt.timestamp())
+                if ts < cutoff:
+                    continue
+            except Exception:
+                continue
+            verdict = parts[2].strip().upper()
+            if verdict in counts:
+                counts[verdict] += 1
+    except Exception as e:
+        print("[digest] error: {}".format(e), file=sys.stderr)
+    return counts
+
+HELP = (
+    "*TomaiSignalAI - BotA Controller*\n\n"
+    "*Commands:*\n"
+    "`/start`   - start session\n"
+    "`/status`  - market and watcher status\n"
+    "`/uptime`  - controller uptime\n"
+    "`/digest`  - last 60m BUY/SELL/HOLD summary\n"
+    "`/analyze PAIR TF` - analysis (e.g. /analyze EURUSD H1)\n"
+    "`/logs [N]` - last N watcher log lines (1-50, default 10)\n"
+    "`/pairs`   - show monitored pairs and timeframes\n"
+    "`/restart` - restart controller session\n"
+    "`/stop`    - stop controller\n"
+    "`/help`    - show help"
+)
+
+def handle(chat_id, text):
+    # Authorization gate
+    if ALLOWED_CHAT_IDS and chat_id not in ALLOWED_CHAT_IDS:
+        return send_msg(chat_id, "Unauthorized. This bot is private.")
+    if not text:
+        return
+    parts = text.strip().split()
+    cmd = parts[0].lower()
+
+    if cmd == "/help":
+        return send_msg(chat_id, HELP)
+
+    if cmd == "/start":
+        write_int_file(START_FILE, int(time.time()))
+        phase = market_phase()
+        age = heartbeat_age()
+        age_s = "{}s".format(age) if age is not None else "n/a"
+        return send_msg(chat_id,
+            "Controller started\nMarket: {}\nWatcher heartbeat age: {}".format(phase, age_s)
+        )
+
+    if cmd == "/status":
+        phase = market_phase()
+        age = heartbeat_age()
+        age_s = "{}s".format(age) if age is not None else "n/a"
+        health = "OK" if (age is not None and age < 180) else "WARN"
+        return send_msg(chat_id,
+            "Status [{}]\nMarket: {}\nWatcher heartbeat age: {}".format(health, phase, age_s)
+        )
+
+    if cmd == "/uptime":
+        up = controller_uptime()
+        if up:
+            hours = up // 3600
+            mins = (up % 3600) // 60
+            secs = up % 60
+            msg = "Uptime: {}h {}m {}s".format(hours, mins, secs)
+        else:
+            msg = "Uptime: n/a"
+        return send_msg(chat_id, msg)
+
+    if cmd == "/digest":
+        c = digest_last_hour()
+        total = c.get("BUY",0) + c.get("SELL",0) + c.get("HOLD",0)
+        return send_msg(chat_id,
+            "Last 60 minutes\nTotal alerts: {}\nBUY: {}\nSELL: {}\nHOLD: {}".format(
+                total, c.get("BUY",0), c.get("SELL",0), c.get("HOLD",0))
+        )
+
+    if cmd == "/analyze":
+        pair = parts[1].upper() if len(parts) >= 2 else "EURUSD"
+        tf   = parts[2].upper() if len(parts) >= 3 else "H1"
+        scorer = os.path.join(TOOLS, "scoring_engine_test.sh")
+        if not os.path.isfile(scorer):
+            scorer = os.path.join(TOOLS, "scoring_engine.sh")
+        if not os.path.isfile(scorer):
+            return send_msg(chat_id, "Scorer not found")
+        try:
+            out = subprocess.check_output(
+                ["bash", scorer, pair, tf],
+                stderr=subprocess.DEVNULL,
+                timeout=15
+            ).decode()
+            d = json.loads(out)
+            score   = d.get("score", "?")
+            verdict = d.get("verdict", "HOLD")
+            conf    = d.get("confidence", "?")
+            price   = d.get("price", "?")
+            reasons = d.get("reasons", "")
+            msg = (
+                "Analyze\n"
+                "{} {}\n"
+                "Verdict: {}\n"
+                "Score: {}/100 (conf: {}%)\n"
+                "Price: {}\n"
+                "{}"
+            ).format(pair, tf, verdict, score, conf, price, reasons)
+            return send_msg(chat_id, msg)
+        except Exception as e:
+            return send_msg(chat_id, "Error: {}".format(e))
+
+    if cmd == "/logs":
+        n = 10
+        if len(parts) >= 2 and parts[1].isdigit():
+            n = int(parts[1])
+        n = min(max(1, n), 50)
+        log_path = os.path.join(LOGS, "watcher_nohup.log")
+        if not os.path.isfile(log_path):
+            return send_msg(chat_id, "No logs found")
+        try:
+            with open(log_path, "r", encoding="utf-8", errors="ignore") as f:
+                lines = f.readlines()
+            recent = lines[-n:]
+            body = "Last {} lines:\n```\n".format(len(recent)) + "".join(recent) + "\n```"
+            return send_msg(chat_id, body)
+        except Exception as e:
+            return send_msg(chat_id, "Error reading logs: {}".format(e))
+
+    if cmd == "/pairs":
+        pairs = CFG.get("PAIRS", "EURUSD GBPUSD XAUUSD USDJPY NAS100")
+        tfs = CFG.get("TIMEFRAMES", "H1 H4 D1")
+        return send_msg(chat_id,
+            "Monitoring\nPairs: {}\nTimeframes: {}".format(pairs, tfs)
+        )
+
+    if cmd == "/restart":
+        write_int_file(START_FILE, int(time.time()))
+        return send_msg(chat_id, "Controller restarted")
+
+    if cmd == "/stop":
+        send_msg(chat_id, "Stopping controller...")
+        sys.exit(0)
+
+    return send_msg(chat_id, HELP)
+
+def signal_handler(sig, frame):
+    print("[telecontroller] Shutting down gracefully...", flush=True)
+    sys.exit(0)
+
+def main():
+    if not TOKEN:
+        print("[telecontroller] ERROR: TELEGRAM_TOKEN missing", flush=True)
+        return
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+    write_int_file(START_FILE, int(time.time()))
+    offset = read_int_file(OFFSET_FILE) or 0
+    print("[telecontroller] started (polling)", flush=True)
+    while True:
+        try:
+            r = http_get("/getUpdates", {"timeout": 30, "offset": offset + 1})
+            for upd in r.get("result", []):
+                offset = max(offset, upd.get("update_id", 0))
+                msg = upd.get("message") or {}
+                chat = msg.get("chat") or {}
+                chat_id = chat.get("id")
+                text = msg.get("text")
+                if chat_id and text:
+                    handle(chat_id, text)
+                write_int_file(OFFSET_FILE, offset)
+        except Exception as e:
+            print("[telecontroller] poll error: {}".format(e), flush=True)
+            time.sleep(3)
+
+if __name__ == "__main__":
+    main()

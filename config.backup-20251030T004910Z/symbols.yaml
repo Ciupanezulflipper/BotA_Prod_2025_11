@@ -1,0 +1,19 @@
+# Per-symbol overrides & constraints
+pairs:
+  EURUSD:
+    min_score: 35
+    strong_score: 60
+    throttle_min: 20
+    allowed_sessions: [London, NewYork]
+    news_sensitivity: medium
+  XAUUSD:
+    min_score: 38
+    strong_score: 65
+    throttle_min: 30
+    allowed_sessions: [Tokyo, London, NewYork]
+    news_sensitivity: high
+defaults:
+  min_score: 35
+  strong_score: 60
+  throttle_min: 30
+  news_sensitivity: medium

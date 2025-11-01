@@ -8,7 +8,7 @@ if python3 weekend_guard.py --closed-now >/dev/null 2>&1; then
 fi
 
 # Prevent overlap
-LOCK=/data/data/com.termux/files/usr/tmp/runner.lock
+LOCK=/data/data/com.termux/files/home/BotA/cache/runner.lock
 if [[ -f "$LOCK" ]] && find "$LOCK" -mmin -1 >/dev/null 2>&1; then
   exit 0
 fi

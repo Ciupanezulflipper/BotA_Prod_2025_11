@@ -1,0 +1,35 @@
+# Bot A — Status Integration Acceptance Checklist (PTB 22.5)
+
+[FILES INSTALLED]
+- tg_bot.py
+- tools/pretty_bridge.py
+- tools/status_pretty_demo.py
+- (reuses) tools/status_pretty.py
+
+[PRE-RUN CHECK]
+python3 -m py_compile tg_bot.py tools/pretty_bridge.py tools/status_pretty_demo.py && echo "✅ Syntax OK"
+
+[MANUAL TESTS]
+1) Preview (no Telegram):
+   python3 tools/status_pretty_demo.py | sed -n '1,160p'
+
+2) Start bot (polling):
+   pkill -f "python3 .*tg_bot.py" 2>/dev/null || true
+   nohup python3 -u tg_bot.py >> run.log 2>&1 & disown
+   sleep 2 && tail -n 80 run.log
+
+3) In Telegram chat:
+   /status
+   /status advanced
+   /ping
+   /help
+
+[EXPECTED]
+- Messages render with the concise, emoji-guided layout.
+- Long outputs auto-split < 4000 chars.
+- If status_pretty.py fails, you receive a clear ⚠️ error, bot stays alive.
+
+[ROLLBACK]
+pkill -f "python3 .*tg_bot.py" 2>/dev/null || true
+
+tests_passed: operator_to_confirm

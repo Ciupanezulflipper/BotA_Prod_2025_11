@@ -1,0 +1,12 @@
+Objective:
+Automate “Auto Status” hourly and a 30-minute heartbeat.
+
+Checks:
+1) “🕐 Auto Status” hourly; “💓 Heartbeat” once per half-hour.
+2) logs/scheduler.log shows “✅ sendMessage OK” and “✅ scheduler.sh completed”.
+3) /ping, /status, /status advanced, /health still respond.
+4) No 4xx/5xx bursts in scheduler.log for 2 consecutive hours.
+
+Cron:
+*/30 * * * * bash $HOME/BotA/tools/scheduler.sh
+0 * * * *     bash $HOME/BotA/tools/scheduler.sh

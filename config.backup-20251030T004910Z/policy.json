@@ -1,0 +1,27 @@
+{
+  "confidence_threshold": 3.0,
+  "strong_send_threshold": 6,
+  "throttle_minutes": 30,
+  "throttle_seconds": 1800,
+
+  "conf_gate": 3.2,
+  "tf_gate": 2.0,
+  "decay": 0.5,
+  "vol_window": 10,
+
+  "pair_overrides": {
+    "EURUSD": { "enabled": true }
+  },
+
+  "logging": {
+    "log_rotation_mb": 10,
+    "csv_enabled": true,
+    "digest_enabled": true
+  },
+
+  "market_hours_gate": {
+    "enabled": true,
+    "open_utc":  { "day": "SUN", "hour": 22 },
+    "close_utc": { "day": "FRI", "hour": 22 }
+  }
+}

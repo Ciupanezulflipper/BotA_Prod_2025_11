@@ -1,0 +1,43 @@
+Title: BotA — status_pretty v2.0 Cross-Audit (Final Prompt)
+
+Context:
+- BotA is a Termux-based Forex assistant on Android with Telegram output.
+- Goal: Clean, mobile-readable status messages without changing the core pipeline.
+- Four independent audits (Grok, Gemini, Perplexity, Claude) converged on:
+  Sections: Header → Signal → Metrics → Health
+  Modes: basic | advanced
+  Core metrics: RSI, EMA(9/21) trend arrow, Vote, Freshness
+  Health: freshness seconds → label (e.g., 2m), optional Provider/Cache
+  Advanced-only: optional ADX / ATR / Sentiment (only if present)
+
+Tasks for the auditor model:
+1) Verify the following constraints maximize Telegram readability on Android:
+   - 2 lines per pair (basic), 4–5 lines per pair (advanced)
+   - Minimal, functional emojis: 📊 header, 🟢/🔴/⚪ signal, 📈 metrics, 🩺 health
+   - Keep total message < 3500 chars; enforce 4000 hard cap with pair-boundary truncation
+   - Avoid full code blocks; rely on plain text with explicit line breaks
+
+2) Confirm metric choices:
+   - Keep: RSI, EMA(9/21) trend, Vote, Freshness (always)
+   - Optionally show in advanced if present: ADX(>25), ATR (pips), sentiment bias
+   - Provider + Cache shown only when helpful (OK/WARN)
+
+3) Produce two canonical examples (EURUSD + GBPUSD):
+   a) Basic (≤ 2 lines per pair)
+   b) Advanced (4–5 lines per pair)
+   Both must remain under 700 chars total for two pairs.
+
+4) Provide a 200–300 char control string to test emoji spacing/line breaks on Telegram.
+
+Input format expected by the formatter:
+List[PairSnapshot] objects → fields:
+  pair, tf, ts_utc_iso, signal("BUY"/"SELL"/"NEUTRAL"),
+  rsi14(float?), ema9_gt_21(bool?), vote(int?),
+  freshness_sec(int?), provider(str?), cache_ok(bool?),
+  adx(float?), atr_pips(float?), sentiment_bias(str?)
+
+Acceptance Criteria:
+- Output examples conform exactly to the format implied by status_pretty v2.0.
+- All lines stay under ~80 characters where possible.
+- No tables; no triple-backtick code fences.
+- Uses arrows ↗️ ↘️ → and emojis as specified.

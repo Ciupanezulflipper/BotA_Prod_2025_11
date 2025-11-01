@@ -1,0 +1,18 @@
+=== BASIC ===
+📊 EUR/USD H1 — 2025-10-28 09:00 UTC
+🟢 BUY | RSI 61 | ↗️ +3 | 🩺 2m
+
+📊 GBP/USD H1 — 2025-10-28 09:05 UTC
+🔴 SELL | RSI 38 | ↘️ -2 | 🩺 12m
+
+=== ADVANCED ===
+📊 EUR/USD H1 — 2025-10-28 09:00 UTC
+🟢 BUY (Trend: Bullish) — Vote +3
+📈 RSI 61 | EMA 9>21 ↗️
+🩺 Fresh 2m | Provider: Yahoo | Cache OK
+
+📊 GBP/USD H1 — 2025-10-28 09:05 UTC
+🔴 SELL (Trend: Bearish) — Vote -2
+📈 RSI 38 | EMA 9<21 ↘️
+🩺 Fresh 12m | Provider: Yahoo | Cache OK
+🧪 ADX 28 | ATR 12p

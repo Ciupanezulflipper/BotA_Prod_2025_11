@@ -1,55 +1,25 @@
-#!/data/data/com.termux/files/usr/bin/bash
-# Phase 10: Log rotation & retention for BotA logs.
-# Env (optional):
-#   MAX_KB=2048           # rotate when size > MAX_KB
-#   KEEP=5                # keep last N rotated files
-#   FORCE=0               # set 1 to force rotation now
-#   DRY=0                 # set 1 to print actions only
+#!/bin/bash
+# logrotate.sh — simple rotation for Bot A logs
 set -euo pipefail
-
 ROOT="$HOME/BotA"
-LOGS=("$ROOT/run.log" "$ROOT/alert.log")
-MAX_KB="${MAX_KB:-2048}"
-KEEP="${KEEP:-5}"
-FORCE="${FORCE:-0}"
-DRY="${DRY:-0}"
+LOG_DIR="$ROOT/logs"
+mkdir -p "$LOG_DIR"
 
-ts_now="$(date -u '+%Y%m%d_%H%M%S')"
-
-rotate_one() {
+rotate(){  # rotate file if > 2MB
   local f="$1"
   [ -f "$f" ] || return 0
-  local kb
-  kb="$(du -k "$f" | awk '{print $1}')"
-  if [ "${FORCE}" = "1" ] || [ "${kb:-0}" -gt "${MAX_KB}" ]; then
-    local rot="${f}.${ts_now}"
-    if [ "$DRY" = "1" ]; then
-      echo "[logrotate] would rotate $f (${kb}KB) -> ${rot}.gz"
-    else
-      mv "$f" "$rot"
-      gzip -9 "$rot"
-      echo "[logrotate] rotated $f (${kb}KB) -> ${rot}.gz"
-      : > "$f"
-    fi
-    # prune old
-    local count=0
-    for old in $(ls -1t "${f}."*".gz" 2>/dev/null || true); do
-      count=$((count+1))
-      if [ "$count" -gt "$KEEP" ]; then
-        if [ "$DRY" = "1" ]; then
-          echo "[logrotate] would remove $old"
-        else
-          rm -f "$old"
-        fi
-      fi
-    done
-  else
-    echo "[logrotate] skip $f (${kb}KB <= ${MAX_KB}KB)"
+  local sz
+  sz=$(wc -c <"$f")
+  if [ "$sz" -gt $((2*1024*1024)) ]; then
+    mv "$f" "${f}.$(date -u +%Y%m%d%H%M%S).bak"
+    : > "$f"
   fi
 }
 
-for f in "${LOGS[@]}"; do
-  # ensure file exists
-  [ -f "$f" ] || : > "$f"
-  rotate_one "$f"
-done
+rotate "$LOG_DIR/run.log"
+rotate "$LOG_DIR/scheduler.log"
+rotate "$LOG_DIR/daily_summary.log"
+
+# keep only latest 7 backups per log
+find "$LOG_DIR" -type f -name "*.bak" -printf "%T@ %p\n" \
+  | sort -nr | awk 'NR>7 {print $2}' | xargs -r rm -f

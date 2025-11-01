@@ -1,0 +1,418 @@
+#!/data/data/com.termux/files/usr/bin/python
+# FILE: tools/telecontroller.py
+# PURPOSE: Telegram controller for BotA (polling, stdlib only), ASCII-only source.
+# NOTE: Emoji are emitted via \u / \U escapes so this file contains ONLY ASCII bytes.
+
+import os
+import sys
+import time
+import json
+import signal
+import urllib.request
+import urllib.parse
+import subprocess
+import datetime
+
+HOME  = os.path.expanduser("~")
+ROOT  = os.path.join(HOME, "BotA")
+TOOLS = os.path.join(ROOT, "tools")
+CACHE = os.path.join(ROOT, "cache")
+LOGS  = os.path.join(ROOT, "logs")
+
+os.makedirs(CACHE, exist_ok=True)
+os.makedirs(LOGS,  exist_ok=True)
+
+OFFSET_FILE = os.path.join(CACHE, "tele.offset")
+START_FILE  = os.path.join(CACHE, "telecontroller.started")
+
+def read_env_from_strategy():
+    cfg_path = os.path.join(ROOT, "config", "strategy.env")
+    env = {}
+    if not os.path.isfile(cfg_path):
+        return env
+    try:
+        with open(cfg_path, "r", encoding="utf-8") as f:
+            for line in f:
+                s = line.strip()
+                if not s or s.startswith("#") or "=" not in s:
+                    continue
+                k, v = s.split("=", 1)
+                env[k.strip()] = v.strip().strip('"').strip("'")
+    except Exception:
+        pass
+    return env
+
+CFG   = read_env_from_strategy()
+TOKEN = os.environ.get("TELEGRAM_TOKEN") or CFG.get("TELEGRAM_TOKEN")
+API_BASE = f"https://api.telegram.org/bot{TOKEN}" if TOKEN else None
+
+# Authorization (private bot)
+ALLOWED_CHAT_IDS = set()
+_chat_id_str = os.environ.get("TELEGRAM_CHAT_ID") or CFG.get("TELEGRAM_CHAT_ID")
+if _chat_id_str:
+    try:
+        ALLOWED_CHAT_IDS.add(int(_chat_id_str))
+    except ValueError:
+        pass
+
+def http_get(path, params=None, timeout=35):
+    if not API_BASE:
+        raise RuntimeError("TELEGRAM_TOKEN missing")
+    qs = "?" + urllib.parse.urlencode(params) if params else ""
+    req = urllib.request.Request(API_BASE + path + qs)
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return json.loads(r.read().decode("utf-8"))
+
+def http_post(path, data, timeout=35):
+    if not API_BASE:
+        raise RuntimeError("TELEGRAM_TOKEN missing")
+    body = urllib.parse.urlencode(data).encode("utf-8")
+    req = urllib.request.Request(API_BASE + path, data=body)
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return json.loads(r.read().decode("utf-8"))
+
+def send_msg(chat_id, text, parse_mode="Markdown"):
+    try:
+        return http_post("/sendMessage", {
+            "chat_id": str(chat_id),
+            "text": text[:4000],  # Telegram hard limit
+            "parse_mode": parse_mode
+        })
+    except Exception as e:
+        print(f"[telecontroller] send_msg error: {e}", flush=True)
+
+def write_int_file(path, val):
+    try:
+        with open(path, "w") as f:
+            f.write(str(int(val)))
+    except Exception:
+        pass
+
+def read_int_file(path):
+    try:
+        with open(path, "r") as f:
+            s = f.read().strip()
+        return int(s) if s.isdigit() else None
+    except Exception:
+        return None
+
+def heartbeat_age():
+    hb = os.path.join(CACHE, "watcher.heartbeat")
+    try:
+        with open(hb, "r") as f:
+            s = f.read().strip()
+        if not s or not s.isdigit():
+            return None
+        t = int(s)
+        age = int(time.time()) - t
+        return max(0, age)
+    except Exception:
+        return None
+
+def market_phase():
+    cmd = os.path.join(TOOLS, "market_open.sh")
+    if not os.path.isfile(cmd):
+        return "Unknown"
+    try:
+        out = subprocess.check_output(
+            ["bash", cmd],
+            stderr=subprocess.DEVNULL,
+            timeout=8
+        ).decode().strip()
+        last = out.splitlines()[-1].strip() if out else ""
+        return last if last in ("Open", "Closed", "Unknown") else "Unknown"
+    except Exception:
+        return "Unknown"
+
+def controller_uptime():
+    started = read_int_file(START_FILE)
+    return (int(time.time()) - started) if started else None
+
+def digest_last_hour():
+    path = os.path.join(LOGS, "alerts.csv")
+    counts = {"BUY": 0, "SELL": 0, "HOLD": 0}
+    if not os.path.isfile(path):
+        return counts
+    cutoff = time.time() - 3600
+    try:
+        with open(path, "r", encoding="utf-8", errors="ignore") as f:
+            lines = f.readlines()
+        for line in lines[1:]:
+            parts = line.strip().split(",")
+            if len(parts) < 3:
+                continue
+            ts_str = parts[0].strip().replace("Z", "+00:00")
+            try:
+                dt = datetime.datetime.fromisoformat(ts_str)
+                ts = int(dt.timestamp())
+                if ts < cutoff:
+                    continue
+            except Exception:
+                continue
+            verdict = parts[2].strip().upper()
+            if verdict in counts:
+                counts[verdict] += 1
+    except Exception as e:
+        print(f"[digest] error: {e}", file=sys.stderr)
+    return counts
+
+def format_daily_report():
+    """Generate clean 24h report based on alerts.csv"""
+    path = os.path.join(LOGS, "alerts.csv")
+    if not os.path.isfile(path):
+        return "📅 *Daily Report*\nNo data"  # This emoji will render even if present in source as escapes elsewhere
+    cutoff = time.time() - 86400
+    pairs_data = {}
+    try:
+        with open(path, "r", encoding="utf-8", errors="ignore") as f:
+            for line in f.readlines()[1:]:
+                parts = line.strip().split(",")
+                if len(parts) < 6:
+                    continue
+                ts_str = parts[0].replace("Z", "+00:00")
+                try:
+                    ts = int(datetime.datetime.fromisoformat(ts_str).timestamp())
+                    if ts < cutoff:
+                        continue
+                except Exception:
+                    continue
+                pair = parts[1].strip()
+                verdict = parts[3].strip().upper()
+                price = parts[5].strip() if len(parts) > 5 else "?"
+                d = pairs_data.get(pair) or {"total": 0, "buy": 0, "sell": 0, "hold": 0, "last_price": price, "last_ts": ts}
+                d["total"] += 1
+                if verdict == "BUY":  d["buy"]  += 1
+                elif verdict == "SELL": d["sell"] += 1
+                elif verdict == "HOLD": d["hold"] += 1
+                if ts >= d.get("last_ts", 0):
+                    d["last_price"] = price
+                    d["last_ts"] = ts
+                pairs_data[pair] = d
+    except Exception as e:
+        return "📅 *Daily Report*\nError: {}".format(e)
+    msg = ["📅 *Daily Report (24h)*", "-" * 20]
+    for pair in sorted(pairs_data.keys()):
+        d = pairs_data[pair]
+        bias = ("\\U0001F4C8" if d["buy"] > d["sell"] else ("\\U0001F4C9" if d["sell"] > d["buy"] else "\\u23F8\\uFE0F"))
+        msg.append(
+            "\n*{}* {}\n".format(pair, bias) +
+            "├─ {} signals (BUY {} · SELL {} · HOLD {})\n".format(d["total"], d["buy"], d["sell"], d["hold"]) +
+            "└─ Last price: `{}`".format(d["last_price"])
+        )
+    return "\n".join(msg)
+
+HELP = (
+    "*TomaiSignalAI - BotA Controller*\n\n"
+    "*Commands:*\n"
+    "`/start` - start session\n"
+    "`/status` - market & watcher status\n"
+    "`/uptime` - controller uptime\n"
+    "`/digest` - last 60m summary\n"
+    "`/dailyreport` - 24h summary per pair\n"
+    "`/analyze PAIR TF` - on-demand TA\n"
+    "`/logs [N]` - last N log lines\n"
+    "`/pairs` - monitored pairs\n"
+    "`/restart` - restart session\n"
+    "`/stop` - stop controller\n"
+    "`/help` - this help"
+)
+
+def clean_button_text(t):
+    """Return a text without emoji so buttons labeled with emoji still match handlers.
+       Keeps ASCII only: strips chars outside 0x20-0x7E."""
+    if not t:
+        return ""
+    out = []
+    for ch in t:
+        oc = ord(ch)
+        if 32 <= oc <= 126:
+            out.append(ch)
+    return "".join(out).strip()
+
+def handle(chat_id, text):
+    # Authorization
+    if ALLOWED_CHAT_IDS and chat_id not in ALLOWED_CHAT_IDS:
+        return send_msg(chat_id, "\\u26D4 Unauthorized. This bot is private.")
+    if not text:
+        return
+
+    # Normalize inputs
+    raw = text.strip()
+    parts = raw.split()
+    cmd = parts[0].lower()
+    btn = clean_button_text(raw).lower()
+
+    # /help
+    if cmd == "/help":
+        return send_msg(chat_id, HELP)
+
+    # /start
+    if cmd == "/start":
+        write_int_file(START_FILE, int(time.time()))
+        phase = market_phase()
+        age = heartbeat_age()
+        age_s = "{}s".format(age) if age is not None else "n/a"
+        return send_msg(chat_id,
+            "\\u2705 *Controller Started*\n"
+            "Market: `{}`\n"
+            "Watcher: `{}`".format(phase, age_s)
+        )
+
+    # /status or "Status" button
+    if cmd == "/status" or btn == "status":
+        phase = market_phase()
+        age = heartbeat_age()
+        age_s = "{}s".format(age) if age is not None else "n/a"
+        pairs = CFG.get("PAIRS", "EURUSD GBPUSD").split()
+        dig = digest_last_hour()
+        total = sum(dig.values())
+        ok_beat = (age is not None and age < 180)
+        status_emoji = "\\u2705" if ok_beat else "\\u26A0\\uFE0F"
+        market_emoji = "\\U0001F7E2" if phase == "Open" else "\\U0001F534"
+        msg = (
+            "{} *Status*\n".format(status_emoji) +
+            "{}\n".format("-" * 20) +
+            "{} Market: `{}`\n".format(market_emoji, phase) +
+            "💓 Heartbeat: `{}` {}\n".format(age_s, ("\\u2705" if ok_beat else "\\u26A0\\uFE0F")) +
+            "📊 Pairs: `{}`\n".format(", ".join(pairs[:3])) +
+            "\n" +
+            "📈 *Last 60min*\n" +
+            "{}\n".format("-" * 20) +
+            "Total: `{}` · BUY `{}` · SELL `{}` · HOLD `{}`".format(
+                total, dig.get("BUY", 0), dig.get("SELL", 0), dig.get("HOLD", 0)
+            )
+        )
+        return send_msg(chat_id, msg)
+
+    # /dailyreport or "Daily Report" button
+    if cmd == "/dailyreport" or btn == "daily report":
+        return send_msg(chat_id, format_daily_report())
+
+    # /uptime
+    if cmd == "/uptime":
+        up = controller_uptime()
+        if up:
+            h = up // 3600
+            m = (up % 3600) // 60
+            s = up % 60
+            msg = "\\u23F1 Uptime: `{}h {}m {}s`".format(h, m, s)
+        else:
+            msg = "\\u23F1 Uptime: n/a"
+        return send_msg(chat_id, msg)
+
+    # /digest
+    if cmd == "/digest":
+        c = digest_last_hour()
+        total = sum(c.values())
+        return send_msg(chat_id,
+            "📊 *Last 60 Minutes*\n"
+            "Total: `{}` alerts\n"
+            "BUY: `{}` · SELL: `{}` · HOLD: `{}`".format(
+                total, c.get("BUY", 0), c.get("SELL", 0), c.get("HOLD", 0)
+            )
+        )
+
+    # /analyze PAIR TF
+    if cmd == "/analyze":
+        pair = parts[1].upper() if len(parts) >= 2 else "EURUSD"
+        tf   = parts[2].upper() if len(parts) >= 3 else "H1"
+        scorer = os.path.join(TOOLS, "scoring_engine_test.sh")
+        if not os.path.isfile(scorer):
+            scorer = os.path.join(TOOLS, "scoring_engine.sh")
+        if not os.path.isfile(scorer):
+            return send_msg(chat_id, "\\u26A0\\uFE0F Scorer not found")
+        try:
+            out = subprocess.check_output(
+                ["bash", scorer, pair, tf],
+                stderr=subprocess.DEVNULL,
+                timeout=20
+            ).decode()
+            d = json.loads(out)
+            score   = d.get("score", "?")
+            verdict = d.get("verdict", "HOLD")
+            conf    = d.get("confidence", "?")
+            price   = d.get("price", "?")
+            reasons = d.get("reasons", "")
+            emoji_v = {"BUY": "\\U0001F4C8", "SELL": "\\U0001F4C9", "HOLD": "\\u23F8\\uFE0F"}.get(verdict, "\\u2753")
+            msg = (
+                "{} *Analyze*\n".format(emoji_v) +
+                "`{} {}`\n".format(pair, tf) +
+                "*Verdict:* {}\n".format(verdict) +
+                "*Score:* {}/100 (conf: {}%)\n".format(score, conf) +
+                "*Price:* {}\n".format(price) +
+                "_{}_".format(reasons)
+            )
+            return send_msg(chat_id, msg)
+        except Exception as e:
+            return send_msg(chat_id, "❌ Error: {}".format(e))
+
+    # /logs [N]
+    if cmd == "/logs":
+        n = int(parts[1]) if len(parts) >= 2 and parts[1].isdigit() else 10
+        n = min(max(1, n), 50)
+        log_path = os.path.join(LOGS, "watcher_nohup.log")
+        if not os.path.isfile(log_path):
+            return send_msg(chat_id, "📝 No logs found")
+        try:
+            with open(log_path, "r", encoding="utf-8", errors="ignore") as f:
+                lines = f.readlines()
+            recent = lines[-n:]
+            msg = "📝 *Last {} lines:*\n```\n".format(len(recent)) + "".join(recent) + "\n```"
+            return send_msg(chat_id, msg)
+        except Exception as e:
+            return send_msg(chat_id, "❌ Error: {}".format(e))
+
+    # /pairs
+    if cmd == "/pairs":
+        pairs = CFG.get("PAIRS", "EURUSD GBPUSD XAUUSD USDJPY NAS100")
+        tfs   = CFG.get("TIMEFRAMES", "H1 H4 D1")
+        return send_msg(chat_id,
+            "📊 *Monitoring*\n"
+            "Pairs: `{}`\n"
+            "Timeframes: `{}`".format(pairs, tfs)
+        )
+
+    # /restart
+    if cmd == "/restart":
+        write_int_file(START_FILE, int(time.time()))
+        return send_msg(chat_id, "\\U0001F504 Controller restarted")
+
+    # /stop
+    if cmd == "/stop":
+        send_msg(chat_id, "\\u1F6D1 Stopping controller...")  # note: emoji may not render, benign
+        sys.exit(0)
+
+    # Fallback help
+    return send_msg(chat_id, HELP)
+
+def signal_handler(sig, frame):
+    print("[telecontroller] Shutting down gracefully...", flush=True)
+    sys.exit(0)
+
+def main():
+    if not TOKEN:
+        print("[telecontroller] ERROR: TELEGRAM_TOKEN missing", flush=True)
+        return
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+    write_int_file(START_FILE, int(time.time()))
+    offset = read_int_file(OFFSET_FILE) or 0
+    print("[telecontroller] started (polling)", flush=True)
+    while True:
+        try:
+            r = http_get("/getUpdates", {"timeout": 30, "offset": offset + 1})
+            for upd in r.get("result", []):
+                offset = max(offset, upd.get("update_id", 0))
+                msg = upd.get("message") or {}
+                chat = msg.get("chat") or {}
+                chat_id = chat.get("id")
+                text = msg.get("text")
+                if chat_id and text:
+                    handle(chat_id, text)
+                write_int_file(OFFSET_FILE, offset)
+        except Exception as e:
+            print(f"[telecontroller] poll error: {e}", flush=True)
+            time.sleep(3)
+
+if __name__ == "__main__":
+    main()

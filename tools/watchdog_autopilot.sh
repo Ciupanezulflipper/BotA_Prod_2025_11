@@ -26,7 +26,7 @@ else
 fi
 
 # 2) Runner lock freshness
-LOCK="/data/data/com.termux/files/usr/tmp/runner.lock"
+LOCK="/data/data/com.termux/files/home/BotA/cache/runner.lock"
 if [ -f "$LOCK" ]; then
   now=$(date +%s)
   mtime=$(stat -c %Y "$LOCK" 2>/dev/null || echo 0)

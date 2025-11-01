@@ -1,25 +1,19 @@
 #!/data/data/com.termux/files/usr/bin/bash
+# Wrapper to run the Telegram controller (idempotent)
 set -euo pipefail
-ROOT="$HOME/BotA"
-TOOLS="$ROOT/tools"
-STATE="$ROOT/state"
-LOG="$ROOT/control.log"
 
-mkdir -p "$STATE"
+# Ensure env is present (use tele_env.sh if you like)
+: "${TELEGRAM_BOT_TOKEN:?Missing TELEGRAM_BOT_TOKEN}"
+: "${TELEGRAM_CHAT_ID:?Missing TELEGRAM_CHAT_ID}"
 
-# 1) Ensure the Python controller exists
-if [ ! -f "$TOOLS/tele_control.py" ]; then
-  echo "[tele_control] Missing tele_control.py — please install it first." >&2
-  exit 1
-fi
-
-# 2) Ensure exactly one instance is running
-if pgrep -f "python3 .*tele_control.py" >/dev/null 2>&1; then
-  echo "[tele_control] Controller already running."
+# Single instance guard
+PIDFILE="$HOME/BotA/.state/tele_control.pid"
+mkdir -p "$HOME/BotA/.state"
+if [[ -f "$PIDFILE" ]] && ps -p "$(cat "$PIDFILE")" >/dev/null 2>&1; then
+  echo "[tele_control] already running (pid $(cat "$PIDFILE"))"
   exit 0
 fi
 
-# 3) Boot the Telegram controller (long-polling)
-echo "[tele_control] Starting controller…" | tee -a "$LOG"
-nohup python3 "$TOOLS/tele_control.py" >> "$LOG" 2>&1 & disown
-echo "[tele_control] Started (log: $LOG)"
+python3 "$HOME/BotA/tools/tele_control.py" &
+echo $! > "$PIDFILE"
+echo "[tele_control] started (pid $(cat "$PIDFILE"))"
