@@ -1,0 +1,60 @@
+"""
+telegramalert.py — single-responsibility Telegram sender.
+
+- Reads BOT_TOKEN and CHAT_ID from env (or .env already exported by runner)
+- Respects QUIET_TELEGRAM=1 (no prints from this module)
+- Returns (ok: bool, err: Optional[str])
+"""
+
+from __future__ import annotations
+import os
+import json
+import requests
+from typing import Optional, Tuple
+
+API_BASE = "https://api.telegram.org"
+
+def _is_true(v: str | None) -> bool:
+    return str(v or "").strip().lower() in ("1", "true", "yes", "y", "on")
+
+def send_telegram_message(text: str) -> Tuple[bool, Optional[str]]:
+    """
+    Send a text message. Returns (ok, err). No prints if QUIET_TELEGRAM=1.
+    """
+    bot_token = os.getenv("BOT_TOKEN") or os.getenv("TELEGRAM_BOT_TOKEN")
+    chat_id = os.getenv("CHAT_ID") or os.getenv("TELEGRAM_CHAT_ID")
+    quiet = _is_true(os.getenv("QUIET_TELEGRAM"))
+
+    if not bot_token or not chat_id:
+        err = "BOT_TOKEN or CHAT_ID not configured"
+        if not quiet:
+            print(f"✗ Telegram send failed: {err}")
+        return False, err
+
+    url = f"{API_BASE}/bot{bot_token}/sendMessage"
+    payload = {
+        "chat_id": chat_id,
+        "text": text,
+        "parse_mode": "HTML",
+        "disable_web_page_preview": True,
+    }
+
+    try:
+        r = requests.post(url, json=payload, timeout=20, verify=os.getenv("VERIFY_SSL", "true").lower() == "true")
+        r.raise_for_status()
+        data = r.json()
+        ok = bool(data.get("ok"))
+        if ok:
+            if not quiet:
+                print("✓ Signal sent to Telegram")
+            return True, None
+        else:
+            err = data.get("description") or "unknown telegram error"
+            if not quiet:
+                print(f"✗ Telegram send failed: {err}")
+            return False, err
+    except requests.RequestException as e:
+        err = str(e)
+        if not quiet:
+            print(f"✗ Telegram send failed: {err}")
+        return False, err

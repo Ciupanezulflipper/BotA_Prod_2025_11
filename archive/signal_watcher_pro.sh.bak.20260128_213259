@@ -1,0 +1,409 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# BotA M15 signal watcher (FETCH → FUSION → FILTER-GATE → CSV → Telegram)
+# File: tools/signal_watcher_pro.sh
+
+set -euo pipefail
+
+# --------- core paths --------- #
+ROOT="${BOTA_ROOT:-$HOME/BotA}"
+TOOLS="$ROOT/tools"
+LOGS="$ROOT/logs"
+CACHE="$ROOT/cache"
+mkdir -p "$LOGS" "$CACHE"
+
+# --------- defaults & env overrides --------- #
+PAIRS_DEFAULT="EURUSD GBPUSD USDJPY EURJPY"
+TIMEFRAMES_DEFAULT="M15"
+
+PAIRS="${PAIRS:-$PAIRS_DEFAULT}"
+TIMEFRAMES="${TIMEFRAMES:-$TIMEFRAMES_DEFAULT}"
+ALERTS_CSV="${ALERTS_CSV:-$LOGS/alerts.csv}"
+
+DRY_RUN_MODE="${DRY_RUN_MODE:-true}"
+
+TELEGRAM_ENABLED="${TELEGRAM_ENABLED:-0}"
+TELEGRAM_MIN_SCORE="${TELEGRAM_MIN_SCORE:-95}"
+TELEGRAM_SEND_SCRIPT="${TELEGRAM_SEND_SCRIPT:-$TOOLS/send_tg.sh}"
+
+FILTER_SCORE_MIN="${FILTER_SCORE_MIN:-0}"
+
+# --------- helpers --------- #
+ts() { date +%Y-%m-%dT%H:%M:%S%z; }
+
+log() {
+  local level="$1"; shift
+  printf '[%s %s] %s\n' "$level" "$(ts)" "$*" >&2
+}
+
+is_truthy() {
+  local v="${1:-}"
+  v="$(printf '%s' "$v" | tr '[:upper:]' '[:lower:]')"
+  [[ "$v" == "1" || "$v" == "true" || "$v" == "yes" || "$v" == "on" ]]
+}
+
+float_lt() { awk -v a="${1:-0}" -v b="${2:-0}" 'BEGIN{exit !((a+0) < (b+0))}'; }
+
+escape_html() {
+  local s="${1:-}"
+  s="${s//&/&amp;}"
+  s="${s//</&lt;}"
+  s="${s//>/&gt;}"
+  printf '%s' "$s"
+}
+
+# Cron often has a minimal env; if critical telegram vars are missing, try sourcing repo .env.
+ensure_env() {
+  local need_env=0
+  if [[ -z "${TELEGRAM_TOKEN:-}" && -z "${TELEGRAM_BOT_TOKEN:-}" && -z "${BOT_TOKEN:-}" ]]; then
+    need_env=1
+  fi
+  if [[ -z "${TELEGRAM_CHAT_ID:-}" && -z "${CHAT_ID:-}" ]]; then
+    need_env=1
+  fi
+
+  if (( need_env == 1 )); then
+    if [[ -f "$ROOT/.env" ]]; then
+      set -a
+      # shellcheck disable=SC1090
+      source "$ROOT/.env"
+      set +a
+    fi
+  fi
+}
+
+send_telegram_alert() {
+  local pair="$1"
+  local tf="$2"
+  local direction="$3"
+  local score="$4"
+  local conf="$5"
+  local filters="$6"
+  local reasons="$7"
+  local price="$8"
+  local provider="$9"
+
+  # Gate: enabled?
+  if ! is_truthy "$TELEGRAM_ENABLED"; then
+    return 0
+  fi
+
+  # Gate: dry run?
+  if is_truthy "$DRY_RUN_MODE"; then
+    return 0
+  fi
+
+  # Gate: tradeable only
+  if [[ -z "$direction" || "$direction" == "HOLD" ]]; then
+    return 0
+  fi
+
+  # Gate: threshold
+  if float_lt "$score" "$TELEGRAM_MIN_SCORE"; then
+    return 0
+  fi
+
+  ensure_env
+
+  if [[ ! -x "$TELEGRAM_SEND_SCRIPT" ]]; then
+    log TG "SKIP: missing telegram sender executable: $TELEGRAM_SEND_SCRIPT"
+    return 0
+  fi
+
+  local safe_pair safe_tf safe_dir safe_provider safe_filters safe_reasons
+  safe_pair="$(escape_html "$pair")"
+  safe_tf="$(escape_html "$tf")"
+  safe_dir="$(escape_html "$direction")"
+  safe_provider="$(escape_html "$provider")"
+  safe_filters="$(escape_html "$filters")"
+  safe_reasons="$(escape_html "$reasons")"
+
+  local msg
+  msg="<b>BotA Signal</b>
+<b>${safe_pair}</b> <code>${safe_tf}</code> → <b>${safe_dir}</b>
+Score: <b>${score}</b>  Conf: <b>${conf}</b>
+Price: <code>${price}</code>  Provider: <code>${safe_provider}</code>"
+
+  if [[ -n "$safe_filters" && "$safe_filters" != "none" ]]; then
+    msg="${msg}
+Filters: <code>${safe_filters}</code>"
+  fi
+
+  if [[ -n "$safe_reasons" ]]; then
+    msg="${msg}
+Why: ${safe_reasons}"
+  fi
+
+  if bash "$TELEGRAM_SEND_SCRIPT" --text "$msg" >/dev/null 2>&1; then
+    log TG "SENT: ${pair} ${tf} ${direction} score=${score} conf=${conf}"
+  else
+    log TG "ERROR: send failed for ${pair} ${tf} ${direction} score=${score}"
+  fi
+}
+
+cleanup_old_csv() {
+  local csv_file="$1"
+
+  if [ ! -f "$csv_file" ]; then
+    return 0
+  fi
+
+  if head -1 "$csv_file" | grep -q "ts_utc,pair,dir_h1,rsi_h1,m5,news,source"; then
+    log WATCHER "Detected old CSV format - backing up and creating new file"
+    local backup_file="${csv_file}.backup.$(date +%Y%m%d_%H%M%S)"
+    mv "$csv_file" "$backup_file"
+    log WATCHER "Backed up old CSV to: $backup_file"
+    return 1
+  fi
+
+  if head -1 "$csv_file" | grep -q "timestamp,pair,tf,direction,score,confidence,reasons,price,provider"; then
+    return 0
+  fi
+
+  log WARN "CSV file has unknown format - backing up and creating new file"
+  local backup_file="${csv_file}.backup.$(date +%Y%m%d_%H%M%S)"
+  mv "$csv_file" "$backup_file"
+  return 1
+}
+
+run_fusion() {
+  local pair="$1"
+  local tf="$2"
+  DRY_RUN_MODE="$DRY_RUN_MODE" TELEGRAM_ENABLED="$TELEGRAM_ENABLED" \
+    bash "$TOOLS/m15_h1_fusion.sh" "$pair" 2>>"$LOGS/error.log"
+}
+
+append_csv() {
+  local ts_val="$1"
+  local pair="$2"
+  local tf="$3"
+  local direction="$4"
+  local score="$5"
+  local conf="$6"
+  local reasons="$7"
+  local price="$8"
+  local provider="$9"
+
+  local file="$ALERTS_CSV"
+
+  if [ ! -f "$file" ]; then
+    echo "timestamp,pair,tf,direction,score,confidence,reasons,price,provider" > "$file" || {
+      log WARN "Failed to create CSV file: $file"
+      return 1
+    }
+  fi
+
+  local reasons_q="${reasons//\"/\"\"}"
+  local csv_row
+  csv_row=$(printf '%s,%s,%s,%s,%s,%s,"%s",%s,%s' \
+    "$ts_val" "$pair" "$tf" "$direction" "$score" "$conf" "$reasons_q" "$price" "$provider")
+
+  printf '%s\n' "$csv_row" >> "$file" || {
+    log WARN "$pair $tf CSV append failed for $file"
+    return 1
+  }
+  return 0
+}
+
+process_pair_tf() {
+  local pair="$1"
+  local tf="$2"
+  local cache_json="$CACHE/${pair}.json"
+
+  if [ -f "$cache_json" ]; then
+    log CACHE "$pair $tf detected cache file $cache_json"
+  else
+    log FETCH "$pair $tf no cache file (forcing fetch)"
+  fi
+
+  local fetch_output
+  fetch_output=$(
+    DRY_RUN_MODE="$DRY_RUN_MODE" TELEGRAM_ENABLED="$TELEGRAM_ENABLED" \
+      bash "$TOOLS/data_fetch_candles.sh" "$pair" "$tf" 2>&1
+  ) || {
+    log WARN "$pair $tf data_fetch_candles.sh failed"
+  }
+
+  local actual_price="0.0"
+  local actual_provider="unknown"
+
+  if echo "$fetch_output" | grep -q "price="; then
+    actual_price=$(echo "$fetch_output" | grep -o "price=[0-9.]*" | cut -d= -f2 | head -1)
+    actual_provider=$(echo "$fetch_output" | grep -o "via [a-zA-Z0-9_]*" | cut -d' ' -f2 | head -1)
+  fi
+
+  local payload
+  if ! payload="$(run_fusion "$pair" "$tf")"; then
+    log WARN "$pair $tf fusion pipeline failed"
+    return
+  fi
+  if [ -z "$payload" ]; then
+    log WARN "$pair $tf fusion pipeline emitted empty payload"
+    return
+  fi
+
+  local summary
+  if ! summary="$(python3 - "$payload" <<'PY'
+import json, sys, base64
+
+def to_float(x):
+    try:
+        return float(x)
+    except Exception:
+        return 0.0
+
+if len(sys.argv) < 2:
+    sys.exit(1)
+
+data = sys.argv[1]
+if not data.strip():
+    sys.exit(1)
+
+try:
+    j = json.loads(data)
+except Exception as e:
+    sys.stderr.write(f"[SUMMARY] JSON parse error: {e}\n")
+    sys.exit(1)
+
+direction = j.get("direction") or "HOLD"
+score = to_float(j.get("score", 0))
+conf = j.get("confidence")
+if conf in (None, "", 0):
+    conf = j.get("confidence_pct", 0)
+conf = to_float(conf)
+
+price = to_float(j.get("price", 0.0))
+provider = j.get("provider") or "scoring_engine"
+
+rejected = bool(j.get("filter_rejected", False))
+
+reasons = j.get("reasons", "")
+if reasons is None:
+    reasons = ""
+if not isinstance(reasons, str):
+    reasons = str(reasons)
+
+f_reasons = j.get("filter_reasons", [])
+if not isinstance(f_reasons, list):
+    f_reasons = []
+
+filters_joined = " | ".join(str(x) for x in f_reasons)
+
+def b64(s: str) -> str:
+    if not s:
+        return ""
+    return base64.b64encode(s.encode("utf-8")).decode("ascii")
+
+parts = [
+    direction,
+    f"{score}",
+    f"{conf}",
+    f"{price}",
+    provider,
+    "true" if rejected else "false",
+    b64(reasons),
+    b64(filters_joined),
+]
+sys.stdout.write("\t".join(parts))
+PY
+  )"; then
+    log WARN "$pair $tf invalid JSON from fusion pipeline"
+    return
+  fi
+
+  local direction score conf price provider rejected reasons_b64 filters_b64
+  local IFS=$'\t'
+  read -r direction score conf price provider rejected reasons_b64 filters_b64 <<<"$summary" || {
+    unset IFS
+    log WARN "$pair $tf could not split summary line"
+    return
+  }
+  unset IFS
+
+  local reasons filters
+  if [ -n "$reasons_b64" ]; then
+    reasons="$(printf '%s' "$reasons_b64" | base64 -d 2>/dev/null || printf '')"
+  else
+    reasons=""
+  fi
+  if [ -n "$filters_b64" ]; then
+    filters="$(printf '%s' "$filters_b64" | base64 -d 2>/dev/null || printf '')"
+  else
+    filters=""
+  fi
+
+  if [ "$price" = "0.0" ] || [ "$price" = "0" ]; then
+    price="$actual_price"
+    if [ "$provider" = "scoring_engine" ] || [ "$provider" = "scoring_engine_market" ]; then
+      provider="$actual_provider"
+    fi
+  fi
+
+  # Enforce FILTER_SCORE_MIN locally if fusion didn't reject
+  local effective_rejected="$rejected"
+  local effective_filters="$filters"
+  if [[ "$effective_rejected" != "true" ]]; then
+    if float_lt "$score" "$FILTER_SCORE_MIN"; then
+      effective_rejected="true"
+      if [[ -n "$effective_filters" ]]; then
+        effective_filters="${effective_filters} | score<${FILTER_SCORE_MIN}"
+      else
+        effective_filters="score<${FILTER_SCORE_MIN}"
+      fi
+    fi
+  fi
+
+  local label="accepted"
+  [[ "$effective_rejected" == "true" ]] && label="rejected_by_filter"
+
+  local ts_now
+  ts_now="$(ts)"
+
+  if [ -n "$effective_filters" ]; then
+    log FILTER "$pair $tf $label score=${score} conf=${conf} filters=${effective_filters}"
+  else
+    log FILTER "$pair $tf $label score=${score} conf=${conf} filters=none"
+    effective_filters="none"
+  fi
+
+  # Telegram send happens ONLY for accepted signals
+  if [[ "$label" == "accepted" ]]; then
+    send_telegram_alert "$pair" "$tf" "$direction" "$score" "$conf" "$effective_filters" "$reasons" "$price" "$provider" || true
+  fi
+
+  local csv_reasons="$reasons"
+  if [ -n "$effective_filters" && "$effective_filters" != "none" ]; then
+    if [ -n "$csv_reasons" ]; then
+      csv_reasons="${csv_reasons} | filters=${effective_filters}"
+    else
+      csv_reasons="filters=${effective_filters}"
+    fi
+  fi
+
+  append_csv "$ts_now" "$pair" "$tf" "$direction" "$score" "$conf" "$csv_reasons" "$price" "$provider" || true
+}
+
+main() {
+  if ! command -v base64 >/dev/null 2>&1; then
+    log ERROR "base64 command not found"
+    exit 1
+  fi
+
+  cleanup_old_csv "$ALERTS_CSV" || :
+
+  log WATCHER "SANITY: PAIRS=\"$PAIRS\" TIMEFRAMES=\"$TIMEFRAMES\" ALERTS_CSV=\"$ALERTS_CSV\" DRY_RUN_MODE=\"$DRY_RUN_MODE\" TELEGRAM_ENABLED=\"$TELEGRAM_ENABLED\" TELEGRAM_MIN_SCORE=\"$TELEGRAM_MIN_SCORE\" FILTER_SCORE_MIN=\"$FILTER_SCORE_MIN\""
+
+  for pair in $PAIRS; do
+    for tf in $TIMEFRAMES; do
+      process_pair_tf "$pair" "$tf"
+    done
+  done
+
+  log DONE "manual --once scan complete"
+}
+
+if [[ "${1:-}" == "--once" ]]; then
+  main
+else
+  log ERROR "This script requires --once flag for single runs"
+  exit 1
+fi

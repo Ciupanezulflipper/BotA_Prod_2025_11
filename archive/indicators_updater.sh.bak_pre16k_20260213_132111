@@ -1,0 +1,76 @@
+#!/data/data/com.termux/files/usr/bin/bash
+###############################################################################
+# FILE: tools/indicators_updater.sh
+#
+# ROLE
+# - For each PAIR + TIMEFRAME:
+#     * Use TF-specific cache input: cache/<PAIR>_<TF>.json
+#     * Run build_indicators.py to generate: cache/indicators_<PAIR>_<TF>.json
+#
+# FAIL-CLOSED
+# - If cache/<PAIR>_<TF>.json is missing, SKIP that pair/tf.
+# - build_indicators.py keeps tf_mismatch strict; scoring_engine.sh must HOLD.
+#
+# LOGGING
+# - stderr only (never pollute JSON stdout pipelines).
+###############################################################################
+set -euo pipefail
+shopt -s inherit_errexit 2>/dev/null || true
+
+ROOT="${HOME}/BotA"
+TOOLS="${ROOT}/tools"
+CACHE="${ROOT}/cache"
+LOGS="${ROOT}/logs"
+
+PAIRS="${PAIRS:-"EURUSD GBPUSD XAUUSD USDJPY EURJPY"}"
+TIMEFRAMES="${TIMEFRAMES:-"M15"}"
+
+log() { printf '%s\n' "$*" >&2; }
+
+log "------------------------------------------------------------"
+log "[UPDATER] indicators_updater.sh start"
+log "[UPDATER] ROOT=${ROOT}"
+log "[UPDATER] PAIRS=${PAIRS}"
+log "[UPDATER] TIMEFRAMES=${TIMEFRAMES}"
+log "------------------------------------------------------------"
+
+if [[ ! -d "${CACHE}" ]]; then
+  log "[UPDATER] cache directory missing: ${CACHE} (nothing to do)"
+  exit 0
+fi
+
+if [[ ! -f "${TOOLS}/build_indicators.py" ]]; then
+  log "[UPDATER] ERROR: build_indicators.py not found at ${TOOLS}/build_indicators.py"
+  log "[UPDATER] Aborting; BotA install may be incomplete."
+  exit 1
+fi
+
+mkdir -p "${LOGS}" >/dev/null 2>&1 || true
+
+for pair in ${PAIRS}; do
+  for tf in ${TIMEFRAMES}; do
+    in_path="${CACHE}/${pair}_${tf}.json"
+    out_path="${CACHE}/indicators_${pair}_${tf}.json"
+
+    if [[ ! -f "${in_path}" ]]; then
+      log "[UPDATER] SKIP   ${pair} ${tf} — missing TF cache: ${in_path}"
+      log "[UPDATER]        Hint: run tools/data_fetch_candles.sh ${pair} ${tf}"
+      continue
+    fi
+
+    log "[UPDATER] BUILD  ${pair} ${tf} ← ${in_path}"
+    if python3 "${TOOLS}/build_indicators.py" \
+        --pair "${pair}" \
+        --tf "${tf}" \
+        --in "${in_path}" \
+        --out "${out_path}" \
+        >/dev/null 2>>"${LOGS}/error.log"; then
+      log "[UPDATER] OK     ${pair} ${tf} → ${out_path}"
+    else
+      log "[UPDATER] ERROR  ${pair} ${tf} — build_indicators.py failed (see ${LOGS}/error.log)"
+    fi
+  done
+done
+
+log "[UPDATER] done"
+exit 0

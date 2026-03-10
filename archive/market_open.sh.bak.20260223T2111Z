@@ -1,0 +1,46 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# FILE: tools/market_open.sh
+# DESC: DST-aware FX market gate (New York time)
+# Canonical FX week: Sunday 17:00 ET -> Friday 17:00 ET
+# Output: "Open" or "Closed"
+# Exit: 0 when Open, 1 when Closed
+
+set -euo pipefail
+
+export TZ="America/New_York"
+
+dow="$(date +%u)"          # 1=Mon .. 7=Sun
+hm_raw="$(date +%H%M)"     # 0000..2359
+hm="$((10#$hm_raw))"       # base-10 to avoid octal issues
+
+# Saturday: closed all day
+if [[ "$dow" -eq 6 ]]; then
+  echo "Closed"
+  exit 1
+fi
+
+# Sunday: open from 17:00 ET
+if [[ "$dow" -eq 7 ]]; then
+  if [[ "$hm" -ge 1700 ]]; then
+    echo "Open"
+    exit 0
+  else
+    echo "Closed"
+    exit 1
+  fi
+fi
+
+# Mon-Thu: open all day
+if [[ "$dow" -ge 1 && "$dow" -le 4 ]]; then
+  echo "Open"
+  exit 0
+fi
+
+# Friday: open until 17:00 ET
+if [[ "$hm" -lt 1700 ]]; then
+  echo "Open"
+  exit 0
+fi
+
+echo "Closed"
+exit 1

@@ -1,0 +1,46 @@
+# BotA Continuity Log (Running)
+
+## Latest Update — 2026-02-21 (T31S3, T32S1–T32S3)
+
+### Fixed (confirmed)
+- Added **OFFLINE replay mode**: `tools/replay_mode.sh`
+  - Reads `cache/indicators_<PAIR>_<TF>.json`
+  - Computes **direction + entry + SL/TP + RR + ATR**
+  - **Never sends Telegram**
+- Added **OFFLINE replay suite**: `tools/replay_suite.sh`
+  - Runs replay across cached indicators files and prints evidence lines.
+- Added **OFFLINE pipeline replay**: `tools/pipeline_replay.sh`
+  - Generates replay JSON + produces the **Telegram-ready formatted card text** via `tools/format_card.py` (no send).
+
+### Proven working (evidence from your paste)
+- Indicators are sane for EURUSD M15:
+  - `price=1.178550...`, `atr=0.0005748...`, `atr_pips=5.748...`, `tf_ok=true`, `weak=false`
+- Replay suite smoke test:
+  - `[SUITE_SUMMARY] runs=9 tradeable_not_rejected=6 rejected=3 one_tests_passed=9 one_tests_failed=0`
+  - Example tradeable lines (not rejected):
+    - `EURUSD M15 dir=BUY rejected=False rr=1.333... atr=0.0005748... entry=1.17855...`
+    - `GBPUSD M15 dir=SELL rejected=False rr=1.333... atr=0.0007266... entry=1.34812...`
+    - `USDJPY M15 dir=SELL rejected=False rr=1.333... atr=0.132129... entry=154.988...`
+
+### Root-cause proof (why live fusion shows entry/atr/sl/tp = 0.0)
+- `tools/scoring_engine.sh` is currently emitting a **fail-closed** payload with:
+  - `provider="scoring_engine_market"`
+  - `reasons="market phase Closed"`
+  - `entry=0.0`, `atr=0.0`, `sl=0.0`, `tp=0.0`, `filter_rejected=true`
+- `tools/m15_h1_fusion.sh` is inheriting that JSON (it does not recompute entry/atr/sl/tp).
+
+### Blocking issues (still open)
+- Live pipeline depends on:
+  - market-status logic (weekend closed vs open)
+  - gating thresholds (score/min score)
+  - quality filter reasons derived from live JSON.
+- We need the live engine to:
+  - stay fail-closed on weekends
+  - but be correct and non-degenerate during open sessions, and produce actionable fields when tradeable.
+
+### Next proof step (do next)
+- Run `tools/pipeline_replay.sh EURUSD M15` and paste:
+  - `[PIPELINE] ...`
+  - `[PIPELINE_RUNLINE] ...`
+  - the full `[PIPELINE_CARD] begin ... end` block (if present)
+- Then we do the live fix: adjust `tools/scoring_engine.sh` market-status branch so it doesn’t destroy computed fields (and confirm correct “open vs closed” detection during an actual open session).

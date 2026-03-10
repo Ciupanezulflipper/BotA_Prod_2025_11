@@ -1,0 +1,332 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import os, sys, json, time, logging
+import datetime as dt
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+
+# ---------- Logging (to ~/BotA/logs/bot.log) ----------
+try:
+    from BotA.tools import logging_bootstrap  # noqa: F401
+except Exception:
+    logdir = Path.home() / "BotA" / "logs"
+    logdir.mkdir(parents=True, exist_ok=True)
+    logging.basicConfig(
+        filename=str(logdir / "bot.log"),
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+    )
+
+# ---------- Providers ----------
+from BotA.tools.providers import get_ohlc
+
+# ---------- Telegram (fallback chain) ----------
+try:
+    from BotA.tools.telegramalert import send_telegram_message
+except Exception:
+    try:
+        from BotA.tools.telegramsender import send_telegram_message
+    except Exception:
+        try:
+            from BotA.tools.telegram_smoke import send_telegram_message
+        except Exception:
+            def send_telegram_message(text: str) -> None:
+                print(text)
+
+# ---------- Indicators ----------
+def _ema(s: pd.Series, n: int) -> pd.Series:
+    return pd.Series(s, dtype=float).ewm(span=n, adjust=False).mean()
+
+def ema(s: pd.Series, n: int) -> pd.Series:
+    return _ema(s, n)
+
+def rsi(s: pd.Series, n: int = 14) -> pd.Series:
+    s = pd.Series(s, dtype=float)
+    delta = s.diff()
+    up = delta.clip(lower=0)
+    down = (-delta).clip(lower=0)
+    roll_up = _ema(up, n)
+    roll_down = _ema(down, n)
+    rs = roll_up / roll_down.replace(0, 1e-10)
+    out = 100 - (100 / (1 + rs))
+    return out.ffill().fillna(50.0)
+
+def macd(s: pd.Series, fast=12, slow=26, signal=9):
+    s = pd.Series(s, dtype=float)
+    ema_fast = _ema(s, fast)
+    ema_slow = _ema(s, slow)
+    macd_line = ema_fast - ema_slow
+    signal_line = _ema(macd_line, signal)
+    hist = macd_line - signal_line
+    return macd_line, signal_line, hist
+
+def atr(df: pd.DataFrame, n: int = 14) -> pd.Series:
+    h = df["high"].astype(float)
+    l = df["low"].astype(float)
+    c = df["close"].astype(float)
+    prev_c = c.shift(1)
+    tr = pd.concat([(h - l), (h - prev_c).abs(), (l - prev_c).abs()], axis=1).max(axis=1)
+    tr = tr.bfill(limit=1)
+    return _ema(tr, n)
+
+def adx(df: pd.DataFrame, n: int = 14) -> pd.Series:
+    # Simplified Welles Wilder ADX
+    h = df["high"].astype(float)
+    l = df["low"].astype(float)
+    c = df["close"].astype(float)
+    up_move = h.diff()
+    down_move = -l.diff()
+    plus_dm = up_move.where((up_move > down_move) & (up_move > 0), 0.0)
+    minus_dm = down_move.where((down_move > up_move) & (down_move > 0), 0.0)
+    tr = pd.concat([(h - l), (h - c.shift(1)).abs(), (l - c.shift(1)).abs()], axis=1).max(axis=1)
+    atr14 = _ema(tr.bfill(limit=1), n)
+    plus_di = 100 * _ema(plus_dm, n) / atr14.replace(0, 1e-10)
+    minus_di = 100 * _ema(minus_dm, n) / atr14.replace(0, 1e-10)
+    dx = 100 * (plus_di - minus_di).abs() / (plus_di + minus_di).replace(0, 1e-10)
+    return _ema(dx, n)
+
+# ---------- Risk levels ----------
+def compute_atr_based_levels(df: pd.DataFrame, entry: float, side: str):
+    try:
+        val = float(atr(df, 14).iloc[-1])
+        if not np.isfinite(val) or val <= 0:
+            return None, None
+        max_atr = entry * 0.05  # clamp 5%
+        if val > max_atr:
+            logging.warning(f"ATR {val:.5f} clamped to {max_atr:.5f}")
+            val = max_atr
+        msl = float(os.getenv("ATR_SL_MULT", "1.5"))
+        mtp = float(os.getenv("ATR_TP_MULT", "2.0"))
+        if side == "BUY":
+            sl = entry - msl * val
+            tp = entry + mtp * val
+        elif side == "SELL":
+            sl = entry + msl * val
+            tp = entry - mtp * val
+        else:
+            return None, None
+        return round(sl, 5), round(tp, 5)
+    except Exception as e:
+        logging.exception(f"ATR levels failed: {e}")
+        return None, None
+
+# ---------- Helpers ----------
+def tf_code(tf_label: str) -> str:
+    return {"H1": "1h", "H4": "4h", "D1": "1d"}[tf_label]
+
+def bars_for(tf_label: str) -> int:
+    return 120 if tf_label == "H1" else 50 if tf_label == "H4" else 100
+
+def format_telegram(symbol, decision, entry, providers, votes, sl, tp):
+    now = dt.datetime.utcnow().strftime("%Y-%m-%d %H:%M")
+    emoji = "🟢" if decision == "BUY" else "🔴" if decision == "SELL" else "⚪"
+    lines = [
+        f"{emoji} {symbol} | {decision}",
+        f"🕒 {now} UTC",
+        f"📈 Entry: {entry:.5f}",
+    ]
+    if sl is not None and tp is not None:
+        lines.append(f"🎯 TP: {tp} | 🛑 SL: {sl}")
+        if decision == "BUY":
+            risk = entry - sl
+            reward = tp - entry
+        else:
+            risk = sl - entry
+            reward = entry - tp
+        rr = round(reward / risk, 2) if risk > 0 else 0
+        lines.append(f"⚖️ RR: 1:{rr}")
+    lines.append(f"🗳️ Votes: {votes} | 📡 {', '.join(set(providers.values()))}")
+    return "\n".join(lines)
+
+# ---------- Main analysis ----------
+def analyze(symbol: str):
+    if not isinstance(symbol, str) or not symbol.strip():
+        raise ValueError("Invalid symbol")
+    tfs = ["H1", "H4", "D1"]
+    data = {}
+    providers = {}
+    votes = {}
+    rows_dbg = {}
+
+    for tf in tfs:
+        code = tf_code(tf)
+        try:
+            rows, src = get_ohlc(symbol, code, bars_for(tf))
+            df = pd.DataFrame(rows)
+            req = {"open","high","low","close"}
+            if df.empty or not req.issubset(df.columns) or len(df) < 30:
+                print(f"{tf}: insufficient data.", file=sys.stderr)
+                continue
+            # cast
+            for col in ["open","high","low","close"]:
+                df[col] = pd.to_numeric(df[col], errors="coerce")
+            df = df.dropna(subset=["open","high","low","close"])
+            # indicators
+            df["ema9"] = ema(df["close"], 9)
+            df["ema21"] = ema(df["close"], 21)
+            df["rsi14"] = rsi(df["close"], 14)
+            _,_,h = macd(df["close"])
+            df["macd_hist"] = h
+
+            last = df.iloc[-1]
+            ema_bull = last["ema9"] > last["ema21"]
+            rsi_bull = last["rsi14"] > 50
+            macd_bull = last["macd_hist"] > 0
+            if ema_bull and rsi_bull and macd_bull:
+                v = 1
+            elif (not ema_bull) and (last["rsi14"] < 50) and (last["macd_hist"] < 0):
+                v = -1
+            else:
+                v = 0
+
+            data[tf] = df
+            providers[tf] = src
+            votes[tf] = v
+
+            rows_dbg[tf] = dict(
+                provider=src,
+                last_time=str(df["time"].iloc[-1]) if "time" in df.columns else "n/a",
+                close=float(last["close"]),
+                ema9=float(last["ema9"]),
+                ema21=float(last["ema21"]),
+                rsi14=float(last["rsi14"]),
+                macd_hist=float(last["macd_hist"]),
+                vote=v,
+            )
+        except Exception as e:
+            print(f"{tf}: ERROR -> {e}", file=sys.stderr)
+
+    if not data:
+        print("No usable data from any TF.")
+        return None, None
+
+    # Decision by votes
+    total = sum(votes.values())
+    need = 1 if os.getenv("RELAX_VOTE","0") == "1" else 2
+    if total >= need:
+        decision = "BUY"
+    elif total <= -need:
+        decision = "SELL"
+    else:
+        decision = "NEUTRAL"
+
+    # Deterministic reference DF
+    ref_df = None
+    for k in ("D1","H4","H1"):
+        if k in data:
+            ref_df = data[k]
+            break
+    if ref_df is None:
+        print("No valid reference dataframe")
+        return None, None
+
+    entry = float(ref_df["close"].iloc[-1])
+    sl, tp = compute_atr_based_levels(ref_df, entry, decision)
+
+    # ---------- GATES ----------
+    # Quiet news
+    if os.getenv("QUIET_NEWS","0") == "1":
+        window = int(os.getenv("NEWS_WINDOW_MIN","45"))
+        f = Path.home()/ "BotA" / "events_utc.txt"
+        try:
+            if f.exists():
+                now = dt.datetime.utcnow()
+                for line in f.read_text().splitlines():
+                    line=line.strip()
+                    if not line: continue
+                    t = dt.datetime.strptime(line,"%Y-%m-%d %H:%M")
+                    if abs((now - t).total_seconds()) <= window*60:
+                        decision="NEUTRAL"
+                        print("NEUTRAL due to QUIET_NEWS gate", file=sys.stderr)
+                        break
+        except Exception:
+            pass
+
+    # ADX gate
+    if os.getenv("USE_ADX","0") == "1":
+        thr = float(os.getenv("ADX_THR","18"))
+        target = data.get("H4") or data.get("D1")
+        if target is not None:
+            adx_val = float(adx(target,14).iloc[-1])
+            if adx_val < thr:
+                decision = "NEUTRAL"
+                print(f"NEUTRAL due to ADX gate ({adx_val:.1f}<{thr})", file=sys.stderr)
+
+    # Inside-day suppressor
+    if os.getenv("DISABLE_INSIDE_DAY","0") != "1" and "D1" in data:
+        d1 = data["D1"]
+        if len(d1) >= 3:
+            rng = (d1["high"] - d1["low"]).iloc[-1]
+            prev = (d1["high"] - d1["low"]).iloc[-2]
+            mid = (d1["high"].iloc[-2] + d1["low"].iloc[-2])/2
+            near_mid = abs(d1["close"].iloc[-1] - mid) <= 0.2*prev
+            if rng < prev and near_mid:
+                decision = "NEUTRAL"
+                print("NEUTRAL due to inside-day suppressor", file=sys.stderr)
+
+    # Breakout confirmation on H1
+    if os.getenv("USE_BREAKOUT","0") == "1" and "H1" in data and decision in ("BUY","SELL"):
+        h1 = data["H1"]
+        if len(h1) >= 25:
+            if decision == "BUY":
+                hi20 = h1["high"].rolling(20).max().iloc[-2]
+                if h1["close"].iloc[-1] <= hi20:
+                    decision = "NEUTRAL"
+                    print("NEUTRAL: BUY needs > 20-bar high on H1", file=sys.stderr)
+            else:
+                lo20 = h1["low"].rolling(20).min().iloc[-2]
+                if h1["close"].iloc[-1] >= lo20:
+                    decision = "NEUTRAL"
+                    print("NEUTRAL: SELL needs < 20-bar low on H1", file=sys.stderr)
+
+    # Preview snapshot (for audits)
+    if os.getenv("ENHANCED_MSG","0") == "1":
+        print("\n=== EURUSD snapshot ===")
+        for tf in ("H1","H4","D1"):
+            if tf in rows_dbg:
+                r = rows_dbg[tf]
+                print(f"{tf}: t={r['last_time']} close={r['close']:.5f} "
+                      f"EMA9={r['ema9']:.5f} EMA21={r['ema21']:.5f} "
+                      f"RSI14={r['rsi14']:.1f} MACD_hist={r['macd_hist']:.5f} "
+                      f"vote={r['vote']} src={r['provider']}")
+
+    # Abort if neutral or missing SL/TP
+    if decision == "NEUTRAL" or sl is None or tp is None:
+        print("No actionable signal.")
+        return None, None
+
+    payload = dict(
+        symbol=symbol, decision=decision, entry=entry,
+        tp=tp, sl=sl, providers=providers, votes=votes
+    )
+    print(f"*preview* UTC {dt.datetime.utcnow().strftime('%H:%M')} payload: {json.dumps(payload)}")
+
+    text = format_telegram(symbol, decision, entry, providers, votes, sl, tp)
+    return payload, text
+
+# ---------- CLI ----------
+def main() -> None:
+    import argparse
+    ap = argparse.ArgumentParser(description="Final signal runner")
+    ap.add_argument("--symbol", required=True, help="Symbol, e.g. EURUSD")
+    ap.add_argument("--dry", action="store_true", help="Dry run (print only)")
+    ap.add_argument("--send", action="store_true", help="Send to Telegram if actionable")
+    args = ap.parse_args()
+
+    payload_text = analyze(args.symbol)
+    if payload_text is None:
+        return
+    payload, text = payload_text
+
+    # Always show JSON in dry for auditability
+    if args.dry:
+        print(json.dumps(payload, indent=2))
+    if args.send:
+        send_telegram_message(text)
+        print("Telegram sent.")
+
+if __name__ == "__main__":
+    main()

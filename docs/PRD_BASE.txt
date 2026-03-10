@@ -1,0 +1,78 @@
+===============================================================
+Bot A PRD Base Block — Termux Runtime Baseline v1.0
+===============================================================
+
+1) Runtime Model
+Design: 3-layer guard system
+- run_loop.sh   : core scheduler; executes indicator cycles
+- loop_guard.sh : singleton enforcer; restarts loop if missing/stale
+- watchdog.sh   : cron heartbeat every 5 min; validates freshness and PID
+
+Requirements
+- Only one active PID of run_loop.sh at any time
+- Guard must auto-start a new loop within 180 s if loop.log is stale
+- Crontab entry for watchdog is mandatory
+
+---------------------------------------------------------------
+
+2) Environment Loading
+Source file: $HOME/BotA/.env
+
+Steps (bash)
+- set -a
+- . "$HOME/BotA/.env"
+- set +a
+
+Minimum required keys
+- TELEGRAM_TOKEN
+- TELEGRAM_CHAT_ID
+- TWELVEDATA_API_KEY
+- ALPHAVANTAGE_API_KEY
+- YF_ENABLE=1
+- PROVIDER_TIMEOUT_SECS
+- PROVIDER_MAX_RETRIES
+- LOG_DIR
+- STATE_DIR
+
+---------------------------------------------------------------
+
+3) Provider Order and Failover
+Default chain
+PROVIDER_ORDER="twelve_data,yahoo,alpha_vantage"
+
+Runtime logic
+1. Try TwelveData
+2. On timeout or bad payload -> Yahoo
+3. If Yahoo fails -> Alpha Vantage
+4. If all fail -> emit "providers failed", set score=0 (WAIT), age=999.9
+
+---------------------------------------------------------------
+
+4) Health Policy (SLO)
+- Loop freshness: <= 180 s since last loop.log line
+- Recovery: loop_guard.sh launches new daemon if stale > 180 s
+- Cron line:
+  */5 * * * * bash "$HOME/BotA/tools/watchdog.sh" >>"$HOME/BotA/logs/watchdog.log" 2>&1
+
+---------------------------------------------------------------
+
+5) Acceptance Tests
+A) Singleton
+   ps -ef | grep -E "BotA/tools/run_loop\.sh" | grep -v grep
+
+B) Log freshness
+   tail -n 1 "$HOME/BotA/logs/loop.log"
+   Expect: timestamp <= 180 s old
+
+C) Watchdog
+   tail -n 3 "$HOME/BotA/logs/watchdog.log"
+   Expect: "ok PID <pid>  log_age=<180s"
+
+---------------------------------------------------------------
+
+6) Success Criteria
+- Exactly one run_loop.sh process
+- loop.log updated within 180 s
+- watchdog fires every 5 min (no errors)
+- Telegram heartbeat reachable
+===============================================================

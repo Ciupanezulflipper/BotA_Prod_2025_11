@@ -1,0 +1,5 @@
+# BotA quiet schedules (UTC)
+0  * * * * bash /data/data/com.termux/files/home/BotA/tools/heartbeat.sh      >> /data/data/com.termux/files/home/BotA/logs/cron.heartbeat.log 2>&1
+4  * * * * bash /data/data/com.termux/files/home/BotA/tools/autostatus.sh     >> /data/data/com.termux/files/home/BotA/logs/cron.autostatus.log 2>&1
+59 23 * * * bash /data/data/com.termux/files/home/BotA/tools/daily_summary.sh >> /data/data/com.termux/files/home/BotA/logs/cron.daily.log 2>&1
+55 * * * * bash /data/data/com.termux/files/home/BotA/tools/logrotate.sh      >> /data/data/com.termux/files/home/BotA/logs/cron.rotate.log 2>&1

@@ -1,0 +1,285 @@
+#!/data/data/com.termux/files/usr/bin/bash
+###############################################################################
+# FILE: tools/scoring_engine.sh
+# MODE: A2 — EMA/RSI variable scoring from cache/indicators_* JSON
+#
+# GOAL (Step 1):
+# - Remove pinned score/confidence=60.0
+# - Keep EXACT JSON contract keys used by watcher/quality_filter
+# - No new dependencies: bash + python3 (stdlib only). (jq not required here)
+#
+# Contract keys preserved:
+# pair, tf, direction, entry, sl, tp, volatility, score, confidence, reasons,
+# price, provider, atr, filter_rr, filter_atr, filter_rejected, filter_reasons,
+# pattern_delta
+###############################################################################
+
+set -euo pipefail
+shopt -s inherit_errexit 2>/dev/null || true
+
+ROOT="${BOTA_ROOT:-$HOME/BotA}"
+TOOLS="${ROOT}/tools"
+CACHE="${ROOT}/cache"
+CFG="${ROOT}/config/strategy.env"
+
+PAIR="${1:-EURUSD}"
+TF_RAW="${2:-M15}"
+
+log() { printf '%s\n' "$*" >&2; }
+
+emit_hold_json() {
+  local pair="$1"
+  local tf="$2"
+  local reason="$3"
+  local provider="${4:-scoring_engine_shell}"
+
+  EMIT_PAIR="$pair" \
+  EMIT_TF="$tf" \
+  EMIT_REASON="$reason" \
+  EMIT_PROVIDER="$provider" \
+  python3 - <<'PY'
+import os, json, sys
+out = {
+  "pair": os.environ.get("EMIT_PAIR",""),
+  "tf": os.environ.get("EMIT_TF",""),
+  "direction": "HOLD",
+  "entry": 0.0,
+  "sl": 0.0,
+  "tp": 0.0,
+  "volatility": "unknown",
+  "score": 0,
+  "confidence": 40,
+  "reasons": os.environ.get("EMIT_REASON",""),
+  "price": 0.0,
+  "provider": os.environ.get("EMIT_PROVIDER","scoring_engine_shell"),
+  "atr": 0.0,
+  "filter_rr": 0.0,
+  "filter_atr": 0.0,
+  "filter_rejected": True,
+  "filter_reasons": ["fail_closed"],
+  "pattern_delta": 0
+}
+json.dump(out, sys.stdout, separators=(",",":"))
+PY
+}
+
+fallback_trap() {
+  trap - ERR
+  log "[SCORING] ERR trap triggered for ${PAIR} ${TF_RAW}"
+  emit_hold_json "${PAIR}" "${TF_RAW}" "internal error trap" "scoring_engine_trap"
+  exit 0
+}
+trap 'fallback_trap' ERR
+
+# Load strategy defaults if present (non-fatal).
+if [[ -f "${CFG}" ]]; then
+  # shellcheck disable=SC1090
+  source "${CFG}" 2>/dev/null || true
+fi
+
+# Normalize inputs
+ENGINE_MODE="${ENGINE_MODE:-CONSERVATIVE}"
+ENGINE_MODE="${ENGINE_MODE^^}"
+
+if [[ ! "${PAIR}" =~ ^[A-Z0-9_]{3,10}$ ]]; then
+  emit_hold_json "${PAIR}" "${TF_RAW}" "invalid pair" "scoring_engine_input"
+  exit 0
+fi
+
+case "${PAIR}" in
+  EURUSD|GBPUSD|USDJPY|EURJPY) ;;
+  *) emit_hold_json "${PAIR}" "${TF_RAW}" "pair not allowed" "scoring_engine_input"; exit 0 ;;
+esac
+
+if [[ ! "${TF_RAW}" =~ ^[MmHhDd][0-9]{1,3}$ ]]; then
+  emit_hold_json "${PAIR}" "${TF_RAW}" "invalid timeframe" "scoring_engine_input"
+  exit 0
+fi
+TF="${TF_RAW}"
+
+# Market gate:
+# - If tools/market_open.sh says "Closed" => fail-closed HOLD.
+# - If "Open" => proceed.
+# - If missing/Unknown => proceed but tag in reasons (avoid silent blocking).
+PHASE="Unknown"
+if [[ -x "${TOOLS}/market_open.sh" ]]; then
+  PHASE="$("${TOOLS}/market_open.sh" 2>/dev/null || echo "Unknown")"
+fi
+if [[ "${PHASE}" == "Closed" ]]; then
+  emit_hold_json "${PAIR}" "${TF}" "market phase Closed" "scoring_engine_market"
+  exit 0
+fi
+
+INDICATORS_PATH="${CACHE}/indicators_${PAIR}_${TF}.json"
+if [[ ! -f "${INDICATORS_PATH}" ]]; then
+  emit_hold_json "${PAIR}" "${TF}" "missing indicators file" "indicator_cache"
+  exit 0
+fi
+
+export SCORING_PAIR="${PAIR}"
+export SCORING_TF="${TF}"
+export SCORING_MODE="${ENGINE_MODE}"
+export SCORING_INDIC_PATH="${INDICATORS_PATH}"
+export SCORING_MARKET_PHASE="${PHASE}"
+
+python3 - <<'PY'
+import os, json, math, sys
+
+def sf(v, d=0.0):
+    try:
+        f = float(v)
+        return d if math.isnan(f) or math.isinf(f) else f
+    except Exception:
+        return d
+
+def load(p):
+    try:
+        with open(p, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+def volatility_bucket(atr: float, price: float) -> str:
+    # ATR as % of price (FX-friendly): stable buckets
+    if atr <= 0.0 or price <= 0.0:
+        return "unknown"
+    atr_pct = (atr / price) * 100.0
+    if atr_pct < 0.05:
+        return "low"
+    if atr_pct < 0.15:
+        return "normal"
+    if atr_pct < 0.30:
+        return "high"
+    return "extreme"
+
+pair = os.environ.get("SCORING_PAIR","")
+tf = os.environ.get("SCORING_TF","")
+phase = os.environ.get("SCORING_MARKET_PHASE","Unknown")
+path = os.environ.get("SCORING_INDIC_PATH","")
+
+ind = load(path)
+
+# Fail-closed guard if upstream marked TF mismatch
+tf_ok = ind.get("tf_ok", True)
+err = ind.get("error", "")
+if tf_ok is False or err == "tf_mismatch":
+    out = {
+      "pair": pair, "tf": tf, "direction": "HOLD",
+      "entry": 0.0, "sl": 0.0, "tp": 0.0, "volatility": "unknown",
+      "score": 0, "confidence": 40,
+      "reasons": "tf_mismatch_detected",
+      "price": 0.0, "provider": "engine_A2",
+      "atr": 0.0, "filter_rr": 0.0, "filter_atr": 0.0,
+      "filter_rejected": True, "filter_reasons": ["fail_closed","tf_mismatch"],
+      "pattern_delta": 0
+    }
+    json.dump(out, sys.stdout, separators=(",",":"))
+    sys.exit(0)
+
+ema9  = sf(ind.get("ema9"))
+ema21 = sf(ind.get("ema21"))
+rsi   = sf(ind.get("rsi"))
+atr   = sf(ind.get("atr"))
+price = sf(ind.get("price"))
+
+missing = []
+if ema9 <= 0:  missing.append("ema9_missing")
+if ema21 <= 0: missing.append("ema21_missing")
+if rsi <= 0:   missing.append("rsi_missing")
+if price <= 0: missing.append("price_missing")
+
+direction = "HOLD"
+score = 0.0
+confidence = 40.0
+reasons = []
+
+if missing:
+    reasons = ["indicators_missing"] + missing
+    out = {
+      "pair": pair, "tf": tf, "direction": "HOLD",
+      "entry": 0.0, "sl": 0.0, "tp": 0.0, "volatility": "unknown",
+      "score": 0, "confidence": 40,
+      "reasons": ",".join(reasons),
+      "price": 0.0, "provider": "engine_A2",
+      "atr": atr, "filter_rr": 0.0, "filter_atr": 0.0,
+      "filter_rejected": True, "filter_reasons": ["fail_closed"] + missing,
+      "pattern_delta": 0
+    }
+    json.dump(out, sys.stdout, separators=(",",":"))
+    sys.exit(0)
+
+# Core direction (unchanged intent)
+if ema9 > ema21 and rsi > 50:
+    direction = "BUY"
+elif ema9 < ema21 and rsi < 50:
+    direction = "SELL"
+else:
+    direction = "HOLD"
+
+vol = volatility_bucket(atr, price)
+
+if direction == "HOLD":
+    out = {
+      "pair": pair, "tf": tf, "direction": "HOLD",
+      "entry": 0.0, "sl": 0.0, "tp": 0.0, "volatility": vol,
+      "score": 0, "confidence": 40,
+      "reasons": f"no_signal|phase={phase}",
+      "price": price, "provider": "engine_A2",
+      "atr": atr, "filter_rr": 0.0, "filter_atr": 0.0,
+      "filter_rejected": True, "filter_reasons": ["no_signal"],
+      "pattern_delta": 0
+    }
+    json.dump(out, sys.stdout, separators=(",",":"))
+    sys.exit(0)
+
+# Variable scoring:
+# - base 45
+# - EMA separation component (bps): min 25
+# - RSI distance from 50: min 25
+# => typical range ~45..95 (clamped)
+ema_delta_pct = abs(ema9 - ema21) / ema21 * 100.0 if ema21 != 0 else 0.0
+ema_delta_bps = ema_delta_pct * 100.0  # 1% = 100 bps
+ema_comp = min(25.0, ema_delta_bps * 1.2)
+rsi_comp = min(25.0, abs(rsi - 50.0) * 0.8)
+
+base = 45.0
+score = base + ema_comp + rsi_comp
+
+# Slight penalty if market phase is Unknown (avoid inflated scores when gate uncertain)
+if phase not in ("Open", "Closed"):
+    score = max(0.0, score - 5.0)
+    reasons.append("market_phase_unknown")
+
+score = max(0.0, min(95.0, score))
+confidence = score
+
+reasons.extend([
+    "ok",
+    f"ema_bps={ema_delta_bps:.1f}",
+    f"rsi={rsi:.1f}",
+    f"phase={phase}"
+])
+
+out = {
+  "pair": pair,
+  "tf": tf,
+  "direction": direction,
+  "entry": float(price),
+  "sl": 0.0,
+  "tp": 0.0,
+  "volatility": vol,
+  "score": float(round(score, 1)),
+  "confidence": float(round(confidence, 1)),
+  "reasons": "|".join(reasons),
+  "price": float(price),
+  "provider": "engine_A2",
+  "atr": float(atr),
+  "filter_rr": 0.0,
+  "filter_atr": 0.0,
+  "filter_rejected": False,
+  "filter_reasons": [],
+  "pattern_delta": 0
+}
+
+json.dump(out, sys.stdout, separators=(",",":"))
+PY

@@ -1,0 +1,103 @@
+# =========================
+# BotA .gitignore (hardened)
+# Goal: prevent secrets + runtime artifacts from being committed
+# =========================
+
+# --- Secrets (never commit) ---
+.env
+.env*
+.env.*
+.env_*
+
+# Allow examples/samples/templates to be tracked
+!.env.example
+!.env.sample
+!.env.template
+!.env.*.example
+!.env.*.sample
+!.env.*.template
+
+# --- Config secrets (never commit) ---
+config/*.env
+config/*.env*
+config/*.env.*
+
+# Allow config examples/samples
+!config/*.env.example
+!config/*.env.sample
+!config/*.env.template
+!config/*.env.*.example
+!config/*.env.*.sample
+!config/*.env.*.template
+!config/*.env*.example
+!config/*.env*.sample
+
+# --- Runtime / generated artifacts (never commit) ---
+cache/
+logs/
+tmp/
+state/
+.state/
+queue/
+data/candles/
+charts_test/
+
+# Locks / pids / stamps
+*.pid
+*.lock
+*.stamp
+
+# Python build artifacts
+__pycache__/
+*.py[cod]
+
+# Generic logs
+*.log
+
+# --- Local backups / archives (never commit) ---
+backup/
+backups/
+.gitignore.bak.*
+*.bak
+*.backup*
+*.old
+*.orig
+*.tgz
+*.tar.gz
+*.zip
+
+# Local cron scratch
+.crontab
+
+# BotA: config backup snapshots (may contain real secrets)
+config.backup-*/
+config.backup-*/strategy.env
+
+# Garbage numeric/symbol files from shell leaks
+[0-9]
+[0-9][0-9]
+0.0
+50.0
+=
+Again:
+FUSION
+Overall:
+
+# Scratch / one-off test files
+X.py
+X.py.gold
+test_input.json
+test_output.json
+payload_*.json
+
+# State snapshots
+state_t*/
+
+# Cron and tool backups
+cron/*.bak*
+tools/*.bak*
+tools/FILENAME
+tools/RULEBOOK_ACTIVE
+tools/NEXT_STEPS.sh
+config/strategy.env
+config/*.env

@@ -1,0 +1,302 @@
+#!/usr/bin/env python3
+import os, sys, json, time, math, datetime as dt
+from typing import Dict, Tuple, Optional
+import numpy as np
+import pandas as pd
+
+# --- Providers ---
+from BotA.tools.providers import get_ohlc
+
+# --- Telegram import (robust fallback chain) ---
+try:
+    from BotA.tools.telegramalert import send_telegram_message
+except Exception:
+    try:
+        from BotA.tools.telegramsender import send_telegram_message
+    except Exception:
+        # low-friction smoke sender (prints to stdout if real sender missing)
+        def send_telegram_message(text: str) -> None:
+            print(text)
+
+# ============== Indicators (compact, dependency-light) ==============
+
+def _ema(arr: pd.Series, n: int) -> pd.Series:
+    return pd.Series(arr, dtype=float).ewm(span=n, adjust=False, min_periods=1).mean()
+
+def ema(s: pd.Series, n: int) -> pd.Series:
+    return _ema(s, n)
+
+def rsi(close: pd.Series, n: int = 14) -> pd.Series:
+    s = pd.Series(close, dtype=float)
+    delta = s.diff()
+    up = delta.clip(lower=0)
+    down = (-delta).clip(lower=0)
+    roll_up = _ema(up, n)
+    roll_down = _ema(down, n)
+    rs = roll_up / roll_down.replace(0, 1e-10)
+    out = 100 - (100 / (1 + rs))
+    return out.ffill().fillna(50.0)
+
+def macd(close: pd.Series, fast: int = 12, slow: int = 26, signal: int = 9) -> Tuple[pd.Series, pd.Series, pd.Series]:
+    c = pd.Series(close, dtype=float)
+    fast_ema = _ema(c, fast)
+    slow_ema = _ema(c, slow)
+    macd_line = fast_ema - slow_ema
+    signal_line = _ema(macd_line, signal)
+    hist = macd_line - signal_line
+    return macd_line, signal_line, hist
+
+def atr(df: pd.DataFrame, n: int = 14) -> pd.Series:
+    h = df["high"].astype(float)
+    l = df["low"].astype(float)
+    c = df["close"].astype(float)
+    prev_c = c.shift(1)
+    tr = pd.concat([(h - l), (h - prev_c).abs(), (l - prev_c).abs()], axis=1).max(axis=1)
+    tr = tr.bfill(limit=1)
+    return _ema(tr, n)
+
+def adx(df: pd.DataFrame, n: int = 14) -> pd.Series:
+    # Wilder’s ADX (compact)
+    h = df["high"].astype(float)
+    l = df["low"].astype(float)
+    c = df["close"].astype(float)
+    up_move = h.diff()
+    down_move = -l.diff()
+    plus_dm = np.where((up_move > down_move) & (up_move > 0), up_move, 0.0)
+    minus_dm = np.where((down_move > up_move) & (down_move > 0), down_move, 0.0)
+    tr = pd.concat([(h - l), (h - c.shift(1)).abs(), (l - c.shift(1)).abs()], axis=1).max(axis=1)
+    tr = tr.bfill(limit=1)
+    atr_n = _ema(tr, n)
+    plus_di = 100 * _ema(pd.Series(plus_dm), n) / atr_n.replace(0, 1e-10)
+    minus_di = 100 * _ema(pd.Series(minus_dm), n) / atr_n.replace(0, 1e-10)
+    dx = (100 * (plus_di - minus_di).abs() / (plus_di + minus_di).replace(0, 1e-10))
+    return _ema(dx, n)
+
+# ============== Helpers ==============
+
+def _df_from_rows(rows: list) -> pd.DataFrame:
+    df = pd.DataFrame(rows)
+    if not {"open","high","low","close"} <= set(df.columns):
+        raise RuntimeError("Provider missing OHLC columns.")
+    return df.astype({"open":float,"high":float,"low":float,"close":float})
+
+def compute_atr_based_levels(df: pd.DataFrame, entry: float, side: str) -> Tuple[Optional[float], Optional[float]]:
+    val = float(atr(df, 14).iloc[-1])
+    if not math.isfinite(val) or val <= 0:
+        return None, None
+    # sanity cap: 5% of price
+    max_atr = entry * 0.05
+    if val > max_atr:
+        val = max_atr
+    msl = float(os.getenv("ATR_SL_MULT", "1.5"))
+    mtp = float(os.getenv("ATR_TP_MULT", "2.0"))
+    if side == "BUY":
+        sl = entry - msl * val
+        tp = entry + mtp * val
+    else:
+        sl = entry + msl * val
+        tp = entry - mtp * val
+    return round(sl,5), round(tp,5)
+
+def _format_telegram(symbol: str, decision: str, entry: float,
+                     providers: Dict[str,str], votes: Dict[str,int],
+                     sl: Optional[float], tp: Optional[float],
+                     score_note: str = "") -> str:
+    emoji = "🟢" if decision=="BUY" else "🔴" if decision=="SELL" else "⚪"
+    lines = [
+        f"{emoji} {symbol} | {decision}",
+        f"🕒 {dt.datetime.utcnow().strftime('%Y-%m-%d %H:%M')} UTC",
+        f"📈 Entry: {entry:.5f}",
+    ]
+    if sl is not None and tp is not None:
+        lines.append(f"🎯 TP: {tp:.5f} | 🛑 SL: {sl:.5f}")
+        if decision=="BUY":
+            risk = entry - sl
+            reward = tp - entry
+        elif decision=="SELL":
+            risk = sl - entry
+            reward = entry - tp
+        else:
+            risk = reward = 0.0
+        rr = (reward / risk) if risk > 0 else 0.0
+        lines.append(f"⚖️ RR: 1:{rr:.2f}")
+    lines.append(f"🗳️ Votes: {votes} | 📡 {', '.join(set(providers.values()))}")
+    if os.getenv("ENHANCED_MSG","0") == "1":
+        lines.append(score_note)
+    return "\n".join(lines)
+
+# ============== Core Analysis ==============
+
+def _within_news_quiet_window() -> bool:
+    if os.getenv("QUIET_NEWS","0") != "1":
+        return False
+    window_min = int(os.getenv("NEWS_WINDOW_MIN","45"))
+    path = os.path.expanduser("~/BotA/events_utc.txt")
+    if not os.path.exists(path):
+        return False
+    now = dt.datetime.utcnow()
+    try:
+        with open(path,"r") as f:
+            for line in f:
+                line=line.strip()
+                if not line: 
+                    continue
+                # allowed formats: "YYYY-mm-dd HH:MM" (UTC) or unix seconds
+                try:
+                    t = dt.datetime.strptime(line, "%Y-%m-%d %H:%M")
+                except Exception:
+                    t = dt.datetime.utcfromtimestamp(int(line))
+                if abs((now - t).total_seconds()) <= window_min*60:
+                    return True
+    except Exception:
+        return False
+    return False
+
+def analyze(symbol: str) -> Tuple[Optional[dict], Optional[str]]:
+    if not isinstance(symbol,str) or not symbol.strip():
+        raise ValueError("Invalid symbol")
+
+    tf_list = [("H1",120), ("H4",50), ("D1",100)]
+    data: Dict[str,pd.DataFrame] = {}
+    providers: Dict[str,str] = {}
+    votes: Dict[str,int] = {}
+
+    # fetch + indicators per TF
+    for tf, need in tf_list:
+        try:
+            rows, src = get_ohlc(symbol, tf, need)
+            if not rows:
+                continue
+            df = _df_from_rows(rows)
+            if len(df) < 30:
+                continue
+            df["ema9"]  = ema(df["close"], 9)
+            df["ema21"] = ema(df["close"],21)
+            df["rsi14"] = rsi(df["close"],14)
+            _,_,hist = macd(df["close"])
+            df["macd_hist"] = hist
+            data[tf] = df
+            providers[tf] = src
+
+            last = df.iloc[-1]
+            ema_bull   = last["ema9"] > last["ema21"]
+            rsi_bull   = last["rsi14"] > 50
+            macd_bull  = last["macd_hist"] > 0
+            if  ema_bull and rsi_bull and macd_bull:
+                votes[tf] = 1
+            elif (not ema_bull) and (last["rsi14"] < 50) and (last["macd_hist"] < 0):
+                votes[tf] = -1
+            else:
+                votes[tf] = 0
+        except Exception as e:
+            # skip TF on error
+            continue
+
+    if not data:
+        raise RuntimeError("No usable data from any timeframe")
+
+    # Deterministic reference DF (D1 -> H4 -> H1)
+    ref_df = None
+    for key in ("D1","H4","H1"):
+        df = data.get(key)
+        if df is not None:
+            ref_df = df
+            break
+    if ref_df is None:
+        raise RuntimeError("No valid reference dataframe")
+
+    entry = float(ref_df["close"].iloc[-1])
+    total_vote = sum(int(v) for v in votes.values())
+    decision = "BUY" if total_vote >= 2 else "SELL" if total_vote <= -2 else "NEUTRAL"
+
+    # --- Light & safe gates ---
+
+    # 0) Quiet-hours throttle (skip near events)
+    if _within_news_quiet_window():
+        return None, None
+
+    # 1) ADX trend gate (H4 or D1 must show trend)
+    if os.getenv("USE_ADX","0") == "1":
+        thr = float(os.getenv("ADX_THR","18"))
+        adx_ok = False
+        for tf in ("D1","H4"):
+            if tf in data:
+                adx_val = float(adx(data[tf],14).iloc[-1])
+                if adx_val >= thr:
+                    adx_ok = True
+                    break
+        if not adx_ok:
+            return None, None
+
+    # 2) Inside-day suppressor (skip if today’s D1 range < yesterday and price near mid)
+    if os.getenv("DISABLE_INSIDE_DAY","0") != "1" and "D1" in data:
+        d1 = data["D1"].iloc[-2:]  # yesterday, today
+        if len(d1) == 2:
+            rng_now  = float(d1.iloc[1]["high"] - d1.iloc[1]["low"])
+            rng_prev = float(d1.iloc[0]["high"] - d1.iloc[0]["low"])
+            if rng_prev > 0 and rng_now < rng_prev:
+                mid = float((d1.iloc[1]["high"] + d1.iloc[1]["low"]) / 2.0)
+                if abs(entry - mid) <= 0.2 * rng_now:
+                    return None, None
+
+    # 3) Breakout confirmation (H1 20-bar)
+    if os.getenv("USE_BREAKOUT","0") == "1" and "H1" in data and decision in ("BUY","SELL"):
+        h1 = data["H1"]
+        if len(h1) >= 20:
+            lo20 = float(h1["low"].rolling(20).min().iloc[-2])   # confirm on close of prior bar
+            hi20 = float(h1["high"].rolling(20).max().iloc[-2])
+            last_close = float(h1["close"].iloc[-2])
+            if decision == "SELL" and not (last_close < lo20):
+                return None, None
+            if decision == "BUY"  and not (last_close > hi20):
+                return None, None
+
+    # SL/TP
+    if decision in ("BUY","SELL"):
+        sl, tp = compute_atr_based_levels(ref_df, entry, decision)
+        if sl is None or tp is None:
+            return None, None
+    else:
+        return None, None
+
+    # Extras (for ENHANCED_MSG)
+    non_neutral = sum(1 for v in votes.values() if v != 0)
+    score_note = f"📊 {non_neutral}/{len(votes)} TFs non-neutral | Vote total={total_vote} | map={votes}"
+
+    payload = {
+        "symbol": symbol,
+        "decision": decision,
+        "entry": entry,
+        "tp": tp,
+        "sl": sl,
+        "providers": providers,
+        "votes": votes,
+    }
+    text = _format_telegram(symbol, decision, entry, providers, votes, sl, tp, score_note)
+    # Optional preview for logs
+    print(f"*preview* UTC {dt.datetime.utcnow().strftime('%H:%M')} payload: {json.dumps(payload)}")
+    return payload, text
+
+# ============================ CLI ============================
+
+def main() -> None:
+    import argparse
+    ap = argparse.ArgumentParser(description="Final signal runner")
+    ap.add_argument("--symbol", required=True, help="Symbol, e.g. EURUSD")
+    ap.add_argument("--dry", action="store_true", help="Dry run (print only)")
+    ap.add_argument("--send", action="store_true", help="Send to Telegram if actionable")
+    args = ap.parse_args()
+
+    payload, text = analyze(args.symbol)
+    if payload is None or text is None:
+        print("No actionable signal.")
+        return
+
+    # Always show JSON for auditability
+    print(json.dumps(payload, indent=2))
+    if args.send:
+        send_telegram_message(text)
+        print("Telegram sent.")
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,139 @@
+BotA — MACRO6 (/6) Ground Truth + Why We Still Need Commands
+Date: 2025-12-16
+Scope: Explain (1) what “/6” is, (2) what is currently implemented vs stubbed, (3) why a few commands are unavoidable,
+       and (4) the minimal, step-by-step audit path to finish /6 without branching chaos.
+
+================================================================================
+A) Why you still see “commands” even with PRD + chat history
+================================================================================
+
+PRD + this chat provide INTENT and PRIOR DECISIONS.
+Your Termux repo provides CURRENT TRUTH (what actually runs today).
+
+These can diverge because:
+1) Multiple runners exist (Python and shell). Only ONE is the live path that emits Telegram alerts.
+2) Files change over time. The chat cannot prove which runner is currently wired into your active loop.
+3) “/6 shown on the card” can be produced by different pipelines:
+   - A shell pipeline that injects macro6 into JSON, then formats the card.
+   - A Python snapshot runner (tools/alerts_runner.py) that currently hard-stubs macro_score=0.
+   Without checking WHICH one your live loop calls, any “fix” risks editing the wrong file again.
+
+So the goal is NOT “hundreds of commands”.
+The goal is a SMALL, deterministic set of checks that answer:
+- “Which runner is the live alert path?”
+- “Does THAT runner carry macro6 into the card payload?”
+
+================================================================================
+B) What “/6” means in THIS repo (grounded from your outputs)
+================================================================================
+
+From your grep results, the repo has an explicit macro/news/sentiment layer:
+
+1) tools/news_sentiment.py
+   - Defines macro6 as an int 0..6 with neutral=3.
+   - Implements macro6_from_bias(bias) mapping from bias in [-1..+1] -> macro6 in [0..6].
+   - Fail-closed behavior:
+     - If NEWS_ON is off: macro6=3 with provider="off".
+     - If no usable news signals: macro6=3 (neutral).
+   - Your live test confirmed it runs and outputs JSON:
+     NEWS_ON=1 python3 tools/news_sentiment.py EURUSD
+     -> {"pair":"EURUSD","score":0.0,"macro6":3,...}
+
+2) Card display expects “/16 + /6”
+   - You showed: tools/signal_fusion.py builds the visible line:
+     "📊 Score: {score16}/16 + {extra6}/6"
+
+Conclusion:
+- In this codebase, “/6” corresponds to the “extra6” part on the card.
+- That “extra6” is intended to be sourced from macro6 / risk-news points (macro6, score6, bonus6 naming varies),
+  but it MUST arrive in the card payload.
+
+================================================================================
+C) What is CURRENTLY wrong (grounded from your alerts_runner.py excerpt)
+================================================================================
+
+Your nl output shows:
+
+1) tools/alerts_runner.py is a Python snapshot runner for H1/H4/D1.
+   - It parses H1/H4/D1 frames and builds the card.
+   - It prints a macro line in the reason block.
+
+2) BUT it hard-stubs macro_score:
+   - macro_score = 0  # placeholder for future sentiment engine
+
+3) It does not call tools/news_sentiment.py (your grep returned nothing):
+   - grep -n "news_sentiment" tools/alerts_runner.py  -> no matches
+
+4) Side effect:
+   - risk_level = "high" if weak or macro_score < 3 else "normal"
+   - With macro_score=0, risk is pushed toward "high" by default.
+
+So: in THIS runner, “/6 is not implemented”. It is explicitly stubbed.
+
+================================================================================
+D) Do I know “the six” that must be implemented?
+================================================================================
+
+Yes — in this repo “/6” is not “six separate checks” in alerts_runner.py.
+It is a 0..6 score representing macro/news bias strength mapped into macro6 (neutral=3).
+The “six levels” are the discrete output levels:
+
+macro6 mapping (from tools/news_sentiment.py):
+- bias <= -0.6 -> 0
+- bias <= -0.3 -> 1
+- bias <= -0.1 -> 2
+- bias  <  0.1 -> 3 (neutral)
+- bias  <  0.3 -> 4
+- bias  <  0.6 -> 5
+- else        -> 6
+
+What “implemented /6” means operationally:
+1) The LIVE runner that sends Telegram must compute or fetch macro6 (0..6, neutral=3 fail-closed).
+2) That value must be carried into the payload field that the card uses as extra6:
+   - commonly ind["extra"] OR score6/macro6 bridged into extra.
+3) The card must display it as: “/16 + X/6”.
+4) No hard-stub (macro_score=0) is allowed in the live runner.
+
+================================================================================
+E) Can /6 be implemented with what we have (Termux + your current APIs)?
+================================================================================
+
+Yes, because:
+- You have a working macro engine already (tools/news_sentiment.py) that runs locally via RSS.
+- It fail-closes to neutral (macro6=3) when news is off/unusable, which matches BotA safety style.
+- Termux can run it. You already executed it successfully.
+
+Important limitation (honest constraint):
+- RSS headline matching is a “lightweight macro proxy”, not a true economic calendar / red-news detector.
+- That is still acceptable for /6 as currently defined in your repo (macro6_from_bias),
+  but “central bank / red news” hard-block logic would be a separate enhancement layer.
+
+================================================================================
+F) Minimal step-by-step audit path (no repo-wide chaos)
+================================================================================
+
+We do NOT need hundreds of commands. We need to answer ONE question:
+
+“Which runner is producing the Telegram alerts you are seeing today?”
+
+Because there are at least two macro6 paths in the repo:
+- Shell pipeline: tools/m15_h1_fusion.sh (explicitly mentions macro6 injection)
+- Python snapshot runner: tools/alerts_runner.py (explicitly stubs macro_score=0)
+
+Minimal steps (run ONE at a time, when you say “go”):
+Step 1: Identify the live entrypoint script you execute for alerts (the one you actually start).
+Step 2: In that entrypoint, locate which runner is called (alerts_runner.py vs m15_h1_fusion.sh vs other).
+Step 3: Only after Step 2, implement /6 in THAT live runner (not guessing).
+
+================================================================================
+G) Acceptance criteria (definition of DONE)
+================================================================================
+
+/6 is “implemented” when ALL are true:
+1) Telegram card shows: “📊 Score: <0..16>/16 + <0..6>/6”
+2) The /6 number changes from 3 when macro bias changes (not permanently 0 or permanently 3).
+3) Fail-closed behavior:
+   - If NEWS_ON=0/off/false OR provider fails -> /6 MUST be 3 (neutral), not 0.
+4) No hard-coded macro_score=0 exists in the LIVE alert runner.
+5) The runner does not crash if RSS returns 0 items (still outputs macro6=3).
+

@@ -1,0 +1,20 @@
+SHELL=/data/data/com.termux/files/usr/bin/bash
+0  * * * * bash /data/data/com.termux/files/home/BotA/tools/heartbeat.sh      >> /data/data/com.termux/files/home/BotA/logs/cron.heartbeat.log 2>&1
+4  * * * * bash /data/data/com.termux/files/home/BotA/tools/autostatus.sh     >> /data/data/com.termux/files/home/BotA/logs/cron.autostatus.log 2>&1
+59 23 * * * bash -lc '. "/data/data/com.termux/files/home/BotA/.env.runtime"; bash /data/data/com.termux/files/home/BotA/tools/daily_summary.sh' >> /data/data/com.termux/files/home/BotA/logs/cron.daily.log 2>&1
+0  3 * * * bash /data/data/com.termux/files/home/BotA/tools/log_rotate.sh     >> /data/data/com.termux/files/home/BotA/logs/cron.rotate.log 2>&1
+# Optional: keep accuracy stats (no Telegram sends)
+# Anti-spam forex signals (M15):
+# - Run on candle cadence (*/15), not */5
+# - Only 🟢 tier (YELLOW_MIN == GREEN_MIN == 75)
+# - Filter threshold aligned to 75 so low-score items are not "accepted"
+# - Longer cooldown to avoid repeats if signal persists
+*/15 * * * * bash -lc '. "/data/data/com.termux/files/home/BotA/.env.runtime"; "/data/data/com.termux/files/home/BotA/tools/market_open.sh" >/dev/null 2>&1 && export TELEGRAM_BOT_TOKEN="${TELEGRAM_BOT_TOKEN:-${TELEGRAM_TOKEN:-${BOT_TOKEN:-}}}"; export TELEGRAM_CHAT_ID="${TELEGRAM_CHAT_ID:-${CHAT_ID:-${TG_CHAT_ID:-}}}"; DRY_RUN_MODE=0 TELEGRAM_ENABLED=1 TELEGRAM_MIN_SCORE=0 TELEGRAM_COOLDOWN_SECONDS=3600 FILTER_SCORE_MIN=62 FILTER_SCORE_MIN_ALL=62 TELEGRAM_TIER_YELLOW_MIN=62 TELEGRAM_TIER_YELLOW_MIN_INT=62 TELEGRAM_TIER_GREEN_MIN=65 TELEGRAM_TIER_GREEN_MIN_INT=65 CANDLE_MAX_AGE_SECS=2700 PAIRS="EURUSD GBPUSD" TIMEFRAMES="M15" timeout -k 30s 12m bash "/data/data/com.termux/files/home/BotA/tools/signal_watcher_pro.sh" --once' >> /data/data/com.termux/files/home/BotA/logs/cron.signals.log 2>&1
+# NOTE:
+# If you want ZERO chance of duplicate sending pipelines, do NOT run send_candidates_now.py on cron.
+# H1 indicators refresh (hourly)
+# H1 indicators refresh (hourly) — ALWAYS logs RUN/SKIP
+2,17,32,47 * * * * bash -lc '. "/data/data/com.termux/files/home/BotA/.env.runtime"; ts="$(date -u +\%Y-\%m-\%dT\%H:\%M:\%SZ 2>/dev/null || true)"; echo "[UPDATER_M15 ${ts}] RUN"; if command -v timeout >/dev/null 2>&1; then PAIRS="EURUSD GBPUSD" TIMEFRAMES="M15" timeout -k 30s 6m bash "/data/data/com.termux/files/home/BotA/tools/indicators_updater.sh" --once && bash "/data/data/com.termux/files/home/BotA/tools/provider_health_check.sh"; else PAIRS="EURUSD GBPUSD" TIMEFRAMES="M15" bash "/data/data/com.termux/files/home/BotA/tools/indicators_updater.sh" --once; fi' >> /data/data/com.termux/files/home/BotA/logs/cron.updater_m15.log 2>&1
+*/15 * * * * bash -lc 'cd /data/data/com.termux/files/home/BotA && BOTA_ROOT=/data/data/com.termux/files/home/BotA python3 tools/signal_accuracy.py >> logs/cron.accuracy.log 2>&1'
+0 1 * * 0 bash -lc 'cd $HOME/BotA && python3 tools/alerts_to_trades.py --horizon 96 --out logs/trades.csv >> logs/cron.trades.log 2>&1'
+0 6 * * * bash -lc 'cd $HOME/BotA && python3 tools/alerts_to_trades.py --since "$(date -u -d yesterday +%Y-%m-%dT00:00:00 2>/dev/null || date -u -v-1d +%Y-%m-%dT00:00:00)" --horizon 96 --out logs/tmp/trades_daily.csv >> logs/cron.trades.log 2>&1'

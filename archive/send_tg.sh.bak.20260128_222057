@@ -1,0 +1,168 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# BotA/tools/send_tg.sh
+# Generic Telegram sender with dedupe and HTML-safe delivery:
+# - Accepts text via --text "..." or STDIN
+# - Uses TELEGRAM_TOKEN/TELEGRAM_CHAT_ID (fallback BOT_TOKEN/CHAT_ID)
+# - Dedupe: suppress identical messages for 15 minutes (per chat)
+# - Safety: escapes raw text for parse_mode=HTML but preserves a small safe tag set:
+#   <b>, </b>, <code>, </code>, <pre>, </pre>
+#
+# Why this is needed:
+# - Telegram parse_mode=HTML interprets "<" as the start of an HTML tag.
+# - Plain text like "rr<=0" will break unless "<" is escaped.
+# - Supported HTML tags are limited and strict. (Telegram docs) 2
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+STATE_DIR="${REPO_DIR}/state"
+LOG_DIR="${REPO_DIR}/logs"
+mkdir -p "${STATE_DIR}" "${LOG_DIR}"
+
+DEDUPE_WINDOW_SEC="${DEDUPE_WINDOW_SEC:-900}"  # 15 minutes
+
+log_line() {
+  # usage: log_line "TEXT..."
+  printf '%s\n' "$*" >> "${LOG_DIR}/send_tg.log"
+}
+
+# Prefer TELEGRAM_*; fall back to BOT_TOKEN / CHAT_ID if present.
+resolve_env() {
+  TELEGRAM_TOKEN="${TELEGRAM_TOKEN:-${BOT_TOKEN:-}}"
+  TELEGRAM_CHAT_ID="${TELEGRAM_CHAT_ID:-${CHAT_ID:-${TG_CHAT_ID:-}}}"
+
+  if [[ -z "${TELEGRAM_TOKEN}" || -z "${TELEGRAM_CHAT_ID}" ]]; then
+    if [[ -f "${REPO_DIR}/.env" ]]; then
+      # shellcheck disable=SC1090
+      . "${REPO_DIR}/.env"
+    fi
+    TELEGRAM_TOKEN="${TELEGRAM_TOKEN:-${BOT_TOKEN:-}}"
+    TELEGRAM_CHAT_ID="${TELEGRAM_CHAT_ID:-${CHAT_ID:-${TG_CHAT_ID:-}}}"
+  fi
+
+  if [[ -z "${TELEGRAM_TOKEN}" || -z "${TELEGRAM_CHAT_ID}" ]]; then
+    echo "SEND_TG: missing TELEGRAM_TOKEN/TELEGRAM_CHAT_ID (or BOT_TOKEN/CHAT_ID). Set env or ${REPO_DIR}/.env" >&2
+    exit 1
+  fi
+}
+
+read_text() {
+  local text=""
+  if [[ "${1:-}" == "--text" ]]; then
+    shift
+    if [[ $# -lt 1 ]]; then
+      echo "SEND_TG: --text requires an argument" >&2
+      exit 1
+    fi
+    text="$*"
+  else
+    if ! text="$(cat)"; then
+      echo "SEND_TG: failed to read stdin" >&2
+      exit 1
+    fi
+  fi
+
+  # Trim leading/trailing whitespace (hash stability)
+  text="$(printf "%s" "${text}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+  printf '%s' "${text}"
+}
+
+# Escape everything that can break Telegram HTML, then re-allow a minimal safe tag set
+# used by BotA (<b>, <code>, <pre>). Telegram supports limited tags. 3
+escape_html_preserve_safe_tags() {
+  local s="${1:-}"
+
+  # 1) Escape critical characters
+  s="${s//&/&amp;}"
+  s="${s//</&lt;}"
+  s="${s//>/&gt;}"
+
+  # 2) Re-enable ONLY these exact tags (no attributes)
+  s="${s//&lt;b&gt;/<b>}"
+  s="${s//&lt;\/b&gt;/<\/b>}"
+  s="${s//&lt;code&gt;/<code>}"
+  s="${s//&lt;\/code&gt;/<\/code>}"
+  s="${s//&lt;pre&gt;/<pre>}"
+  s="${s//&lt;\/pre&gt;/<\/pre>}"
+
+  printf '%s' "${s}"
+}
+
+dedupe_should_send() {
+  local chat_id="$1"
+  local text="$2"
+
+  local hash state_file now_epoch last_epoch last_hash delta
+  hash="$(printf "%s|%s" "${chat_id}" "${text}" | sha1sum | awk '{print $1}')"
+  state_file="${STATE_DIR}/last_tg_${chat_id}.state"
+
+  now_epoch="$(date +%s)"
+  last_epoch="0"
+  last_hash=""
+
+  if [[ -f "${state_file}" ]]; then
+    read -r last_epoch last_hash < "${state_file}" || { last_epoch="0"; last_hash=""; }
+  fi
+
+  if [[ -n "${last_hash}" && "${last_hash}" == "${hash}" ]]; then
+    delta=$(( now_epoch - last_epoch ))
+    if (( delta >= 0 && delta < DEDUPE_WINDOW_SEC )); then
+      log_line "[DEDUPE] Skipping duplicate Telegram message (Δ=${delta}s, window=${DEDUPE_WINDOW_SEC}s)"
+      return 1
+    fi
+  fi
+
+  # Update state before sending (so repeated crashes don't spam)
+  printf '%s %s\n' "${now_epoch}" "${hash}" > "${state_file}"
+  return 0
+}
+
+send_message() {
+  local text_html="$1"
+
+  local response
+  response="$(
+    curl -sS \
+      -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage" \
+      -d "chat_id=${TELEGRAM_CHAT_ID}" \
+      --data-urlencode "text=${text_html}" \
+      -d "parse_mode=HTML"
+  )"
+
+  if echo "${response}" | grep -q '"ok":true'; then
+    log_line "[SEND_TG] ok $(date -Iseconds)"
+    return 0
+  fi
+
+  log_line "[SEND_TG] ERROR response: ${response}"
+  return 1
+}
+
+main() {
+  resolve_env
+
+  local raw
+  raw="$(read_text "$@")"
+
+  if [[ -z "${raw}" ]]; then
+    echo "SEND_TG: empty message, nothing to send" >&2
+    exit 0
+  fi
+
+  # IMPORTANT: sanitize for HTML parse_mode (but preserve BotA tags)
+  local safe
+  safe="$(escape_html_preserve_safe_tags "${raw}")"
+
+  if ! dedupe_should_send "${TELEGRAM_CHAT_ID}" "${safe}"; then
+    exit 0
+  fi
+
+  if send_message "${safe}"; then
+    exit 0
+  fi
+
+  exit 1
+}
+
+main "$@"

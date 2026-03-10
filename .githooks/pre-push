@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+# 1) Prevent force-push to main (unless fast-forward)
+branch="$(git rev-parse --abbrev-ref HEAD)"
+if [[ "$branch" == "main" ]]; then
+  if git rev-parse -q --verify origin/main >/dev/null 2>&1; then
+    if ! git merge-base --is-ancestor origin/main HEAD; then
+      echo "❌ Force-push to main blocked. Create a tag and push normally."
+      exit 1
+    fi
+  fi
+fi
+# 2) Guard against staged secrets (handles the case where commit was aborted)
+CHANGED=$(git diff --cached --name-only || true)
+for f in $CHANGED; do
+  case "$f" in
+    *.env|config/strategy.env) echo "❌ Secret-like file staged: $f"; exit 1 ;;
+    *.env.sample|*.env.example) : ;;   # allowed
+    *) : ;;
+  esac
+done
+exit 0

@@ -1,0 +1,13 @@
+{
+  "fx_sessions": {
+    "Sydney": {"tz": "Australia/Sydney", "open": "08:00", "close": "16:00", "weight": 0.7},
+    "Tokyo":  {"tz": "Asia/Tokyo",      "open": "09:00", "close": "17:00", "weight": 0.9},
+    "London": {"tz": "Europe/London",   "open": "08:00", "close": "16:30", "weight": 1.0},
+    "NewYork":{"tz": "America/New_York","open": "08:00", "close": "17:00", "weight": 1.0}
+  },
+  "dst_hint": true,
+  "overlaps_boost": {
+    "Tokyo+London": 0.2,
+    "London+NewYork": 0.3
+  }
+}

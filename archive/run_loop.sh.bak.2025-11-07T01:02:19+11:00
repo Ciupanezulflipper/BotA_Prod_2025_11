@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+umask 022
+
+ROOT="$HOME/BotA"
+LOGS="$ROOT/logs"
+mkdir -p "$LOGS"
+
+# Load env (KEY=VALUE only)
+if [ -f "$HOME/.env.runtime" ]; then
+  set -a; . "$HOME/.env.runtime"; set +a
+fi
+
+# Config (env overrides)
+SYMBOLS="${TRADING_SYMBOLS:-EURUSD,GBPUSD}"
+TF="${TRADING_TIMEFRAME:-15}"            # minutes
+LIMIT="${BARS_REQUIRED:-150}"
+ALIGN_BOUNDARY="${ALIGN_BOUNDARY:-true}" # true/false — wait for candle close
+SPLAY_SEC="${SYMBOL_SPLAY_SEC:-2}"       # small delay between symbols
+LOOP_SLEEP_DEFAULT="$(( TF * 60 ))"
+
+log() { printf "[loop] %s\n" "$*" | tee -a "$LOGS/loop.log" ; }
+
+secs_to_next_tf() {
+  # seconds until the next multiple of TF minutes
+  local now epoch tf_sec next boundary
+  epoch="$(date +%s)"
+  tf_sec=$(( TF * 60 ))
+  boundary=$(( ( (epoch / tf_sec) + 1 ) * tf_sec ))
+  next=$(( boundary - epoch ))
+  if [ "$next" -lt 0 ]; then next="$tf_sec"; fi
+  printf "%s" "$next"
+}
+
+run_cycle() {
+  IFS=',' read -r -a arr <<<"$SYMBOLS"
+  for sym in "${arr[@]}"; do
+    sym="$(echo "$sym" | xargs)"
+    if [ -n "$sym" ]; then
+      bash "$ROOT/tools/run_signal_once.sh" "$sym" "$TF" "$LIMIT" || true
+      sleep "$SPLAY_SEC"
+    fi
+  done
+}
+
+case "${1:-daemon}" in
+  once)
+    log "single cycle: SYMBOLS=${SYMBOLS} TF=${TF}m LIMIT=${LIMIT}"
+    run_cycle
+    log "single cycle complete"
+    ;;
+  daemon)
+    log "daemon start: SYMBOLS=${SYMBOLS} TF=${TF}m LIMIT=${LIMIT} align=${ALIGN_BOUNDARY}"
+    while true; do
+      if [ "${ALIGN_BOUNDARY,,}" = "true" ]; then
+        # wait for the next candle boundary (plus a tiny guard)
+        wait_s="$(secs_to_next_tf)"
+        log "sleeping ${wait_s}s for TF boundary"
+        sleep "$wait_s"
+        sleep 2
+      else
+        sleep "$LOOP_SLEEP_DEFAULT"
+      fi
+      run_cycle
+    done
+    ;;
+  *)
+    echo "Usage: $0 [once|daemon]" >&2
+    exit 2
+    ;;
+esac

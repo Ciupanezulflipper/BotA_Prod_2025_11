@@ -1,0 +1,57 @@
+BotA — What “/6” (macro6) really is, and what must be implemented
+Date: 2025-12-16
+Scope: Grounded ONLY in tools/news_sentiment.py lines 660–845 (as pasted)
+
+A) Do we have “six specific checks” to implement?
+NO. In this code, “/6” is NOT six named modules (e.g., “central bank”, “red news”, etc.).
+It is a DISCRETE 0..6 SCALE (7 buckets) computed from an averaged “bias” score in [-1..+1],
+then mapped into macro6 using fixed thresholds.
+
+B) How macro6 is computed (grounded)
+1) Each news item is scored into a per-pair bias in score_item_for_pair():
+   - bias is clamped to [-1..+1]
+   - noise guard: if abs(bias) < 0.1 -> bias becomes 0.0 (ignored)
+
+2) aggregate(items, pair) produces:
+   Returns: (score, macro6, hit_items, total_hits)
+   - min_hit_items = NEWS_MIN_HIT_ITEMS (default=2)
+   - If used == 0 OR hit_items < min_hit_items:
+       FAIL-CLOSED NEUTRAL -> (score=0.0, macro6=3)
+   - Else: score = average bias across USED items, clamped to [-1..+1], then:
+       macro6 = macro6_from_bias(score)
+
+3) macro6_from_bias(bias) mapping (tools/news_sentiment.py lines 698–719):
+   bias <= -0.6  -> 0
+   bias <= -0.3  -> 1
+   bias <= -0.1  -> 2
+   bias <  0.1   -> 3   (neutral)
+   bias <  0.3   -> 4
+   bias <  0.6   -> 5
+   else          -> 6
+
+C) Fail-closed behavior (grounded)
+1) If NEWS_ON is off/false/0/empty:
+   run_engine() returns macro6=3 with provider="off" (neutral)
+
+2) If RSS fetch yields no usable signal (not enough hit_items):
+   aggregate() returns macro6=3 (neutral)
+
+So: the “default safe state” is macro6=3, not 0.
+
+D) What is currently wrong in alerts_runner.py (grounded from your earlier nl/grep)
+- tools/alerts_runner.py currently uses:
+  macro_score = 0  # placeholder
+  and prints “Macro: 0/6 (not checked yet)”
+- It also sets risk_level = "high" if macro_score < 3
+  => With macro_score hard-stubbed to 0, risk is forced “high” permanently.
+
+E) Acceptance criteria for “/6 implemented” (practical + grounded)
+1) The runner that sends Telegram cards must populate the card’s “+ X/6” from macro6 (0..6).
+2) The /6 value must be fail-closed to 3 (neutral) when news is off/unavailable/insufficient.
+3) No production path is allowed to hard-stub macro_score=0.
+
+F) Critical Termux note (why your shell exploded)
+- Anything that is NOT inside a heredoc (cat <<'EOF' ... EOF) is executed by bash.
+- If you paste plain text lines like “Acceptance criteria check (this message): …”
+  bash will try to run them as commands and throw syntax errors.
+

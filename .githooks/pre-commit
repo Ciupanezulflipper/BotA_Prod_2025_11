@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Purpose:
+# - Block committing REAL env/secrets files by PATH when they are ADDED/MODIFIED/RENAMED.
+# - Allow DELETIONS of such files (so cleanup commits can happen without --no-verify).
+# - Keep a small allowlist for safe samples.
+
+ALLOW_RE='^(config/strategy\.env\.sample|\.env\.example|TomaMobileForexBot/\.env\.example)$'
+
+# Only inspect staged paths that are Added/Modified/Renamed/Copied.
+# Deletions are intentionally allowed.
+paths="$(
+  git diff --cached --name-status --diff-filter=AMRC \
+  | awk '{print $NF}' \
+  | sed '/^\s*$/d' \
+  || true
+)"
+
+# Filter to env-like targets only (by path name).
+# Notes:
+# - Matches ".env", ".env.*", ".envanything"
+# - Matches "strategy.env" and "strategy.env.*"
+flagged="$(
+  printf "%s\n" "$paths" \
+  | grep -Ei '(^|/)\.env($|[._])|(^|/)\.env[^/]*$|(^|/)strategy\.env($|[._])' \
+  | grep -Ev "$ALLOW_RE" \
+  || true
+)"
+
+if [ -n "${flagged:-}" ]; then
+  echo "❌ Blocked secret-like staged ADD/MODIFY/RENAME paths:"
+  printf "%s\n" "$flagged"
+  echo
+  echo "Fix:"
+  echo "- Keep real env/strategy.env files UNTRACKED (local only)."
+  echo "- Only commit safe samples (e.g., .env.example, config/strategy.env.sample)."
+  exit 1
+fi
+
+exit 0

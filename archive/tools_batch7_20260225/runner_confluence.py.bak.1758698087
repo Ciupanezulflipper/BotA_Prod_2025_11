@@ -1,0 +1,242 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+runner_confluence.py
+--------------------
+Consolidates the most-recent signals per timeframe for a pair from
+~/bot-a/data/signal_journal.csv, computes a confluence decision, and
+emits a compact summary suitable for Telegram or for a downstream sender.
+
+Safe-by-default:
+- Tolerates missing files/columns
+- Ignores malformed rows
+- Never assumes dicts: every `.get()` is guarded
+- Produces HOLD if not enough agreement
+
+CLI examples:
+  python3 runner_confluence.py --pair EURUSD --tf M15 --force --dry-run=false
+  python3 runner_confluence.py --pair EURUSD --dry-run=true
+
+Outputs:
+- Prints a one-line result to stdout
+- If --dry-run=false and passes thresholds, writes JSON to:
+    ~/bot-a/data/last_decision.json
+"""
+
+import os
+import sys
+import csv
+import json
+import time
+import math
+import argparse
+from datetime import datetime, timezone
+
+HOME = os.path.expanduser("~")
+BOT_HOME = os.path.join(HOME, "bot-a")
+DATA_DIR = os.path.join(BOT_HOME, "data")
+JOURNAL_CSV = os.path.join(DATA_DIR, "signal_journal.csv")
+DECISION_JSON = os.path.join(DATA_DIR, "last_decision.json")
+
+# --- Environment thresholds with sensible defaults ---
+CONF_MIN = float(os.environ.get("CONF_MIN", os.environ.get("CONFIDENCE_MIN", 3.0)))
+STRONG_SEND_THRESHOLD = float(os.environ.get("STRONG_SEND_THRESHOLD", 6.0))
+PAIR_DEFAULT = os.environ.get("PAIR_DEFAULT", "EURUSD")
+
+# Some timeframes we care about (ordered low->high TF)
+TF_ORDER = ["M1", "M5", "M15", "M30", "H1", "H4", "D1", "W1"]
+
+# --- Utils -------------------------------------------------------------------
+
+def now_utc_iso():
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+def safe_float(x, default=0.0):
+    try:
+        return float(x)
+    except Exception:
+        return default
+
+def safe_upper(x):
+    try:
+        return str(x).strip().upper()
+    except Exception:
+        return ""
+
+def pick_latest_per_tf(rows):
+    """
+    rows: list of dicts from the CSV (already filtered by pair).
+    Returns dict tf -> row (latest by 'ts' if present, else by file order).
+    """
+    latest = {}
+    for r in rows:
+        tf = r.get("tf") or r.get("timeframe") or ""
+        if not tf:
+            continue
+        # ts may be float epoch or iso; try both
+        ts = r.get("ts") or r.get("timestamp") or r.get("time") or ""
+        try:
+            # epoch seconds?
+            tscore = float(ts)
+        except Exception:
+            try:
+                # ISO time
+                tscore = datetime.fromisoformat(str(ts).replace("Z","")).timestamp()
+            except Exception:
+                # fallback: file order tick
+                tscore = time.time()
+        prev = latest.get(tf)
+        if prev is None or tscore >= prev["_tscore"]:
+            r_copy = dict(r)
+            r_copy["_tscore"] = tscore
+            latest[tf] = r_copy
+    return latest
+
+def load_latest_signals_for_pair(pair):
+    """
+    Read JOURNAL_CSV and build tf_data = {tf: {signal, strength, score, ...}}
+    Malformed lines are ignored.
+    """
+    tf_data = {}
+    if not os.path.exists(JOURNAL_CSV):
+        return tf_data
+
+    rows = []
+    with open(JOURNAL_CSV, "r", newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            if safe_upper(row.get("pair")) != safe_upper(pair):
+                continue
+            rows.append(row)
+
+    latest = pick_latest_per_tf(rows)
+    for tf, r in latest.items():
+        entry = {
+            "tf": tf,
+            "signal": safe_upper(r.get("signal") or r.get("direction") or r.get("side") or ""),
+            "strength": safe_float(r.get("strength") or r.get("conf") or r.get("confidence"), 0.0),
+            "score": safe_float(r.get("score") or r.get("base_score"), 0.0),
+            "raw": r,
+        }
+        tf_data[tf] = entry
+    return tf_data
+
+def confluence_decision(tf_data, prefer_tf=None):
+    """
+    Compute BUY/SELL/HOLD based on summed strengths of most recent TF entries.
+    prefer_tf: a single TF to emphasize (optional), e.g. "M15".
+    Returns (decision, total_score, buy_sum, sell_sum, used_tfs:list)
+    """
+    # Weighting scheme: higher TFs get slightly more weight
+    weights = {}
+    for i, tf in enumerate(TF_ORDER, start=1):
+        weights[tf] = 1.0 + (i - 1) * 0.05  # gentle slope
+    if prefer_tf:
+        weights[prefer_tf] = weights.get(prefer_tf, 1.0) + 0.25
+
+    buy_sum = 0.0
+    sell_sum = 0.0
+    used_tfs = []
+
+    # Defensive: tf_data can contain strings; only use dict entries
+    for tf, d in tf_data.items():
+        if not isinstance(d, dict):
+            continue
+        sig = safe_upper(d.get("signal", ""))
+        strength = safe_float(d.get("strength", 0.0))
+        w = weights.get(tf, 1.0)
+        if sig == "BUY":
+            buy_sum += strength * w
+            used_tfs.append(tf)
+        elif sig == "SELL":
+            sell_sum += strength * w
+            used_tfs.append(tf)
+        # HOLD or unknown => ignored
+
+    delta = buy_sum - sell_sum
+    total = abs(delta)
+
+    if total < 1e-9:
+        decision = "HOLD"
+    else:
+        decision = "BUY" if delta > 0 else "SELL"
+
+    return decision, round(total, 3), round(buy_sum, 3), round(sell_sum, 3), sorted(set(used_tfs), key=lambda x: TF_ORDER.index(x) if x in TF_ORDER else 999)
+
+def format_brief(pair, prefer_tf, decision, score, buy_sum, sell_sum, used_tfs):
+    arrow = "🔺" if decision == "BUY" else "🔻" if decision == "SELL" else "⏸️"
+    tf_tag = f" {prefer_tf}" if prefer_tf else ""
+    tf_list = ", ".join(used_tfs) if used_tfs else "—"
+    return (f"{arrow} {pair}{tf_tag} • Score {score:.2f} "
+            f"| BUY Σ {buy_sum:.2f} • SELL Σ {sell_sum:.2f} "
+            f"| TFs [{tf_list}]")
+
+def write_decision_json(pair, prefer_tf, decision, score, buy_sum, sell_sum, used_tfs, tf_data):
+    os.makedirs(DATA_DIR, exist_ok=True)
+    payload = {
+        "ts": now_utc_iso(),
+        "pair": pair,
+        "prefer_tf": prefer_tf,
+        "decision": decision,
+        "score": score,
+        "buy_sum": buy_sum,
+        "sell_sum": sell_sum,
+        "tfs": used_tfs,
+        "inputs": tf_data,  # for transparency/debug
+    }
+    with open(DECISION_JSON, "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False, indent=2)
+
+# --- Main --------------------------------------------------------------------
+
+def parse_args():
+    p = argparse.ArgumentParser(description="Confluence runner (safe, CSV-backed).")
+    p.add_argument("--pair", default=PAIR_DEFAULT, help="Symbol (default from env or EURUSD)")
+    p.add_argument("--tf", "--timeframe", dest="tf", default="M15", help="Preferred TF hint (e.g., M15)")
+    p.add_argument("--force", action="store_true", help="Ignore freshness / always compute")
+    p.add_argument("--dry-run", default="true", help="true/false (string). If false, write decision JSON when score passes thresholds.")
+    return p.parse_args()
+
+def main():
+    args = parse_args()
+    pair = safe_upper(args.pair) or "EURUSD"
+    prefer_tf = safe_upper(args.tf) if args.tf else "M15"
+    dry_run = str(args["dry_run"] if isinstance(args, dict) and "dry_run" in args else args.dry_run).lower() in ("false","0","no","off") == False
+    # The line above is a bit dense; make it explicit:
+    dry_run = not (str(args.dry_run).lower() in ("false", "0", "no", "off"))
+
+    # Load most recent entries per TF for this pair
+    tf_data = load_latest_signals_for_pair(pair)
+
+    # Compute decision
+    decision, score, buy_sum, sell_sum, used_tfs = confluence_decision(tf_data, prefer_tf=prefer_tf)
+
+    # Gate by thresholds
+    strong = score >= STRONG_SEND_THRESHOLD
+    confident = score >= CONF_MIN
+
+    summary = format_brief(pair, prefer_tf, decision, score, buy_sum, sell_sum, used_tfs)
+    print(summary)
+
+    # Persist only if not a dry-run AND we’re confident enough to be actionable.
+    if not dry_run and confident:
+        try:
+            write_decision_json(pair, prefer_tf, decision, score, buy_sum, sell_sum, used_tfs, tf_data)
+        except Exception as e:
+            print(f"[WARN] Failed to write decision JSON: {e}", file=sys.stderr)
+
+    # Exit code semantics: 0 = ok; 2 = not confident (skipped); 1 = error
+    if confident:
+        return 0
+    else:
+        return 2
+
+if __name__ == "__main__":
+    try:
+        sys.exit(main())
+    except KeyboardInterrupt:
+        sys.exit(130)
+    except Exception as e:
+        print(f"[FATAL] {e}", file=sys.stderr)
+        sys.exit(1)

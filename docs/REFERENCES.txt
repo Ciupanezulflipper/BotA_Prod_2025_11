@@ -1,0 +1,10 @@
+WHY THESE LIMITS & THE APPROACH
+
+- Twelve Data free plan is commonly cited around ~8 requests/min and ~800/day (credits model).
+- Token Bucket Rate Limiter is a standard, production-grade pattern used widely (e.g., Amazon SP-API).
+
+These justify defaults:
+  TD_PER_MIN ≈ 8
+  TD_DAY_CAP slightly below 800 (headroom), default 760 here.
+
+This file is informational only; BotA operates without it.

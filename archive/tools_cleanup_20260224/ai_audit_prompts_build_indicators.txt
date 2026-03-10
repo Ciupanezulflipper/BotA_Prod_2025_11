@@ -1,0 +1,114 @@
+TITLE: BotA AI Audit Prompts — tools/build_indicators.py (Termux / stdlib-only / fail-closed)
+
+PURPOSE
+- Provide two separate, copy/paste prompts for two different AIs.
+- Force grounded, “brutal and surgical” review.
+- Prevent hallucinations by requiring citations for claims about formulas, standards, or tool behavior.
+
+SCOPE
+- Target file: tools/build_indicators.py
+- Environment: Termux (Android), Python3, stdlib-only, BotA PRD rules:
+  - Fail-closed behavior required
+  - Output JSON contract must be stable
+  - Timeframe validation must prevent mislabeled indicator bundles
+  - No circular imports, no non-stdlib deps
+  - Copy-paste workflows must use cat <<'EOF' ... EOF
+- Reality check: We ran a “mullet” adversarial test and it did NOT show significant poisoning; do not re-argue it without reproducing.
+
+INPUTS YOU MUST PROVIDE TO THE AI (PASTE THESE WITH THE PROMPT)
+1) FULL CONTENT of tools/build_indicators.py
+2) The smoke/mullet test results:
+   [INFO] tf_ok full/tail: True True tf_actual_min: 15.0 15.0
+   [RESULT] abs diffs(full vs tail): {'ema9': 0.0, 'ema21': 5.773159728050814e-15, 'rsi': 1.5181925050455902e-08, 'macd_hist': 3.2281946213408297e-13, 'adx': 7.937811972169584e-07, 'atr': 0.0}
+   [VERDICT] MULLET-RISK-NOT-SIGNIFICANT (safe to move on)
+
+IMPORTANT RULES FOR THE AI
+- If you claim “standard RSI/ATR/ADX/MACD/EMA formula,” you MUST cite authoritative sources (StockCharts, Investopedia, Wikipedia, TradingView docs, etc).
+- If you cannot cite it, write: “No grounding found.”
+- You MUST identify: (a) any bug, (b) any contract mismatch vs downstream callers, (c) any Termux filesystem pitfalls, (d) any silent corruption risks.
+- You MUST distinguish between: correctness bugs vs strategy-alignment differences.
+- You MUST propose changes ONLY if you can justify them with evidence AND they preserve stdlib-only + fail-closed.
+
+========================================================
+PROMPT A (for AI #1 — “Implementation Correctness & Contracts”)
+========================================================
+
+You are auditing a single Python file used in a Termux trading bot (BotA). You MUST be brutal and surgical.
+
+TASK
+1) Read the file content (pasted below).
+2) Validate the FAIL-CLOSED design:
+   - On bad/missing input: weak=true, tf_ok=false, stable JSON keys present.
+   - On tf mismatch: weak=true and explicit error set.
+   - On insufficient data: weak=true and explicit error set.
+3) Validate the OUTPUT JSON CONTRACT:
+   - Confirm which keys are always present.
+   - Identify any mismatch vs likely downstream expectations (health_check_pro.sh expects many keys).
+4) Verify parsing/loaders:
+   - JSON types: Yahoo chart JSON vs generic list JSON
+   - CSV loader assumptions (header row, column order)
+   - Filtering: zero/NaN, h<l, timestamp normalization
+5) Timeframe validation:
+   - Explain what validate_tf actually guarantees.
+   - Identify any edge cases that could incorrectly pass.
+   - You MUST consider the provided mullet test results; do not claim poisoning without reproducing.
+6) Provide findings in this exact format:
+
+FORMAT (MANDATORY)
+- Verdict: PASS / PASS-WITH-NOTES / FAIL
+- Blocking issues (must-fix): numbered list (if none, say “None”)
+- Non-blocking issues: numbered list
+- Contract table: key -> always present? type? meaning? failure value?
+- Proposed changes (only if grounded): show exact code blocks and explain why
+- Test additions: 3-5 minimal tests we should add in Termux (paths must not use /tmp)
+
+CITATIONS
+- For any formula/standard claim, include URLs or citations.
+- If you cannot cite it, write “No grounding found.”
+
+NOW HERE IS THE FILE (PASTE FULL CONTENT NEXT), THEN THE TEST RESULTS, THEN RESPOND.
+
+========================================================
+PROMPT B (for AI #2 — “Indicator Standards & Strategy Alignment”)
+========================================================
+
+You are auditing indicator math and alignment for a Termux-based trading bot. You MUST use online sources and cite them. No hallucinations.
+
+TASK
+Given the file (pasted below) and the mullet test output, do all of the following:
+
+1) Identify exactly which variants are implemented:
+   - EMA (standard k=2/(p+1) vs Wilder smoothing)
+   - RSI (Cutler SMA vs Wilder)
+   - ATR (SMA TR vs Wilder smoothing)
+   - ADX (Wilder’s method details)
+   - MACD (EMA12-EMA26, signal EMA9, histogram)
+2) For each indicator:
+   - State the canonical definition (with citations).
+   - Compare to the implementation line-by-line and state “matches” or “differs”.
+   - If differs, classify as:
+     (a) correctness bug OR
+     (b) acceptable alternative variant OR
+     (c) strategy-drift risk (likely mismatch vs TradingView).
+3) Confirm minimum-bars requirements realistically:
+   - Not “theoretical minimum”, but “practically stable” for Wilder-style indicators.
+   - Cite sources if you claim recommended history length.
+4) Confirm whether the mullet risk is material:
+   - Use the provided test diffs.
+   - If you claim a new poisoning scenario, you must provide a reproducible construction and explain why it beats the test we ran.
+5) Deliver output in this exact format:
+
+FORMAT (MANDATORY)
+- Verdict: PASS / PASS-WITH-NOTES / FAIL
+- Indicator alignment matrix (table):
+  indicator | canonical definition cited | implementation variant | match? | impact
+- Strategy drift risks (ranked): 1..N
+- Specific improvement proposals (only if grounded):
+  - Each proposal must state: benefit, risk, exact change, and why citations support it
+- “No grounding found” section: list anything you could not cite.
+
+CITATION RULE
+- Every canonical definition claim must have a citation URL.
+- If you cannot cite, do not guess.
+
+NOW HERE IS THE FILE (PASTE FULL CONTENT NEXT), THEN THE TEST RESULTS, THEN RESPOND.

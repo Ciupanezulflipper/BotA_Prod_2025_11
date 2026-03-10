@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+import os, sys, json, argparse, pathlib, datetime
+
+STATE_DIR = pathlib.Path(os.getenv("HOME","/data")) / "BotA" / "state"
+STATE_DIR.mkdir(parents=True, exist_ok=True)
+STATE_FILE = STATE_DIR / "risk.json"
+
+def _env_int(k, d): 
+    try: return int(os.getenv(k, d))
+    except: return d
+
+def today_utc_str():
+    return datetime.datetime.utcnow().strftime("%Y-%m-%d")
+
+def load_state():
+    if STATE_FILE.exists():
+        try:
+            return json.loads(STATE_FILE.read_text())
+        except Exception:
+            pass
+    return {"day": today_utc_str(), "count": 0}
+
+def save_state(st):
+    STATE_FILE.write_text(json.dumps(st))
+
+def status():
+    st = load_state()
+    # day rollover
+    td = today_utc_str()
+    if st.get("day") != td:
+        st = {"day": td, "count": 0}
+        save_state(st)
+    print(json.dumps(st)); return 0
+
+def increment():
+    st = load_state()
+    td = today_utc_str()
+    if st.get("day") != td:
+        st = {"day": td, "count": 0}
+    st["count"] = int(st.get("count",0)) + 1
+    save_state(st)
+    print(json.dumps(st)); return 0
+
+def reset():
+    st = {"day": today_utc_str(), "count": 0}
+    save_state(st)
+    print(json.dumps(st)); return 0
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("cmd", choices=["status","increment","reset"])
+    args = ap.parse_args()
+    if args.cmd == "status":  sys.exit(status())
+    if args.cmd == "increment": sys.exit(increment())
+    if args.cmd == "reset": sys.exit(reset())
+
+if __name__ == "__main__":
+    main()

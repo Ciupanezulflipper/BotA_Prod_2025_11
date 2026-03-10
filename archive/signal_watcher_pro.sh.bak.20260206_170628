@@ -1,0 +1,538 @@
+#!/data/data/com.termux/files/usr/bin/bash
+###############################################################################
+# FILE: tools/signal_watcher_pro.sh
+#
+# ROLE:
+#   Watcher/orchestrator for BotA. Runs fusion, logs decisions, writes alerts.csv,
+#   and optionally sends Telegram alerts.
+#
+# FIX (Step 3d):
+#   1) Load + EXPORT env at startup (Python only sees exported env vars).
+#   2) Precedence: CLI env > .env > config/strategy.env (no override of CLI).
+#   3) Back-compat: FILTER_SCORE_MIN -> FILTER_SCORE_MIN_ALL (quality_filter gate).
+#   4) Parse robustness:
+#        - Treat whitespace-only fusion stdout as empty => fail-closed fallback JSON.
+#        - Robust scan to find JSON dict(s) anywhere in fusion output (handles noise).
+#        - On parse_error, dump raw fusion stdout to logs/state/last_payload_<pair>_<tf>.txt
+###############################################################################
+
+set -euo pipefail
+shopt -s inherit_errexit 2>/dev/null || true
+
+ROOT="${BOTA_ROOT:-$HOME/BotA}"
+TOOLS="${ROOT}/tools"
+
+ts_iso() { date +"%Y-%m-%dT%H:%M:%S%z"; }
+
+log() {
+  local tag="${1:-WATCHER}"
+  shift || true
+  printf '[%s %s] %s\n' "${tag}" "$(ts_iso)" "$*" >&2
+}
+
+abs_under_root() {
+  local p="${1:-}"
+  if [[ -z "${p}" ]]; then
+    echo "${ROOT}"
+    return 0
+  fi
+  if [[ "${p}" == /* ]]; then
+    echo "${p}"
+  else
+    echo "${ROOT}/${p}"
+  fi
+}
+
+is_true() {
+  local v="${1:-}"
+  v="${v,,}"
+  case "${v}" in
+    1|true|yes|y|on) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+is_false() {
+  local v="${1:-}"
+  v="${v,,}"
+  case "${v}" in
+    0|false|no|n|off|"") return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+# Safe KEY=VALUE loader that EXPORTS variables for Python.
+# IMPORTANT: does NOT override variables already present in the process environment.
+env_safe_source_no_override() {
+  local f="${1:-}"
+  [[ -f "${f}" ]] || return 0
+
+  local line key val
+  while IFS= read -r line || [[ -n "${line}" ]]; do
+    line="${line#"${line%%[![:space:]]*}"}"
+    line="${line%"${line##*[![:space:]]}"}"
+    [[ -z "${line}" ]] && continue
+    [[ "${line}" == \#* ]] && continue
+
+    if [[ "${line}" == export\ * ]]; then
+      line="${line#export }"
+      line="${line#"${line%%[![:space:]]*}"}"
+    fi
+
+    if [[ "${line}" =~ ^([A-Za-z_][A-Za-z0-9_]*)=(.*)$ ]]; then
+      key="${BASH_REMATCH[1]}"
+      val="${BASH_REMATCH[2]}"
+
+      # If already present in environment (including empty), do not override.
+      if printenv "${key}" >/dev/null 2>&1; then
+        continue
+      fi
+
+      # Strip surrounding quotes if present
+      if [[ "${val}" =~ ^\"(.*)\"$ ]]; then
+        val="${BASH_REMATCH[1]}"
+      elif [[ "${val}" =~ ^\'(.*)\'$ ]]; then
+        val="${BASH_REMATCH[1]}"
+      fi
+
+      export "${key}=${val}"
+    fi
+  done < "${f}"
+}
+
+# Load env with precedence: CLI env > .env > strategy.env
+load_env_startup() {
+  env_safe_source_no_override "${ROOT}/.env"
+  env_safe_source_no_override "${ROOT}/config/strategy.env"
+
+  : "${PAIRS:=EURUSD GBPUSD USDJPY EURJPY}"
+  : "${TIMEFRAMES:=M15}"
+  : "${SLEEP_SECONDS:=300}"
+
+  : "${DRY_RUN_MODE:=false}"
+  : "${TELEGRAM_ENABLED:=1}"
+  : "${TELEGRAM_MIN_SCORE:=95}"
+  : "${FILTER_SCORE_MIN:=0}"
+  : "${TELEGRAM_COOLDOWN_SECONDS:=300}"
+
+  : "${LOGS:=logs}"
+  : "${CACHE:=cache}"
+  : "${STATE:=logs/state}"
+  : "${ALERTS_CSV:=logs/alerts.csv}"
+  : "${ERRLOG:=logs/error.log}"
+
+  LOGS="$(abs_under_root "${LOGS}")"
+  CACHE="$(abs_under_root "${CACHE}")"
+  STATE="$(abs_under_root "${STATE}")"
+  ALERTS_CSV="$(abs_under_root "${ALERTS_CSV}")"
+  ERRLOG="$(abs_under_root "${ERRLOG}")"
+
+  mkdir -p "${LOGS}" "${CACHE}" "${STATE}"
+  touch "${ERRLOG}" 2>/dev/null || true
+
+  # Backward compatibility for quality_filter.py threshold naming
+  if [[ -n "${FILTER_SCORE_MIN:-}" && -z "${FILTER_SCORE_MIN_ALL:-}" ]]; then
+    export FILTER_SCORE_MIN_ALL="${FILTER_SCORE_MIN}"
+    export _BOTA_MAPPED_FILTER_SCORE_MIN_ALL="1"
+  fi
+}
+
+usage() {
+  cat <<'USAGE'
+Usage:
+  bash tools/signal_watcher_pro.sh --once
+  bash tools/signal_watcher_pro.sh
+
+Env (precedence: CLI > .env > config/strategy.env):
+  PAIRS="EURUSD GBPUSD ..."
+  TIMEFRAMES="M15 H1 ..."
+  DRY_RUN_MODE=true|false|1|0
+  TELEGRAM_ENABLED=0|1
+  TELEGRAM_MIN_SCORE=NN
+  FILTER_SCORE_MIN=NN              (legacy; mapped to FILTER_SCORE_MIN_ALL)
+  FILTER_SCORE_MIN_ALL=NN          (quality_filter hard gate)
+  TELEGRAM_COOLDOWN_SECONDS=NN     (default 300)
+
+Secrets expected (for Telegram send):
+  TELEGRAM_BOT_TOKEN
+  TELEGRAM_CHAT_ID
+USAGE
+}
+
+ensure_alerts_csv() {
+  if [[ ! -f "${ALERTS_CSV}" || ! -s "${ALERTS_CSV}" ]]; then
+    printf '%s\n' "ts,pair,tf,direction,score,confidence,entry,sl,tp,provider,filter_rejected,filter_reasons,reasons" > "${ALERTS_CSV}"
+  fi
+}
+
+append_alert_csv() {
+  local ts="$1" pair="$2" tf="$3" direction="$4" score="$5" conf="$6"
+  local entry="$7" sl="$8" tp="$9" provider="${10}"
+  local filter_rejected="${11}" filter_reasons="${12}" reasons="${13}"
+
+  TS="${ts}" PAIR="${pair}" TF="${tf}" DIRECTION="${direction}" SCORE="${score}" CONF="${conf}" \
+  ENTRY="${entry}" SL="${sl}" TP="${tp}" PROVIDER="${provider}" REJ="${filter_rejected}" \
+  FRS="${filter_reasons}" RSN="${reasons}" CSV_PATH="${ALERTS_CSV}" \
+  python3 - <<'PY' 2>/dev/null || true
+import os, csv
+row = [
+  os.environ.get("TS",""),
+  os.environ.get("PAIR",""),
+  os.environ.get("TF",""),
+  os.environ.get("DIRECTION",""),
+  os.environ.get("SCORE",""),
+  os.environ.get("CONF",""),
+  os.environ.get("ENTRY",""),
+  os.environ.get("SL",""),
+  os.environ.get("TP",""),
+  os.environ.get("PROVIDER",""),
+  os.environ.get("REJ",""),
+  os.environ.get("FRS",""),
+  os.environ.get("RSN",""),
+]
+path = os.environ.get("CSV_PATH","alerts.csv")
+with open(path, "a", newline="", encoding="utf-8") as f:
+  csv.writer(f).writerow(row)
+PY
+}
+
+payload_is_blank() {
+  # true if payload is empty OR only whitespace/newlines
+  local s="${1:-}"
+  [[ -z "$(printf '%s' "${s}" | tr -d ' \t\r\n')" ]]
+}
+
+run_fusion() {
+  local pair="$1"
+  local tf="$2"
+
+  if [[ -x "${TOOLS}/m15_h1_fusion.sh" ]]; then
+    bash "${TOOLS}/m15_h1_fusion.sh" "${pair}" 2>>"${ERRLOG}" || true
+    return 0
+  fi
+
+  if [[ -x "${TOOLS}/scoring_engine.sh" && -f "${TOOLS}/quality_filter.py" ]]; then
+    local raw
+    raw="$(bash "${TOOLS}/scoring_engine.sh" "${pair}" "${tf}" 2>>"${ERRLOG}" || true)"
+    if [[ -n "${raw}" ]]; then
+      printf '%s' "${raw}" | python3 "${TOOLS}/quality_filter.py" 2>>"${ERRLOG}" || true
+      return 0
+    fi
+  fi
+
+  PAIR="${pair}" TF="${tf}" python3 - <<'PY'
+import os, json
+pair=os.environ.get("PAIR","UNKNOWN")
+tf=os.environ.get("TF","UNKNOWN")
+print(json.dumps({
+  "pair":pair,"tf":tf,"direction":"HOLD",
+  "entry":0.0,"sl":0.0,"tp":0.0,"volatility":"unknown",
+  "score":0.0,"confidence":40.0,
+  "reasons":"fusion_unavailable",
+  "price":0.0,"provider":"watcher_fallback",
+  "atr":0.0,"filter_rr":0.0,"filter_atr":0.0,
+  "filter_rejected":True,"filter_reasons":["fail_closed","fusion_unavailable"],
+  "pattern_delta":0
+}, separators=(",",":")))
+PY
+}
+
+parse_payload_tsv() {
+  python3 - <<'PY'
+import sys, json
+
+def sf(v, d=0.0):
+  try:
+    return float(v)
+  except Exception:
+    return d
+
+raw = sys.stdin.read()
+dec = json.JSONDecoder()
+
+data = None
+parse_ok = False
+
+# Robust scan: find JSON dicts anywhere in text (handles noise or concatenated JSON).
+s = raw
+i = 0
+last_dict = None
+
+while True:
+  j = s.find("{", i)
+  if j == -1:
+    break
+  try:
+    obj, end = dec.raw_decode(s, j)
+    i = end
+    if isinstance(obj, dict):
+      last_dict = obj
+    elif isinstance(obj, list) and obj and isinstance(obj[-1], dict):
+      last_dict = obj[-1]
+    # continue scanning for later dicts
+    continue
+  except Exception:
+    i = j + 1
+    continue
+
+if isinstance(last_dict, dict):
+  data = last_dict
+  parse_ok = True
+else:
+  data = {}
+  parse_ok = False
+
+pair = str(data.get("pair") or "").strip()
+tf = str(data.get("tf", data.get("timeframe","")) or "").strip()
+direction = str(data.get("direction","HOLD")).upper()
+
+score = sf(data.get("score",0.0),0.0)
+conf = sf(data.get("confidence",0.0),0.0)
+entry = sf(data.get("entry",0.0),0.0)
+sl = sf(data.get("sl",0.0),0.0)
+tp = sf(data.get("tp",0.0),0.0)
+
+provider = str(data.get("provider","engine_A2"))
+rejected = bool(data.get("filter_rejected", False))
+
+fr = data.get("filter_reasons", [])
+if isinstance(fr, list):
+  filter_str = " | ".join(str(x) for x in fr)
+else:
+  filter_str = str(fr) if fr is not None else ""
+
+reasons = str(data.get("reasons",""))
+
+# Fail-closed if parse failed
+if not parse_ok:
+  rejected = True
+  if not filter_str:
+    filter_str = "parse_error"
+  if not reasons:
+    reasons = "parse_error"
+
+# Prevent TSV field shift from empty leading fields
+if not pair:
+  pair = "UNKNOWN"
+  rejected = True
+  filter_str = (filter_str + " | empty_pair").strip(" |") if filter_str else "empty_pair"
+if not tf:
+  tf = "UNKNOWN"
+  rejected = True
+  filter_str = (filter_str + " | empty_tf").strip(" |") if filter_str else "empty_tf"
+
+out = [
+  pair,
+  tf,
+  direction,
+  f"{score:.2f}",
+  f"{conf:.2f}",
+  f"{entry:.5f}",
+  f"{sl:.5f}",
+  f"{tp:.5f}",
+  provider,
+  "true" if rejected else "false",
+  filter_str,
+  reasons,
+]
+sys.stdout.write("\t".join(out))
+PY
+}
+
+telegram_cooldown_ok() {
+  local pair="$1" tf="$2"
+  local cooldown="${TELEGRAM_COOLDOWN_SECONDS:-300}"
+  local key="${STATE}/last_sent_${pair}_${tf}.txt"
+  local now last
+  now="$(date +%s)"
+  last="0"
+  if [[ -f "${key}" ]]; then
+    last="$(cat "${key}" 2>/dev/null || echo 0)"
+  fi
+  if [[ "${last}" =~ ^[0-9]+$ ]] && (( now - last < cooldown )); then
+    return 1
+  fi
+  echo "${now}" > "${key}" 2>/dev/null || true
+  return 0
+}
+
+can_send_telegram() {
+  is_false "${TELEGRAM_ENABLED:-1}" && return 1
+  is_true "${DRY_RUN_MODE:-false}" && return 1
+  [[ -n "${TELEGRAM_BOT_TOKEN:-}" ]] || return 1
+  [[ -n "${TELEGRAM_CHAT_ID:-}" ]] || return 1
+  return 0
+}
+
+send_telegram_message() {
+  local msg="$1"
+
+  if is_true "${DRY_RUN_MODE:-false}" || is_false "${TELEGRAM_ENABLED:-1}"; then
+    log "TELEGRAM" "DRY_RUN or disabled: would send: ${msg}"
+    return 0
+  fi
+
+  if ! can_send_telegram; then
+    log "TELEGRAM" "skip: missing token/chat_id or disabled (set TELEGRAM_ENABLED=1 and export TELEGRAM_BOT_TOKEN/TELEGRAM_CHAT_ID)"
+    return 0
+  fi
+
+  if [[ -x "${TOOLS}/telegram_send.sh" ]]; then
+    "${TOOLS}/telegram_send.sh" "${msg}" 2>>"${ERRLOG}" || true
+    log "TELEGRAM" "SENT: via tools/telegram_send.sh"
+    return 0
+  fi
+
+  TELEGRAM_BOT_TOKEN="${TELEGRAM_BOT_TOKEN}" TELEGRAM_CHAT_ID="${TELEGRAM_CHAT_ID}" MSG="${msg}" \
+  python3 - <<'PY' 2>>"${ERRLOG}" || true
+import os, urllib.parse, urllib.request
+token=os.environ["TELEGRAM_BOT_TOKEN"]
+chat_id=os.environ["TELEGRAM_CHAT_ID"]
+msg=os.environ["MSG"]
+url=f"https://api.telegram.org/bot{token}/sendMessage"
+data=urllib.parse.urlencode({"chat_id": chat_id, "text": msg}).encode("utf-8")
+req=urllib.request.Request(url, data=data, method="POST")
+with urllib.request.urlopen(req, timeout=15) as r:
+  r.read()
+PY
+
+  log "TELEGRAM" "SENT: via python urllib"
+}
+
+process_pair_tf() {
+  local pair="$1"
+  local tf="$2"
+
+  local cache_file="${CACHE}/${pair}.json"
+  if [[ -f "${cache_file}" ]]; then
+    log "CACHE" "${pair} ${tf} detected cache file ${cache_file}"
+  else
+    log "CACHE" "${pair} ${tf} missing cache file ${cache_file}"
+  fi
+
+  local payload
+  payload="$(run_fusion "${pair}" "${tf}" || true)"
+
+  # Key fix: if fusion stdout is whitespace-only, treat as empty and fail-closed fallback.
+  if payload_is_blank "${payload}"; then
+    payload=""
+  fi
+
+  if [[ -z "${payload}" ]]; then
+    log "DEBUG" "${pair} ${tf} fusion_stdout_empty -> using fail_closed fallback JSON"
+    payload="$(PAIR="${pair}" TF="${tf}" python3 - <<'PY'
+import os, json
+print(json.dumps({
+  "pair":os.environ.get("PAIR","UNKNOWN"),
+  "tf":os.environ.get("TF","UNKNOWN"),
+  "direction":"HOLD",
+  "entry":0.0,"sl":0.0,"tp":0.0,"volatility":"unknown",
+  "score":0.0,"confidence":40.0,
+  "reasons":"empty_payload",
+  "price":0.0,"provider":"watcher_empty",
+  "atr":0.0,"filter_rr":0.0,"filter_atr":0.0,
+  "filter_rejected":True,"filter_reasons":["fail_closed","empty_payload"],
+  "pattern_delta":0
+}, separators=(",",":")))
+PY
+)"
+  fi
+
+  local tsv
+  tsv="$(printf '%s' "${payload}" | parse_payload_tsv || true)"
+  if [[ -z "${tsv}" ]]; then
+    log "FILTER" "${pair} ${tf} rejected_by_filter score=0.0 conf=40.0 filters=parse_error(tsv_empty)"
+    local dump="${STATE}/last_payload_${pair}_${tf}.txt"
+    printf '%s' "${payload}" | head -c 8000 > "${dump}" 2>/dev/null || true
+    log "DEBUG" "${pair} ${tf} dumped_payload=${dump}"
+    return 0
+  fi
+
+  local pair_o tf_o direction score conf entry sl tp provider rejected filter_str reasons
+  IFS=$'\t' read -r pair_o tf_o direction score conf entry sl tp provider rejected filter_str reasons <<< "${tsv}"
+
+  local now
+  now="$(ts_iso)"
+
+  append_alert_csv "${now}" "${pair_o}" "${tf_o}" "${direction}" "${score}" "${conf}" "${entry}" "${sl}" "${tp}" "${provider}" "${rejected}" "${filter_str}" "${reasons}"
+
+  if [[ "${rejected}" == "true" ]]; then
+    log "FILTER" "${pair_o} ${tf_o} rejected_by_filter score=${score} conf=${conf} filters=${filter_str}"
+
+    if [[ "${filter_str}" == *parse_error* || "${pair_o}" == "UNKNOWN" || "${tf_o}" == "UNKNOWN" ]]; then
+      local dump="${STATE}/last_payload_${pair}_${tf}.txt"
+      local bytes
+      bytes="$(printf '%s' "${payload}" | wc -c | tr -d '[:space:]')"
+      printf '%s' "${payload}" | head -c 8000 > "${dump}" 2>/dev/null || true
+      log "DEBUG" "${pair} ${tf} parse_debug payload_bytes=${bytes} dump=${dump}"
+    fi
+    return 0
+  fi
+
+  log "FILTER" "${pair_o} ${tf_o} accepted score=${score} conf=${conf} filters=${filter_str}"
+
+  local score_int
+  score_int="$(python3 - <<PY
+import math
+try:
+  s=float("${score}")
+  print(int(math.floor(s+1e-9)))
+except:
+  print(0)
+PY
+)"
+
+  if (( score_int < TELEGRAM_MIN_SCORE )); then
+    log "TELEGRAM" "gate: score_int=${score_int} < TELEGRAM_MIN_SCORE=${TELEGRAM_MIN_SCORE} (${pair_o} ${tf_o})"
+    return 0
+  fi
+
+  if ! telegram_cooldown_ok "${pair_o}" "${tf_o}"; then
+    log "TELEGRAM" "cooldown active: ${pair_o} ${tf_o}"
+    return 0
+  fi
+
+  local msg
+  msg="BotA ${pair_o} ${tf_o} ${direction} score=${score} conf=${conf} | ${filter_str}"
+  send_telegram_message "${msg}"
+}
+
+scan_once() {
+  local tf pair
+  for tf in ${TIMEFRAMES}; do
+    for pair in ${PAIRS}; do
+      process_pair_tf "${pair}" "${tf}"
+    done
+  done
+}
+
+main() {
+  local once="false"
+  case "${1:-}" in
+    --once) once="true"; shift || true ;;
+    --help|-h) usage; exit 0 ;;
+    "") ;;
+    *) usage; exit 2 ;;
+  esac
+
+  load_env_startup
+  ensure_alerts_csv
+
+  local mapped="0"
+  [[ -n "${_BOTA_MAPPED_FILTER_SCORE_MIN_ALL:-}" ]] && mapped="1"
+
+  log "WATCHER" "SANITY: PAIRS=\"${PAIRS}\" TIMEFRAMES=\"${TIMEFRAMES}\" ALERTS_CSV=\"${ALERTS_CSV}\" DRY_RUN_MODE=\"${DRY_RUN_MODE}\" TELEGRAM_ENABLED=\"${TELEGRAM_ENABLED}\" TELEGRAM_MIN_SCORE=\"${TELEGRAM_MIN_SCORE}\" FILTER_SCORE_MIN=\"${FILTER_SCORE_MIN}\" FILTER_SCORE_MIN_ALL=\"${FILTER_SCORE_MIN_ALL:-}\" MAPPED_FILTER_SCORE_MIN_ALL=\"${mapped}\""
+
+  if [[ "${once}" == "true" ]]; then
+    scan_once
+    log "DONE" "manual --once scan complete"
+    exit 0
+  fi
+
+  while true; do
+    scan_once
+    sleep "${SLEEP_SECONDS}"
+  done
+}
+
+main "${@}"

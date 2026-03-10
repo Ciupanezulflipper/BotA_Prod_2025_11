@@ -1,0 +1,118 @@
+#!/usr/bin/env python3
+# provider_mux.py — robust provider multiplexer with age clamp + hard failover
+# Usage:
+#   python3 $HOME/BotA/tools/provider_mux.py --symbol EURUSD --tf 15 --limit 150
+# Env:
+#   PROVIDER_ORDER=twelve_data,alpha_vantage,yahoo
+#   MIN_BARS_REQUIRED=120
+#   MAX_DATA_AGE_MINUTES=30
+import os, sys, json, importlib, argparse, pathlib
+
+HERE = pathlib.Path(__file__).resolve().parent
+if str(HERE) not in sys.path:
+    sys.path.insert(0, str(HERE))
+
+NAME_MAP = {
+    "yahoo": "data_provider_yahoo",
+    "alpha_vantage": "data_provider_alphavantage",
+    "alpha": "data_provider_alphavantage",
+    "twelve_data": "data_provider_twelvedata",
+    "twelvedata": "data_provider_twelvedata",
+}
+
+def _env_int(k: str, d: int) -> int:
+    try:
+        return int(os.getenv(k, d))
+    except Exception:
+        return d
+
+def _env_float(k: str, d: float) -> float:
+    try:
+        return float(os.getenv(k, d))
+    except Exception:
+        return d
+
+def _load_provider(name: str):
+    key = name.strip().lower()
+    mod_name = NAME_MAP.get(key, key)
+    return importlib.import_module(mod_name)
+
+def _clamp_age_minutes(v) -> float:
+    try:
+        a = float(v)
+    except Exception:
+        a = 1e9
+    return max(0.0, a)  # guard against negative ages from clock skew
+
+def _normalize_result(raw: dict, provider_name: str) -> dict:
+    rows = int(raw.get("rows", 0) or 0)
+    age_min = _clamp_age_minutes(raw.get("age_min", 1e9))
+    out = {
+        "ok": bool(raw.get("ok", False)),
+        "provider": provider_name,
+        "rows": rows,
+        "age_min": age_min,
+        "last_ts": raw.get("last_ts") or raw.get("last") or raw.get("ts") or None,
+    }
+    if "error" in raw:
+        out["error"] = raw.get("error")
+    if "msg" in raw:
+        out["msg"] = raw.get("msg")
+    return out
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--symbol", required=True)
+    ap.add_argument("--tf", required=True)        # e.g. 15
+    ap.add_argument("--limit", type=int, default=150)
+    args = ap.parse_args()
+
+    min_bars = _env_int("MIN_BARS_REQUIRED", 120)
+    max_age  = _env_float("MAX_DATA_AGE_MINUTES", 30.0)
+
+    order_raw = os.getenv("PROVIDER_ORDER", "twelve_data,alpha_vantage,yahoo")
+    providers = [p.strip() for p in order_raw.split(",") if p.strip()]
+    if not providers:
+        providers = ["twelve_data", "alpha_vantage", "yahoo"]
+
+    failures = []
+
+    for pname in providers:
+        try:
+            mod = _load_provider(pname)
+        except Exception as e:
+            failures.append(f"{pname}: import failed: {e}")
+            continue
+        try:
+            res = mod.fetch(args.symbol, args.tf, args.limit)
+        except Exception as e:
+            failures.append(f"{pname}: exception {e}")
+            continue
+        if not isinstance(res, dict):
+            failures.append(f"{pname}: invalid response type {type(res)}")
+            continue
+
+        norm = _normalize_result(res, pname)
+
+        if not norm.get("ok", False):
+            failures.append(f"{pname}: {res.get('error','unknown') if isinstance(res,dict) else 'failed'}")
+            continue
+
+        rows = int(norm.get("rows", 0) or 0)
+        age_min = float(norm.get("age_min", 1e9))
+
+        if rows < min_bars:
+            failures.append(f"{pname}: insufficient rows {rows} < {min_bars}")
+            continue
+        if age_min > max_age:
+            failures.append(f"{pname}: stale {age_min:.1f}m > {max_age:.1f}m")
+            continue
+
+        print(json.dumps(norm, ensure_ascii=False))
+        sys.exit(0)
+
+    print("ERROR: all providers failed: " + "; ".join(failures), file=sys.stderr)
+    sys.exit(1)
+
+if __name__ == "__main__":
+    main()

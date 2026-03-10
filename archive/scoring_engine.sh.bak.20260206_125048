@@ -1,0 +1,204 @@
+#!/data/data/com.termux/files/usr/bin/bash
+###############################################################################
+# FILE: tools/scoring_engine.sh
+# MODE: A2 — internal EMA/RSI/ATR + pattern scoring with strict JSON contract
+#
+# STEP 4B SAFETY RAIL
+# - HARD FAIL-CLOSED on indicators.tf_ok == false
+# - HARD FAIL-CLOSED on indicators.error == "tf_mismatch"
+###############################################################################
+
+set -euo pipefail
+shopt -s inherit_errexit 2>/dev/null || true
+
+ROOT="${BOTA_ROOT:-$HOME/BotA}"
+TOOLS="${ROOT}/tools"
+CACHE="${ROOT}/cache"
+CFG="${ROOT}/config/strategy.env"
+
+PAIR="${1:-EURUSD}"
+TF_RAW="${2:-M15}"
+
+log() { printf '%s\n' "$*" >&2; }
+
+emit_hold_json() {
+  local pair="$1"
+  local tf="$2"
+  local reason="$3"
+  local provider="${4:-scoring_engine_shell}"
+
+  EMIT_PAIR="$pair" \
+  EMIT_TF="$tf" \
+  EMIT_REASON="$reason" \
+  EMIT_PROVIDER="$provider" \
+  python3 - <<'PY'
+import os, json, sys
+out = {
+  "pair": os.environ.get("EMIT_PAIR",""),
+  "tf": os.environ.get("EMIT_TF",""),
+  "direction": "HOLD",
+  "entry": 0.0,
+  "sl": 0.0,
+  "tp": 0.0,
+  "volatility": "unknown",
+  "score": 0,
+  "confidence": 40,
+  "reasons": os.environ.get("EMIT_REASON",""),
+  "price": 0.0,
+  "provider": os.environ.get("EMIT_PROVIDER","scoring_engine_shell"),
+  "atr": 0.0,
+  "filter_rr": 0.0,
+  "filter_atr": 0.0,
+  "filter_rejected": True,
+  "filter_reasons": ["fail_closed"]
+}
+json.dump(out, sys.stdout, separators=(",",":"))
+PY
+}
+
+fallback_trap() {
+  trap - ERR
+  log "[SCORING] ERR trap triggered for ${PAIR} ${TF_RAW}"
+  emit_hold_json "${PAIR}" "${TF_RAW}" "internal error trap" "scoring_engine_trap"
+  exit 0
+}
+trap 'fallback_trap' ERR
+
+if [[ -f "${CFG}" ]]; then
+  # shellcheck disable=SC1090
+  source "${CFG}" 2>/dev/null || true
+fi
+
+ENGINE_MODE="${ENGINE_MODE:-CONSERVATIVE}"
+ENGINE_MODE="${ENGINE_MODE^^}"
+
+if [[ ! "${PAIR}" =~ ^[A-Z0-9_]{3,10}$ ]]; then
+  emit_hold_json "${PAIR}" "${TF_RAW}" "invalid pair" "scoring_engine_input"
+  exit 0
+fi
+
+case "${PAIR}" in
+  EURUSD|GBPUSD|USDJPY|EURJPY) ;;
+  *) emit_hold_json "${PAIR}" "${TF_RAW}" "pair not allowed" "scoring_engine_input"; exit 0 ;;
+esac
+
+if [[ ! "${TF_RAW}" =~ ^[MmHhDd][0-9]{1,3}$ ]]; then
+  emit_hold_json "${PAIR}" "${TF_RAW}" "invalid timeframe" "scoring_engine_input"
+  exit 0
+fi
+TF="${TF_RAW}"
+
+PHASE="Unknown"
+if [[ -x "${TOOLS}/market_open.sh" ]]; then
+  PHASE="$("${TOOLS}/market_open.sh" 2>/dev/null || echo "Unknown")"
+fi
+if [[ "${PHASE}" != "Open" ]]; then
+  emit_hold_json "${PAIR}" "${TF}" "market phase ${PHASE}" "scoring_engine_market"
+  exit 0
+fi
+
+INDICATORS_PATH="${CACHE}/indicators_${PAIR}_${TF}.json"
+if [[ ! -f "${INDICATORS_PATH}" ]]; then
+  emit_hold_json "${PAIR}" "${TF}" "missing indicators file" "indicator_cache"
+  exit 0
+fi
+
+TF_OK="$(jq -r '.tf_ok // true' "${INDICATORS_PATH}" 2>/dev/null || echo true)"
+TF_ERR="$(jq -r '.error // ""' "${INDICATORS_PATH}" 2>/dev/null || echo "")"
+
+if [[ "${TF_OK}" != "true" || "${TF_ERR}" == "tf_mismatch" ]]; then
+  log "[SCORING] TF mismatch detected for ${PAIR} ${TF} — fail closed"
+  emit_hold_json "${PAIR}" "${TF}" "tf_mismatch_detected" "scoring_engine_tf_guard"
+  exit 0
+fi
+
+export SCORING_PAIR="${PAIR}"
+export SCORING_TF="${TF}"
+export SCORING_MODE="${ENGINE_MODE}"
+export SCORING_INDIC_PATH="${INDICATORS_PATH}"
+
+python3 - <<'PY'
+import os, json, math, sys
+
+def sf(v, d=0.0):
+    try:
+        f = float(v)
+        return d if math.isnan(f) or math.isinf(f) else f
+    except Exception:
+        return d
+
+def load(p):
+    try:
+        with open(p, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+def classify_volatility(atr: float, price: float) -> str:
+    # Deterministic, indicator-based volatility using ATR as % of price.
+    # Thresholds tuned to be stable across FX + JPY pairs:
+    #   <0.05%  -> low
+    #   <0.15%  -> normal
+    #   <0.30%  -> high
+    #   >=0.30% -> extreme
+    if atr <= 0.0 or price <= 0.0:
+        return "unknown"
+    atr_pct = (atr / price) * 100.0
+    if atr_pct < 0.05:
+        return "low"
+    if atr_pct < 0.15:
+        return "normal"
+    if atr_pct < 0.30:
+        return "high"
+    return "extreme"
+
+ind = load(os.environ["SCORING_INDIC_PATH"])
+
+ema9 = sf(ind.get("ema9"))
+ema21 = sf(ind.get("ema21"))
+rsi = sf(ind.get("rsi"))
+atr = sf(ind.get("atr"))
+price = sf(ind.get("price"))
+
+reasons = []
+if ema9 == 0 or ema21 == 0:
+    reasons.append("ema_missing")
+if rsi == 0:
+    reasons.append("rsi_missing")
+if atr == 0:
+    reasons.append("atr_missing")
+
+direction = "HOLD"
+score = 0
+if not reasons:
+    if ema9 > ema21 and rsi > 50:
+        direction = "BUY"
+        score = 60
+    elif ema9 < ema21 and rsi < 50:
+        direction = "SELL"
+        score = 60
+
+volatility = classify_volatility(atr, price)
+
+out = {
+  "pair": os.environ["SCORING_PAIR"],
+  "tf": os.environ["SCORING_TF"],
+  "direction": direction,
+  "entry": price,
+  "sl": 0.0,
+  "tp": 0.0,
+  "volatility": volatility,
+  "score": score,
+  "confidence": score,
+  "reasons": ",".join(reasons) if reasons else "ok",
+  "price": price,
+  "provider": "engine_A2",
+  "atr": atr,
+  "filter_rr": 0.0,
+  "filter_atr": 0.0,
+  "filter_rejected": False,
+  "filter_reasons": [],
+  "pattern_delta": 0
+}
+json.dump(out, sys.stdout, separators=(",",":"))
+PY

@@ -1,0 +1,26 @@
+weights:
+  technical: 0.55
+  news:      0.30
+  macro:     0.15
+
+technical:
+  mtf_agree_bonus: 8        # add if M15/H1/H4 align
+  rsi_edge: {oversold: 6, overbought: 6}
+  trend_follow_bonus: 5
+news:
+  freshness_half_life_min: 90
+  tone_to_score:
+    bullish:  +10
+    neutral:   0
+    bearish: -10
+macro:
+  surprise_to_score_factor: 12
+
+post_processing:
+  session_weight: true      # multiply by session weight from markets.json
+  overlaps_boost: true      # apply overlaps_boost table
+  clip_min: 0
+  clip_max: 100
+
+strong_threshold: 60
+send_threshold:   35

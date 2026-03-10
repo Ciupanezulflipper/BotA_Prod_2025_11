@@ -1,0 +1,10 @@
+# BotA production schedules (UTC)
+0  * * * * bash /data/data/com.termux/files/home/BotA/tools/heartbeat.sh      >> /data/data/com.termux/files/home/BotA/logs/cron.heartbeat.log 2>&1
+4  * * * * bash /data/data/com.termux/files/home/BotA/tools/autostatus.sh     >> /data/data/com.termux/files/home/BotA/logs/cron.autostatus.log 2>&1
+59 23 * * * bash /data/data/com.termux/files/home/BotA/tools/daily_summary.sh >> /data/data/com.termux/files/home/BotA/logs/cron.daily.log 2>&1
+55 * * * * bash /data/data/com.termux/files/home/BotA/tools/logrotate.sh      >> /data/data/com.termux/files/home/BotA/logs/cron.rotate.log 2>&1
+*/5 * * * * bash /data/data/com.termux/files/home/BotA/tools/signal_watcher_pro.sh >> /data/data/com.termux/files/home/BotA/logs/cron.signals.log 2>&1
+*/15 * * * * BOTA_ROOT=/data/data/com.termux/files/home/BotA python3 /data/data/com.termux/files/home/BotA/tools/signal_accuracy.py >> /data/data/com.termux/files/home/BotA/logs/cron.accuracy.log 2>&1
+5 0 * * * BOTA_ROOT=/data/data/com.termux/files/home/BotA bash /data/data/com.termux/files/home/BotA/tools/daily_accuracy_summary.sh >> /data/data/com.termux/files/home/BotA/logs/daily_summary.log 2>&1
+# NEW: hourly dashboard (summary to log + optional Telegram)
+10 * * * * bash /data/data/com.termux/files/home/BotA/tools/hourly_dashboard.sh >> /data/data/com.termux/files/home/BotA/logs/cron.dashboard.log 2>&1

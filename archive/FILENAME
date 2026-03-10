@@ -1,0 +1,340 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# FILE: tools/signal_watcher_pro.sh
+# ROLE: Phase II orchestrator — fetch → score → filter → CSV → Telegram (gated)
+# NOTE: Strict mode — never reads indicators JSON directly; all logic flows through
+#       scoring_engine.sh + quality_filter.py. Always fail-closed.
+
+set -euo pipefail
+shopt -s inherit_errexit 2>/dev/null || true
+
+ROOT="${HOME}/BotA"
+TOOLS="${ROOT}/tools"
+CACHE="${ROOT}/cache"
+LOG_DIR="${ROOT}/logs"
+
+mkdir -p "${CACHE}" "${LOG_DIR}"
+
+ALERTS_CSV_DEFAULT="${LOG_DIR}/alerts.csv"
+ERROR_LOG="${LOG_DIR}/error.log"
+
+timestamp_iso() {
+  # Example: 2025-12-05T11:40:59+1100
+  date +"%Y-%m-%dT%H:%M:%S%z"
+}
+
+log_console() {
+  # Human-facing log on stdout
+  printf '%s\n' "$*"
+}
+
+log_err() {
+  # Structured log into error.log
+  printf '%s\n' "$*" >> "${ERROR_LOG}"
+}
+
+# ----------------------- Load config / defaults -----------------------------
+
+CFG="${ROOT}/config/strategy.env"
+if [[ -f "${CFG}" ]]; then
+  # shellcheck disable=SC1090
+  . "${CFG}" 2>/dev/null || true
+fi
+
+PAIRS="${PAIRS:-EURUSD GBPUSD XAUUSD USDJPY EURJPY}"
+TIMEFRAMES="${TIMEFRAMES:-M15}"
+WATCHER_SLEEP="${WATCHER_SLEEP:-120}"
+
+DRY_RUN_MODE="${DRY_RUN_MODE:-false}"
+TELEGRAM_ENABLED="${TELEGRAM_ENABLED:-1}"
+TELEGRAM_MIN_SCORE="${TELEGRAM_MIN_SCORE:-70}"
+
+ALERTS_CSV="${ALERTS_CSV:-${ALERTS_CSV_DEFAULT}}"
+
+# ----------------------- CSV header (idempotent) ---------------------------
+
+ensure_csv_header() {
+  if [[ ! -f "${ALERTS_CSV}" ]] || [[ ! -s "${ALERTS_CSV}" ]]; then
+    printf 'timestamp,pair,timeframe,verdict,score,confidence,reasons,price,provider\n' > "${ALERTS_CSV}"
+  fi
+}
+
+# ----------------------- Market phase helper -------------------------------
+
+get_market_phase() {
+  local phase="Open"
+  if [[ -x "${TOOLS}/market_open.sh" ]]; then
+    phase="$("${TOOLS}/market_open.sh" 2>/dev/null || echo "Unknown")"
+  fi
+  printf '%s\n' "${phase}"
+}
+
+# ----------------------- Candle cache helper -------------------------------
+
+get_candle_cache_path() {
+  local pair="$1"
+  printf '%s/%s.json\n' "${CACHE}" "${pair}"
+}
+
+get_cache_age_sec() {
+  local file="$1"
+  if [[ ! -f "${file}" ]]; then
+    printf '999999\n'
+    return 0
+  fi
+  local now mtime
+  now=$(date +%s)
+  mtime=$(stat -c '%Y' "${file}" 2>/dev/null || stat -f '%m' "${file}")
+  printf '%s\n' "$(( now - mtime ))"
+}
+
+fetch_candles_if_needed() {
+  local pair="$1"
+  local tf="$2"
+  local cache_file
+  cache_file="$(get_candle_cache_path "${pair}")"
+  local age
+  age="$(get_cache_age_sec "${cache_file}")"
+  local ts
+  ts="$(timestamp_iso)"
+
+  if [[ ! -f "${cache_file}" ]]; then
+    log_console "[FETCH ${ts}] ${pair} new (no cache)"
+    log_err     "[SANITY] data_fetch_candles.sh: PAIR=${pair} TF=${tf} CACHE_JSON=${cache_file}"
+    if ! bash "${TOOLS}/data_fetch_candles.sh" "${pair}" "${tf}" >> "${ERROR_LOG}" 2>&1; then
+      log_console "[WARN  ${ts}] data_fetch_candles.sh failed for ${pair} ${tf}"
+    fi
+    return 0
+  fi
+
+  if [[ "${age}" -ge "${WATCHER_SLEEP}" ]]; then
+    log_console "[FETCH ${ts}] ${pair} stale (${age}s)"
+    log_err     "[SANITY] data_fetch_candles.sh: PAIR=${pair} TF=${tf} CACHE_JSON=${cache_file}"
+    if ! bash "${TOOLS}/data_fetch_candles.sh" "${pair}" "${tf}" >> "${ERROR_LOG}" 2>&1; then
+      log_console "[WARN  ${ts}] data_fetch_candles.sh failed for ${pair} ${tf}"
+    fi
+  else
+    log_console "[FETCH ${ts}] ${pair} fresh (${age}s)"
+  fi
+}
+
+# ----------------------- Scoring + filter wrapper --------------------------
+
+run_scoring_with_filter() {
+  local pair="$1"
+  local tf="$2"
+  local json
+
+  # Run scoring → quality_filter chain; all stderr into ERROR_LOG
+  if ! json="$(
+    DRY_RUN_MODE="${DRY_RUN_MODE}" TELEGRAM_ENABLED="${TELEGRAM_ENABLED}" \
+      bash "${TOOLS}/scoring_engine.sh" "${pair}" "${tf}" 2>>"${ERROR_LOG}" \
+      | python3 "${TOOLS}/quality_filter.py" 2>>"${ERROR_LOG}"
+  )"; then
+    # Hard failure — emit fail-closed stub that quality_filter would normally provide
+    EMIT_PAIR="${pair}" EMIT_TF="${tf}" \
+    python3 - <<'PY'
+import os, json
+pair = os.environ.get("EMIT_PAIR","UNKNOWN")
+tf   = os.environ.get("EMIT_TF","UNKNOWN")
+out = {
+  "pair": pair,
+  "tf": tf,
+  "direction": "HOLD",
+  "entry": 0.0,
+  "sl": 0.0,
+  "tp": 0.0,
+  "volatility": "unknown",
+  "score": 0,
+  "confidence": 40,
+  "reasons": "scoring or filter error",
+  "price": 0.0,
+  "provider": "watcher_fallback",
+  "filter_rr": 0.0,
+  "filter_atr": 0.0,
+  "filter_rejected": True,
+  "filter_reasons": ["scoring or filter error"]
+}
+print(json.dumps(out, separators=(",", ":")))
+PY
+    return 0
+  fi
+
+  printf '%s\n' "${json}"
+}
+
+# ----------------------- JSON field extraction -----------------------------
+
+extract_fields_from_json() {
+  # stdin: one JSON line
+  # stdout: 8 lines: direction, score, confidence, price, provider,
+  #                  filter_rejected(true/false), filter_reasons_joined, reasons
+  python3 - <<'PY'
+import sys, json
+try:
+    j = json.load(sys.stdin)
+except Exception:
+    # Fail-closed defaults
+    print("HOLD")
+    print("0")
+    print("40")
+    print("0.0")
+    print("unknown")
+    print("true")
+    print("parse_error")
+    print("invalid json in watcher")
+    sys.exit(0)
+
+direction = str(j.get("direction", "HOLD"))
+score = str(j.get("score", 0))
+confidence = str(j.get("confidence", 40))
+price = str(j.get("price", 0.0))
+provider = str(j.get("provider", "unknown"))
+
+filter_rejected = j.get("filter_rejected", False)
+filter_reasons = j.get("filter_reasons", [])
+if isinstance(filter_reasons, list):
+    filters_joined = "|".join(str(x) for x in filter_reasons)
+else:
+    filters_joined = str(filter_reasons)
+
+reasons = str(j.get("reasons", ""))
+
+print(direction)
+print(score)
+print(confidence)
+print(price)
+print(provider)
+print("true" if filter_rejected else "false")
+print(filters_joined)
+print(reasons)
+PY
+}
+
+# ----------------------- Core scan for one pair/tf -------------------------
+
+scan_pair_tf() {
+  local pair="$1"
+  local tf="$2"
+
+  fetch_candles_if_needed "${pair}" "${tf}"
+
+  local json
+  json="$(run_scoring_with_filter "${pair}" "${tf}")"
+
+  # Parse core fields via Python
+  local parsed
+  parsed="$(printf '%s\n' "${json}" | extract_fields_from_json)"
+  IFS=$'\n' read -r verdict score confidence price provider filter_rejected filters_joined reasons <<< "${parsed}"
+
+  local ts
+  ts="$(timestamp_iso)"
+
+  # Decide if this is a candidate worth logging
+  local is_candidate="false"
+  if [[ "${verdict}" != "HOLD" || "${score}" -ge 65 ]]; then
+    is_candidate="true"
+  fi
+
+  if [[ "${is_candidate}" != "true" ]]; then
+    log_console "[SKIP  ${ts}] ${pair} ${tf} ${verdict} score=${score} conf=${confidence} price=${price} prov=${provider}"
+    return 0
+  fi
+
+  # Build reasons for CSV: reasons;filters=...
+  local reasons_csv="${reasons}"
+  if [[ -n "${filters_joined}" ]]; then
+    if [[ -n "${reasons_csv}" ]]; then
+      reasons_csv="${reasons_csv};filters=${filters_joined}"
+    else
+      reasons_csv="filters=${filters_joined}"
+    fi
+  fi
+
+  # Append to CSV
+  ensure_csv_header
+  printf '%s,%s,%s,%s,%s,%s,%s,%s,%s\n' \
+    "${ts}" "${pair}" "${tf}" "${verdict}" "${score}" "${confidence}" \
+    "${reasons_csv}" "${price}" "${provider}" >> "${ALERTS_CSV}"
+
+  if [[ "${filter_rejected}" == "true" ]]; then
+    log_console "[FILTER ${ts}] ${pair} ${tf} rejected_by_filter score=${score} conf=${confidence} filters=${filters_joined}"
+    log_err     "[NOTE  ${ts}] Telegram gated by quality_filter for ${pair} ${tf} (filters=${filters_joined})"
+    return 0
+  fi
+
+  # Score gating
+  if [[ "${score}" -lt "${TELEGRAM_MIN_SCORE}" ]]; then
+    log_console "[FILTER ${ts}] ${pair} ${tf} below_min_score score=${score} min=${TELEGRAM_MIN_SCORE}"
+    log_err     "[NOTE  ${ts}] Telegram gated by score threshold for ${pair} ${tf} (score=${score} min=${TELEGRAM_MIN_SCORE})"
+    return 0
+  fi
+
+  # DRY_RUN / Telegram flags
+  if [[ "${DRY_RUN_MODE,,}" == "true" || "${TELEGRAM_ENABLED}" != "1" ]]; then
+    log_console "[SKIP  ${ts}] ${pair} ${tf} gating=DRY_RUN/TELEGRAM_DISABLED score=${score}"
+    log_err     "[NOTE  ${ts}] Telegram gated by DRY_RUN/TELEGRAM_ENABLED for ${pair} ${tf}"
+    return 0
+  fi
+
+  # send-tg.sh present?
+  if [[ ! -x "${TOOLS}/send-tg.sh" ]]; then
+    log_console "[WARN  ${ts}] send-tg.sh not executable; cannot send Telegram card"
+    log_err     "[WARN  ${ts}] send-tg.sh missing or not executable"
+    return 0
+  fi
+
+  # Finally, send Pro Card — we pass the full JSON through format_card.py
+  printf '%s\n' "${json}" \
+    | python3 "${TOOLS}/format_card.py" 2>>"${ERROR_LOG}" \
+    | "${TOOLS}/send-tg.sh" >> "${ERROR_LOG}" 2>&1 || true
+
+  log_console "[ALERT ${ts}] ${pair} ${tf} ${verdict} score=${score} conf=${confidence} price=${price} prov=${provider}"
+}
+
+# ----------------------- Main loop -----------------------------------------
+
+run_once() {
+  local ts
+  ts="$(timestamp_iso)"
+  log_console "[WATCHER ${ts}] SANITY: PAIRS=\"${PAIRS}\" TIMEFRAMES=\"${TIMEFRAMES}\" ALERTS_CSV=\"${ALERTS_CSV}\" SLEEP=\"${WATCHER_SLEEP}s\" DRY_RUN_MODE=\"${DRY_RUN_MODE}\" TELEGRAM_ENABLED=\"${TELEGRAM_ENABLED}\""
+
+  local phase
+  phase="$(get_market_phase)"
+  log_console "[MARKET ${ts}] phase: ${phase}"
+  if [[ "${phase}" != "Open" ]]; then
+    log_err "[NOTE  ${ts}] Market not open (phase=${phase}); skipping scan"
+    return 0
+  fi
+
+  local pair tf
+  for pair in ${PAIRS}; do
+    for tf in ${TIMEFRAMES}; do
+      scan_pair_tf "${pair}" "${tf}"
+    done
+  done
+
+  ts="$(timestamp_iso)"
+  log_console "[DONE  ${ts}] manual --once scan complete"
+}
+
+main_loop() {
+  while true; do
+    run_once
+    sleep "${WATCHER_SLEEP}"
+  done
+}
+
+# ----------------------- CLI entrypoint ------------------------------------
+
+mode="loop"
+if [[ "${1:-}" == "--once" || "${1:-}" == "-1" ]]; then
+  mode="once"
+fi
+
+ensure_csv_header
+
+if [[ "${mode}" == "once" ]]; then
+  run_once
+else
+  main_loop
+fi

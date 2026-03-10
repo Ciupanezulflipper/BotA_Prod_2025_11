@@ -1,0 +1,237 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# BotA/tools/send_tg.sh
+# Telegram sender with dedupe + FAIL-CLOSED HTML sanitization.
+#
+# Fixes:
+# - Prevents Telegram HTML parse failures from raw '<' (e.g., rr<=0).
+# - FAIL-CLOSED: if sanitization outputs empty text, do NOT send and do NOT dedupe.
+# - Dedupe state is updated ONLY after a successful Telegram send.
+#
+# Allowed passthrough tags (exact, no attributes):
+#   <b>, </b>, <code>, </code>, <pre>, </pre>
+# Everything else is escaped for parse_mode=HTML.
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+STATE_DIR="${REPO_DIR}/state"
+LOG_DIR="${REPO_DIR}/logs"
+mkdir -p "${STATE_DIR}" "${LOG_DIR}"
+
+DEDUPE_WINDOW_SEC="${DEDUPE_WINDOW_SEC:-900}"  # 15 minutes
+TG_DEBUG="${TG_DEBUG:-0}"
+
+log_line() { printf '%s\n' "$*" >> "${LOG_DIR}/send_tg.log"; }
+
+resolve_env() {
+  TELEGRAM_TOKEN="${TELEGRAM_TOKEN:-${BOT_TOKEN:-}}"
+  TELEGRAM_CHAT_ID="${TELEGRAM_CHAT_ID:-${CHAT_ID:-${TG_CHAT_ID:-}}}"
+
+  if [[ -z "${TELEGRAM_TOKEN}" || -z "${TELEGRAM_CHAT_ID}" ]]; then
+    if [[ -f "${REPO_DIR}/.env" ]]; then
+      # shellcheck disable=SC1090
+      . "${REPO_DIR}/.env"
+    fi
+    TELEGRAM_TOKEN="${TELEGRAM_TOKEN:-${BOT_TOKEN:-}}"
+    TELEGRAM_CHAT_ID="${TELEGRAM_CHAT_ID:-${CHAT_ID:-${TG_CHAT_ID:-}}}"
+  fi
+
+  if [[ -z "${TELEGRAM_TOKEN}" || -z "${TELEGRAM_CHAT_ID}" ]]; then
+    echo "SEND_TG: missing TELEGRAM_TOKEN/TELEGRAM_CHAT_ID (or BOT_TOKEN/CHAT_ID). Set env or ${REPO_DIR}/.env" >&2
+    exit 1
+  fi
+
+  if ! command -v python3 >/dev/null 2>&1; then
+    echo "SEND_TG: python3 is required for sanitizer but not found" >&2
+    exit 1
+  fi
+}
+
+read_text() {
+  local text=""
+  if [[ "${1:-}" == "--text" ]]; then
+    shift
+    if [[ $# -lt 1 ]]; then
+      echo "SEND_TG: --text requires an argument" >&2
+      exit 1
+    fi
+    text="$*"
+  else
+    if ! text="$(cat)"; then
+      echo "SEND_TG: failed to read stdin" >&2
+      exit 1
+    fi
+  fi
+
+  # Trim leading/trailing whitespace (hash stability)
+  text="$(printf "%s" "${text}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+  printf '%s' "${text}"
+}
+
+sanitize_for_telegram_html() {
+  # Reads raw text from stdin; outputs sanitized HTML-safe text to stdout.
+  python3 - <<'PY'
+import re
+import sys
+
+s = sys.stdin.read()
+
+def numeric_entity_at(text, i):
+    if text.startswith("&#", i):
+        m = re.match(r"&#(x[0-9a-fA-F]+|\d+);", text[i:])
+        return m.group(0) if m else None
+    return None
+
+out = []
+i = 0
+n = len(s)
+
+while i < n:
+    ch = s[i]
+
+    if ch == "<":
+        matched = None
+        for t in ("<b>", "</b>", "<code>", "</code>", "<pre>", "</pre>"):
+            if s.startswith(t, i):
+                matched = t
+                break
+        if matched:
+            out.append(matched)
+            i += len(matched)
+        else:
+            out.append("&lt;")
+            i += 1
+        continue
+
+    if ch == ">":
+        out.append("&gt;")
+        i += 1
+        continue
+
+    if ch == "&":
+        kept = None
+        for ent in ("&lt;", "&gt;", "&amp;", "&quot;"):
+            if s.startswith(ent, i):
+                kept = ent
+                break
+        if kept:
+            out.append(kept)
+            i += len(kept)
+            continue
+
+        num = numeric_entity_at(s, i)
+        if num:
+            out.append(num)
+            i += len(num)
+            continue
+
+        out.append("&amp;")
+        i += 1
+        continue
+
+    out.append(ch)
+    i += 1
+
+sys.stdout.write("".join(out))
+PY
+}
+
+state_file_for_chat() {
+  printf '%s' "${STATE_DIR}/last_tg_${TELEGRAM_CHAT_ID}.state"
+}
+
+should_send_dedupe() {
+  local raw_for_hash="$1"
+  local hash now_epoch last_epoch last_hash delta sf
+
+  hash="$(printf "%s|%s" "${TELEGRAM_CHAT_ID}" "${raw_for_hash}" | sha1sum | awk '{print $1}')"
+  sf="$(state_file_for_chat)"
+
+  now_epoch="$(date +%s)"
+  last_epoch="0"
+  last_hash=""
+
+  if [[ -f "${sf}" ]]; then
+    read -r last_epoch last_hash < "${sf}" || { last_epoch="0"; last_hash=""; }
+  fi
+
+  if [[ -n "${last_hash}" && "${last_hash}" == "${hash}" ]]; then
+    delta=$(( now_epoch - last_epoch ))
+    if (( delta >= 0 && delta < DEDUPE_WINDOW_SEC )); then
+      log_line "[DEDUPE] Skipping duplicate Telegram message (Δ=${delta}s, window=${DEDUPE_WINDOW_SEC}s)"
+      return 1
+    fi
+  fi
+
+  return 0
+}
+
+update_state_after_success() {
+  local raw_for_hash="$1"
+  local hash now_epoch sf
+  hash="$(printf "%s|%s" "${TELEGRAM_CHAT_ID}" "${raw_for_hash}" | sha1sum | awk '{print $1}')"
+  now_epoch="$(date +%s)"
+  sf="$(state_file_for_chat)"
+  printf '%s %s\n' "${now_epoch}" "${hash}" > "${sf}"
+}
+
+send_message() {
+  local text_html="$1"
+  local response
+
+  response="$(
+    curl -sS \
+      -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage" \
+      -d "chat_id=${TELEGRAM_CHAT_ID}" \
+      --data-urlencode "text=${text_html}" \
+      -d "parse_mode=HTML"
+  )"
+
+  if echo "${response}" | grep -q '"ok":true'; then
+    log_line "[SEND_TG] ok $(date -Iseconds)"
+    return 0
+  fi
+
+  log_line "[SEND_TG] ERROR response: ${response}"
+  return 1
+}
+
+main() {
+  resolve_env
+
+  local raw safe raw_len safe_len
+  raw="$(read_text "$@")"
+
+  if [[ -z "${raw}" ]]; then
+    echo "SEND_TG: empty message, nothing to send" >&2
+    exit 0
+  fi
+
+  if ! should_send_dedupe "${raw}"; then
+    exit 0
+  fi
+
+  safe="$(printf '%s' "${raw}" | sanitize_for_telegram_html)"
+
+  if [[ -z "${safe}" ]]; then
+    raw_len="$(printf '%s' "${raw}" | wc -c | tr -d ' ')"
+    log_line "[SEND_TG] ERROR sanitizer produced empty output (raw_len=${raw_len})"
+    exit 1
+  fi
+
+  if [[ "${TG_DEBUG}" == "1" ]]; then
+    raw_len="$(printf '%s' "${raw}" | wc -c | tr -d ' ')"
+    safe_len="$(printf '%s' "${safe}" | wc -c | tr -d ' ')"
+    log_line "[DEBUG] raw_len=${raw_len} safe_len=${safe_len} safe_head=$(printf '%s' "${safe}" | head -c 120 | tr '\n' ' ')"
+  fi
+
+  if send_message "${safe}"; then
+    update_state_after_success "${raw}"
+    exit 0
+  fi
+
+  exit 1
+}
+
+main "$@"

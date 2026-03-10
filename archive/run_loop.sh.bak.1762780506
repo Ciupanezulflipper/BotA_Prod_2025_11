@@ -1,0 +1,106 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# ================================================================
+# BotA — tools/run_loop.sh
+# ✅ AUDITED BY 4 AIs (Claude + Perplexity + Gemini + DeepSeek)
+# Heartbeat jitter + TF15 sleep pad. UTC-aware schedule.
+# NOTE: send-tg.sh expects --text, so we pass it explicitly.
+# ================================================================
+set -euo pipefail
+
+ROOT="$HOME/BotA"
+cd "$ROOT"
+
+SEND_WAIT="${SEND_WAIT:-1}"
+DAILY_CAP="${DAILY_CAP:-999}"
+HEARTBEAT_MINUTES="${HEARTBEAT_MINUTES:-60}"
+TF15_SLEEP_PAD="${TF15_SLEEP_PAD:-20}"
+PAIRS="${PAIRS:-EURUSD GBPUSD}"
+HB_JITTER=$((RANDOM%5))
+
+mkdir -p cache logs
+HB_FILE="cache/hb.ts"
+
+timestamp(){
+  date -u +"%Y-%m-%d %H:%M:%S UTC"
+}
+
+mins_since(){
+  if [ ! -f "$HB_FILE" ]; then
+    echo 999
+    return
+  fi
+  now=$(date -u +%s)
+  old=$(cat "$HB_FILE")
+  echo $(((now-old)/60))
+}
+
+log_info(){ echo "[INFO] $1"; }
+log_warn(){ echo "[WARN] $1"; }
+log_error(){ echo "[ERROR] $1"; }
+
+send_hb(){
+  sleep "$HB_JITTER"
+  msg="💚 BotA Heartbeat $(timestamp)
+Pairs: $PAIRS
+SEND_WAIT=${SEND_WAIT}  DAILY_CAP=${DAILY_CAP}
+Providers: Finnhub→TwelveData→Yahoo"
+  bash tools/send-tg.sh --text "$msg" || true
+  date -u +%s > "$HB_FILE"
+  log_info "Heartbeat sent"
+}
+
+run_pair(){
+  local pair="$1"
+  sleep "$TF15_SLEEP_PAD"
+  # Delegate single-run; keep loop alive but capture rc & log.
+  if bash tools/run_signal_once.sh "$pair"; then
+    log_info "run_signal_once OK for ${pair}"
+  else
+    log_error "run_signal_once FAILED for ${pair}"
+    # NOTE: Downstream script should avoid writing/sending null payloads.
+  fi
+}
+
+graceful_exit(){
+  log_warn "Received termination signal — exiting scheduler"
+  exit 0
+}
+
+trap graceful_exit INT TERM
+
+# ----------- Main Loop -----------
+log_info "Scheduler start (PAIRS=${PAIRS})"
+
+while true; do
+
+  # Housekeeping: memory guard
+  if low_memory; then
+    log_warn "Low memory detected (<${LOW_MEM_MB}MB). Skipping cycle."
+    sleep 300
+    continue
+  fi
+
+  # Weekend/closed-market gating
+  if market_closed; then
+    log_info "Market closed window — skipping cycle"
+    sleep "$LOOP_ALIGN_SEC"
+    continue
+  fi
+
+  # Heartbeat cadence
+  ms=$(mins_since)
+  if [ "$ms" -ge "$HEARTBEAT_MINUTES" ]; then
+    send_hb
+  fi
+
+  log_info "Starting cycle for pairs: $PAIRS"
+  for p in $PAIRS; do
+    run_pair "$p"
+  done
+
+  # Align next wake to 15-minute boundary
+  now=$(date -u +%s)
+  rem=$((LOOP_ALIGN_SEC - (now % LOOP_ALIGN_SEC)))
+  sleep "$rem"
+
+done

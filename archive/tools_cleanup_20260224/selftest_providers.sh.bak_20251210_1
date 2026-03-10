@@ -1,0 +1,168 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+umask 022
+
+# ----------------------------------------
+# BotA - Provider Self-Test
+# ----------------------------------------
+# Purpose:
+#   - Verify that Yahoo, AlphaVantage, and TwelveData
+#     can all fetch EURUSD (or given SYMBOL) data.
+#   - Confirm that the provider_mux chain returns
+#     enough fresh rows for M15 trading.
+#
+# Behavior:
+#   - Loads BotA .env (~/BotA/.env) and optional $HOME/.env.runtime
+#   - Writes JSON summaries into logs/
+#   - Prints a one-line summary per provider
+#   - Exits:
+#       0  -> mux has rows >= MIN_BARS_REQUIRED and age <= MAX_DATA_AGE_MINUTES
+#       1  -> mux call errored
+#       2  -> mux returned stale/insufficient data
+#
+# Usage:
+#   tools/selftest_providers.sh          # default EURUSD, TF=15, LIMIT=150
+#   tools/selftest_providers.sh EURUSD 15 150
+# ----------------------------------------
+
+ROOT="${ROOT:-$HOME/BotA}"
+LOGS="$ROOT/logs"
+mkdir -p "$LOGS"
+chmod -R u+rwX "$LOGS" || true
+
+SYMBOL="${1:-EURUSD}"
+TF="${2:-15}"
+LIMIT="${3:-150}"
+
+# ----------------------------------------
+# Load environment
+# ----------------------------------------
+# 1) BotA-local .env (canonical keys live here)
+if [ -f "$ROOT/.env" ]; then
+  set -a
+  . "$ROOT/.env"
+  set +a
+fi
+
+# 2) Optional runtime overlay (if you ever use it)
+if [ -f "$HOME/.env.runtime" ]; then
+  set -a
+  . "$HOME/.env.runtime"
+  set +a
+fi
+
+MIN_BARS_REQUIRED="${MIN_BARS_REQUIRED:-120}"
+MAX_DATA_AGE_MINUTES="${MAX_DATA_AGE_MINUTES:-30}"
+
+echo "=== Provider self-test: SYMBOL=$SYMBOL TF=$TF LIMIT=$LIMIT ==="
+echo "Thresholds: rows>=$MIN_BARS_REQUIRED && age<=$MAX_DATA_AGE_MINUTES m"
+echo
+
+# Show which env keys are visible to this script
+for var in \
+  TWELVEDATA_API_KEY \
+  TWELVE_DATA_API_KEY \
+  ALPHAVANTAGE_API_KEY \
+  ALPHA_VANTAGE_API_KEY \
+  FINNHUB_API_KEY \
+  YF_ENABLE
+do
+  if [ -n "${!var:-}" ]; then
+    echo "ENV ${var}=SET"
+  else
+    echo "ENV ${var}=MISSING"
+  fi
+done
+
+echo
+
+YJ="$LOGS/yahoo_${SYMBOL}_${TF}.json"
+AJ="$LOGS/alphav_${SYMBOL}_${TF}.json"
+TJ="$LOGS/twelved_${SYMBOL}_${TF}.json"
+MJ="$LOGS/mux_${SYMBOL}_${TF}.json"
+
+rm -f \
+  "$YJ" "$YJ.err" \
+  "$AJ" "$AJ.err" \
+  "$TJ" "$TJ.err" \
+  "$MJ" "$MJ.err" 2>/dev/null || true
+
+summ() {
+  local prov="$1" file="$2"
+  if [ -s "$file" ]; then
+    local rows age last ok
+    rows=$(jq -r '.rows // 0' "$file" 2>/dev/null || echo 0)
+    age=$(jq -r '.age_min // 1e9' "$file" 2>/dev/null || echo 1e9)
+    last=$(jq -r '.last_ts // .last // empty' "$file" 2>/dev/null || true)
+    ok=$(jq -r '.ok // false' "$file" 2>/dev/null || echo false)
+    printf "%14s | rows=%-5s | age_min=%-8s | last=%s | ok=%s\n" \
+      "$prov" "$rows" "$age" "$last" "$ok"
+  else
+    printf "%14s | %s\n" "$prov" "no output"
+  fi
+}
+
+# ----------------------------------------
+# Raw providers
+# ----------------------------------------
+
+# Yahoo (keyless, uses YF_ENABLE + network/certs)
+if python3 "$ROOT/tools/data_provider_yahoo.py" \
+      --symbol "$SYMBOL" --tf "$TF" --limit "$LIMIT" \
+      >"$YJ" 2>"$YJ.err"; then
+  :
+else
+  echo "      yahoo | ERROR: $(tail -n1 "$YJ.err" 2>/dev/null || echo 'unknown')" >&2
+fi
+
+# Alpha Vantage (ALPHAVANTAGE_API_KEY / ALPHA_VANTAGE_API_KEY)
+if python3 "$ROOT/tools/data_provider_alphavantage.py" \
+      --symbol "$SYMBOL" --tf "$TF" --limit "$LIMIT" \
+      >"$AJ" 2>"$AJ.err"; then
+  :
+else
+  echo "alpha_vantage | ERROR: $(tail -n1 "$AJ.err" 2>/dev/null || echo 'unknown')" >&2
+fi
+
+# TwelveData (TWELVEDATA_API_KEY / TWELVE_DATA_API_KEY)
+if python3 "$ROOT/tools/data_provider_twelvedata.py" \
+      --symbol "$SYMBOL" --tf "$TF" --limit "$LIMIT" \
+      >"$TJ" 2>"$TJ.err"; then
+  :
+else
+  echo "   twelve_data | ERROR: $(tail -n1 "$TJ.err" 2>/dev/null || echo 'unknown')" >&2
+fi
+
+summ "yahoo"         "$YJ"
+summ "alpha_vantage" "$AJ"
+summ "twelve_data"   "$TJ"
+
+echo
+echo "--- provider_mux ---"
+
+# ----------------------------------------
+# Mux (provider chain) summary + gating
+# ----------------------------------------
+if python3 "$ROOT/tools/provider_mux.py" \
+      --symbol "$SYMBOL" --tf "$TF" --limit "$LIMIT" \
+      >"$MJ" 2>"$MJ.err"; then
+
+  summ "mux" "$MJ"
+
+  rows=$(jq -r '.rows // 0' "$MJ" 2>/dev/null || echo 0)
+  age=$(jq -r '.age_min // 1e9' "$MJ" 2>/dev/null || echo 1e9)
+
+  # Clamp negative age to zero for the gate
+  if awk -v r="$rows" -v m="$MIN_BARS_REQUIRED" 'BEGIN{exit !(r>=m)}' \
+     && awk -v a="$age" -v t="$MAX_DATA_AGE_MINUTES" 'BEGIN{if(a<0)a=0; exit !(a<=t)}'
+  then
+    echo "mux_result: PASS (rows >= $MIN_BARS_REQUIRED and age <= $MAX_DATA_AGE_MINUTES)"
+    exit 0
+  else
+    echo "mux_result: FAIL (rows=$rows, age_min=$age, need rows>=$MIN_BARS_REQUIRED & age<=$MAX_DATA_AGE_MINUTES)" >&2
+    exit 2
+  fi
+else
+  echo "mux_result: ERROR: $(tail -n1 "$MJ.err" 2>/dev/null || echo 'unknown')" >&2
+  exit 1
+fi
