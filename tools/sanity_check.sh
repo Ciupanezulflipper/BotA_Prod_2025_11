@@ -1,4 +1,5 @@
 #!/data/data/com.termux/files/usr/bin/bash
+. "/data/data/com.termux/files/home/BotA/.env.runtime" 2>/dev/null || true
 # sanity_check.sh — BotA master sanity/smoke/health check
 # Replaces: health_check_pro.sh, run_smoke_suite.sh
 # Run: bash tools/sanity_check.sh

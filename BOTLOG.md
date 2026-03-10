@@ -422,3 +422,12 @@ Credentials in .env: OANDA_API_TOKEN, OANDA_ACCOUNT_ID, OANDA_API_URL.
 2. Restore matplotlib chart_generator from GitHub (pip or pkg when available)
 3. Monitor alerts.csv growth + WR tracking resumption
 4. Git commit + push all changes from this session
+
+### 2026-03-10 — GEM-101 IMPLEMENTED: SL/TP Hit Monitor
+- tools/sltp_monitor.py — real-time SL/TP hit detection + daily summary
+- Runs every 15min via cron (same cadence as signal watcher)
+- Sends Telegram alert immediately when TP or SL is hit
+- Daily summary at 23:50 UTC with W/L/pips/WR
+- State persisted in logs/sltp_monitor_state.json (dedup safe)
+- Reads only non-rejected BUY/SELL from alerts.csv
+- 24h lookback window — ignores signals older than 24h
