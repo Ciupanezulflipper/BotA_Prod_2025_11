@@ -431,3 +431,58 @@ Credentials in .env: OANDA_API_TOKEN, OANDA_ACCOUNT_ID, OANDA_API_URL.
 - State persisted in logs/sltp_monitor_state.json (dedup safe)
 - Reads only non-rejected BUY/SELL from alerts.csv
 - 24h lookback window — ignores signals older than 24h
+
+## 2026-03-10 — Filter Tightening + ProfitLab Integration
+
+### Changes made:
+- FILTER_SCORE_MIN: 62 → 70
+- TELEGRAM_TIER_YELLOW_MIN: 62 → 70
+- TELEGRAM_TIER_GREEN_MIN: 65 → 75
+- H1_trend_neutral: veto=false → veto=true (blocks signals with no H1 confirmation)
+- Added tools/supabase_publish.py — publishes signals to ProfitLab Supabase
+- Added tools/signal_ledger.py — win/loss tracker with SL/TP analysis
+- Added tools/morning_check.sh — daily health check script
+- Wired supabase_publish into signal_watcher_pro.sh after Telegram send
+
+### Ledger baseline (pre-filter):
+- 51 signals evaluated, WR=25.5%, -264 pips
+- Root cause: H1_neutral signals had no directional edge
+- Expected improvement: WR 40-50% after filter changes
+
+### ProfitLab SaaS status:
+- Live at https://forex-zen-flow.lovable.app
+- Supabase Realtime connected — signals appear instantly
+- Stripe sandbox working (Pro $29, Premium $49)
+- Security audit complete — privilege escalation fixed
+
+## 2026-03-10 — Filter Tightening + ProfitLab Integration
+
+### Changes made:
+- FILTER_SCORE_MIN: 62 → 70
+- TELEGRAM_TIER_YELLOW_MIN: 62 → 70
+- TELEGRAM_TIER_GREEN_MIN: 65 → 75
+- H1_trend_neutral: veto=false → veto=true
+- Added tools/supabase_publish.py
+- Added tools/signal_ledger.py
+- Added tools/morning_check.sh
+- Wired supabase_publish into signal_watcher_pro.sh
+
+### Ledger baseline (pre-filter):
+- 51 signals, WR=25.5%, -264 pips
+- Root cause: H1_neutral had no directional edge
+
+### ProfitLab status:
+- Live at https://forex-zen-flow.lovable.app
+- Realtime connected, Stripe sandbox working
+- Security audit complete
+
+## Session 2026-03-13
+- Fixed crontab hardcoded thresholds (was 62/65, now 70/75) — env files alone were not enough
+- Fixed H1_neutral veto: two missing branches both left veto=false (GEM-113)
+- Added H1_neutral override for score>=85 — signals with high conviction pass through neutral H1
+- Built tools/signal_closer.py — monitors ACTIVE signals, closes on TP/SL hit, cancels after 24h
+- Added signal_closer.py to cron every 15min
+- Signal History page now populates correctly (was only showing 3 seed signals)
+- Fixed float rounding on Dashboard and History (Math.round * 10 / 10)
+- Admin dashboard live at /admin — protected by email check server-side
+- Lovable credits used: 3 of 5 (History fix, P&L rounding, Admin dashboard)

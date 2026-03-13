@@ -1,0 +1,33 @@
+============================================================
+BotA SIGNAL QUALITY LEDGER REPORT
+Generated: 2026-03-10 18:07
+============================================================
+
+── OVERVIEW ──────────────────────────────────────────────
+  Total signals:     51
+  Closed (TP/SL):    51
+  Open (pending):    0
+  Wins:              13
+  Losses:            38
+  Win rate:          25.5%
+  Total pips:        -264.1
+  Avg result/signal: -5.2 pips
+
+── SL/TP QUALITY ─────────────────────────────────────────
+  Avg max adverse (winning trades): 6.3 pips
+  Max adverse seen on a winner:     17.7 pips
+  => SL tighter than 17.7 pips would have stopped winners early
+  Avg SL distance (wins): 15.9 pips
+  Avg TP distance (wins): 26.8 pips
+  Avg R:R on winners: 1.68
+
+── PER PAIR ───────────────────────────────────────────────
+  EURUSD: 27 closed | WR=26% | -107.6 pips
+  GBPUSD: 24 closed | WR=25% | -156.5 pips
+
+── RECOMMENDATIONS ────────────────────────────────────────
+  OK SL distance looks reasonable for M15 scalping
+  ALERT Win rate below 50% — review signal filters
+  ALERT Net negative: -264.1 pips — review SL/TP sizing
+
+============================================================

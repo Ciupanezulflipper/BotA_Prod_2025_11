@@ -82,7 +82,6 @@ _log_error() {
 run_a2_pipeline() {
   local pair="$1"
   local tf="$2"
-
   bash "${TOOLS}/scoring_engine.sh" "${pair}" "${tf}" \
     | python3 "${TOOLS}/quality_filter.py"
 }
@@ -168,7 +167,6 @@ fi
 
 # 1.1) Inject macro6 fields into M15 JSON (always)
 fetch_macro "${PAIR}"
-
 m15_json="$(printf '%s\n' "${m15_json}" | jq \
   --argjson macro6 "${MACRO6}" \
   --arg macro_score "${MACRO_SCORE}" \
@@ -213,11 +211,19 @@ veto="false"
 
 if [[ "${h1_filter_rejected}" == "true" ]]; then
   _log_debug "H1 rejected by quality filter; neutral for fusion."
+  m15_score_int="$(printf '%s\n' "${m15_score:-0}" | awk '{printf("%d", $1)}')"
+  h1_override_score="${H1_VETO_OVERRIDE_SCORE:-85}"
+  if (( m15_score_int >= h1_override_score )); then
+    trend_tag="H1_trend_neutral_overridden"
+    veto="false"
+    _log_debug "H1 neutral veto OVERRIDDEN by high score: ${m15_score_int}>=${h1_override_score}"
+  else
+    veto="true"
+  fi
 else
   if [[ "${h1_dir}" == "BUY" || "${h1_dir}" == "SELL" ]]; then
     h1_score_int="$(printf '%s\n' "${h1_score}" | awk '{printf("%d", $1)}')"
     h1_min_int="$(printf '%s\n' "${H1_TREND_MIN_SCORE}" | awk '{printf("%d", $1)}')"
-
     if (( h1_score_int >= h1_min_int )); then
       if [[ "${h1_dir}" == "${m15_dir}" ]]; then
         trend_tag="H1_trend_confirmed"
@@ -242,8 +248,16 @@ else
       veto="false"
     fi
   else
-    trend_tag="H1_trend_neutral"
-    veto="false"
+    m15_score_int="$(printf '%s\n' "${m15_score:-0}" | awk '{printf("%d", $1)}')"
+    h1_override_score="${H1_VETO_OVERRIDE_SCORE:-85}"
+    if (( m15_score_int >= h1_override_score )); then
+      trend_tag="H1_trend_neutral_overridden"
+      veto="false"
+      _log_debug "H1 neutral veto OVERRIDDEN by high score: ${m15_score_int}>=${h1_override_score}"
+    else
+      trend_tag="H1_trend_neutral"
+      veto="true"
+    fi
   fi
 fi
 
@@ -267,7 +281,6 @@ if [[ "${veto}" == "true" ]]; then
   printf '%s\n' "${fused_json}"
   exit 0
 fi
-
 
 # MTF FIX: H4+D1 confluence veto via emit_snapshot.py
 mtf_snap="$(python3 "${TOOLS}/emit_snapshot.py" "${PAIR}" 2>/dev/null || true)"

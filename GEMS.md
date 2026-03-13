@@ -178,3 +178,32 @@
 97 | auditor.py             | Trade simulator engine, called by alerts_to_trades.py, 444 lines | 🟡 MED
 GEM-98 | HIGH ✅ IMPLEMENTED 2026-03-03 | H1 veto may block valid high-score signals (91.00 blocked 2026-03-03 London open) — Basic 8 plan = real-time data, no delay. H1 veto issue is last-closed-candle timing at session open. Rate limit 6-8/min is borderline — monitor for silent rejections | PENDING
 GEM-99 | MED ⏳ PENDING 1/5 confirmations | RSI exhaustion filter — high score (90+) with RSI<20 on H4 may indicate move exhaustion not continuation. Evidence: signal #13 2026-03-03 score=95.90 entry=1.15540 SL hit after bounce from low. Consider adding RSI floor warning when H4 RSI<22 | PENDING
+
+## GEM-110: H1_neutral veto (2026-03-10)
+Blocking H1_trend_neutral signals was the single biggest quality fix.
+Previously veto="false" on neutral — signals fired with no H1 confirmation.
+Change: m15_h1_fusion.sh line 245, veto="true" under H1_trend_neutral block.
+Expected to cut signal volume 60-70% but improve win rate significantly.
+
+## GEM-111: Score threshold raised to 70/75 (2026-03-10)
+strategy.env: YELLOW=70, GREEN=75 (was 62/65)
+Eliminates dead zone signals that were borderline quality.
+
+## GEM-112: supabase_publish.py (2026-03-10)
+stdlib-only urllib, no pip needed. Called from signal_watcher_pro.sh
+after successful Telegram send. Uses SUPABASE_SERVICE_KEY from strategy.env.
+
+## GEM-113: H1_neutral veto had TWO missing branches (2026-03-10)
+First patch only fixed the h1_dir=HOLD branch (line 247).
+Second patch fixed h1_filter_rejected branch (line 216).
+Both branches were leaving veto="false" when H1 data was rejected or neutral.
+Always check ALL branches when patching veto logic — grep for every
+occurrence of the tag being patched, not just the one you expect.
+
+## GEM-114: printf format string corruption (2026-03-13)
+When patching bash files via python3 -c with heredoc strings, printf format
+strings like '%s\n' can get corrupted to '%s     ' (trailing spaces).
+The spaces cause arithmetic comparisons to silently fail — variable gets
+set to "85   " and (( 85    >= 85 )) evaluates false in bash.
+Always verify printf patterns after patching: grep -n "printf.*varname" file.sh
+Fix: always deliver full file via cat <<'EOF' instead of in-place python patches.

@@ -780,3 +780,15 @@ _Auto-generated. 735 files. Edit descriptions manually as needed._
 | `tools/tg_utils.py` | BotA/tools/tg_utils.py |
 | `tools/update_tg_menu.py` | !/usr/bin/env python3 |
 | `tools/verify_telegram_delivery.sh` | !/data/data/com.termux/files/usr/bin/bash |
+
+## Updated 2026-03-10
+New active tools added:
+- tools/supabase_publish.py — publishes signals to ProfitLab Supabase
+- tools/signal_ledger.py — win/loss outcome tracker
+- tools/morning_check.sh — daily health check
+
+Retired concept: H1_neutral signals now blocked (veto=true)
+Score thresholds raised: YELLOW=70, GREEN=75
+
+## tools/signal_closer.py
+Monitors ACTIVE signals in Supabase, fetches candles, closes signals when TP/SL hit. Max age 24h then CANCELLED. Runs every 15min via cron.
