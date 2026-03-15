@@ -1,58 +1,53 @@
 #!/data/data/com.termux/files/usr/bin/bash
 # FILE: tools/market_open.sh
-# DESC: DST-aware FX market gate (New York time)
-# Canonical FX week: Sunday 17:00 ET -> Friday 17:00 ET
+# DESC: DST-aware FX market gate — London + NY sessions only
+# Active window: 07:00-20:00 UTC Mon-Fri
+# Sunday 17:00 ET = ~21:00-22:00 UTC — excluded (pre-London)
 # Output: "Open" or "Closed"
 # Exit: 0 when Open, 1 when Closed
 
 set -euo pipefail
 
-export TZ="America/New_York"
+# All logic in UTC to avoid DST confusion
+_utc_dow="$(TZ=UTC date +%u)"   # 1=Mon .. 7=Sun
+_utc_hm="$(TZ=UTC date +%H%M)"
+_utc_int="$((10#$_utc_hm))"
 
-dow="$(date +%u)"          # 1=Mon .. 7=Sun
-hm_raw="$(date +%H%M)"     # 0000..2359
-hm="$((10#$hm_raw))"       # base-10 to avoid octal issues
-
-# Saturday: closed all day
-if [[ "$dow" -eq 6 ]]; then
-  echo "Closed"
+# Saturday UTC: closed all day
+if [[ "$_utc_dow" -eq 6 ]]; then
+  echo "Closed (weekend Saturday)"
   exit 1
 fi
 
-# Sunday: open from 17:00 ET
-if [[ "$dow" -eq 7 ]]; then
-  if [[ "$hm" -ge 1700 ]]; then
-    echo "Open"
-    exit 0
-  else
-    echo "Closed"
-    exit 1
-  fi
+# Sunday UTC: closed all day (Sunday 17:00 ET = ~21:00 UTC — below our 07:00 open anyway)
+if [[ "$_utc_dow" -eq 7 ]]; then
+  echo "Closed (weekend Sunday)"
+  exit 1
 fi
 
-# Mon-Thu: open all day
-
-# --- Dead zone gate (UTC) ---
-# Block 21:30-23:00 UTC (NY close / pre-Tokyo low liquidity)
-# Override: SKIP_DEAD_ZONE=1
-if [[ "${SKIP_DEAD_ZONE:-0}" != "1" ]]; then
-  _utc_hm="$(TZ=UTC date +%H%M)"
-  _utc_int="$((10#$_utc_hm))"
-  if [[ "$_utc_int" -ge 2130 && "$_utc_int" -lt 2300 ]]; then
-    echo "Closed (dead zone 21:30-23:00 UTC)"
-    exit 1
-  fi
+# Friday UTC: close at 20:00 UTC (17:00 ET)
+if [[ "$_utc_dow" -eq 5 && "$_utc_int" -ge 2000 ]]; then
+  echo "Closed (Friday after 20:00 UTC)"
+  exit 1
 fi
-if [[ "$dow" -ge 1 && "$dow" -le 4 ]]; then
-  echo "Open"
+
+# Skip session filter override
+if [[ "${SKIP_SESSION_FILTER:-0}" == "1" ]]; then
+  echo "Open (session filter bypassed)"
   exit 0
 fi
 
-# Friday: open until 17:00 ET
-if [[ "$hm" -lt 1700 ]]; then
-  echo "Open"
-  exit 0
+# Block Asian session: 00:00-07:00 UTC
+if [[ "$_utc_int" -lt 700 ]]; then
+  echo "Closed (Asian session 00:00-07:00 UTC)"
+  exit 1
 fi
 
-echo "Closed"
-exit 1
+# Block post-NY: 20:00-24:00 UTC
+if [[ "$_utc_int" -ge 2000 ]]; then
+  echo "Closed (post-NY 20:00-00:00 UTC)"
+  exit 1
+fi
+
+echo "Open"
+exit 0
