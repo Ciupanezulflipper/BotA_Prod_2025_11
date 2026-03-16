@@ -13,7 +13,8 @@ SAFETY RAIL (FAIL-CLOSED)
 
 OUTPUT CONTRACT (always present keys)
 pair, timeframe, price, age_min, tf_ok, tf_actual_min, weak, error,
-ema9, ema21, rsi, macd_hist, adx, atr, atr_pips
+ema9, ema21, rsi, macd_hist, adx, atr, atr_pips,
+bb_upper, bb_middle, bb_lower, bb_squeeze
 
 STDLIB ONLY
 """
@@ -23,6 +24,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import math
 import statistics
 import sys
 import time
@@ -216,7 +218,6 @@ def load_from_csv(path: Path) -> List[Dict[str, float]]:
             return s.isdigit()
 
         start_idx = 1 if not _is_int_str(rows[0][0]) else 0
-
         for r in rows[start_idx:]:
             if len(r) < 5:
                 continue
@@ -432,8 +433,31 @@ def adx_wilder_last(highs: List[float], lows: List[float], closes: List[float], 
     adx = sum(dx_list[:p]) / p
     for i in range(p, len(dx_list)):
         adx = (adx * (p - 1) + dx_list[i]) / p
-
     return adx
+
+
+def bollinger_bands_last(closes: List[float], p: int = 20, std_mult: float = 2.0) -> Tuple[float, float, float, bool]:
+    """
+    Compute Bollinger Bands at the last candle.
+    Returns: (upper, middle, lower, squeeze)
+    squeeze=True when band width < 0.5% of price (low volatility trap)
+    """
+    if len(closes) < p:
+        return 0.0, 0.0, 0.0, False
+
+    window = closes[-p:]
+    sma = sum(window) / p
+    variance = sum((x - sma) ** 2 for x in window) / p
+    std = math.sqrt(variance)
+
+    upper = sma + std_mult * std
+    lower = sma - std_mult * std
+
+    # Squeeze: band width < 0.5% of price indicates consolidation
+    band_width_pct = ((upper - lower) / sma * 100.0) if sma > 0 else 0.0
+    squeeze = band_width_pct < 0.5
+
+    return upper, sma, lower, squeeze
 
 
 def build_bundle(pair: str, tf: str, candles_in: List[Dict[str, float]]) -> Dict[str, Any]:
@@ -460,6 +484,11 @@ def build_bundle(pair: str, tf: str, candles_in: List[Dict[str, float]]) -> Dict
         "adx": 0.0,
         "atr": 0.0,
         "atr_pips": 0.0,
+        # Bollinger Bands (new)
+        "bb_upper": 0.0,
+        "bb_middle": 0.0,
+        "bb_lower": 0.0,
+        "bb_squeeze": False,
     }
 
     if not ok:
@@ -488,6 +517,13 @@ def build_bundle(pair: str, tf: str, candles_in: List[Dict[str, float]]) -> Dict
     bundle["macd_hist"] = float(macd_hist_last(closes))
     bundle["atr"] = float(atr_wilder_last(highs, lows, closes, 14))
     bundle["adx"] = float(adx_wilder_last(highs, lows, closes, 14))
+
+    # Bollinger Bands (20-period, 2 std)
+    bb_upper, bb_middle, bb_lower, bb_squeeze = bollinger_bands_last(closes, 20, 2.0)
+    bundle["bb_upper"] = float(bb_upper)
+    bundle["bb_middle"] = float(bb_middle)
+    bundle["bb_lower"] = float(bb_lower)
+    bundle["bb_squeeze"] = bool(bb_squeeze)
 
     pip = _pip_size(pair, bundle["price"])
     bundle["atr_pips"] = float(bundle["atr"] / pip) if pip > 0 else 0.0
@@ -522,3 +558,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
