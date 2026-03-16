@@ -209,14 +209,36 @@ _log_debug "H1 trend: pair=${PAIR} dir=${h1_dir} score=${h1_score} rejected=${h1
 trend_tag="H1_trend_neutral"
 veto="false"
 
+# Pre-fetch H4 direction from indicators cache to guard H1 neutral override
+h4_ind_path="${CACHE:-${ROOT}/cache}/indicators_${PAIR}_H4.json"
+h4_dir_cached="HOLD"
+if [[ -f "${h4_ind_path}" ]]; then
+  h4_dir_cached="$(python3 -c "
+import json,sys
+try:
+  d=json.load(open('${h4_ind_path}'))
+  e9=float(d.get('ema9',0)); e21=float(d.get('ema21',0))
+  print('SELL' if e9 < e21 else ('BUY' if e9 > e21 else 'HOLD'))
+except: print('HOLD')
+" 2>/dev/null || echo "HOLD")"
+fi
+h4_opposing="false"
+if [[ "${m15_dir}" == "BUY" && "${h4_dir_cached}" == "SELL" ]]; then h4_opposing="true"; fi
+if [[ "${m15_dir}" == "SELL" && "${h4_dir_cached}" == "BUY" ]]; then h4_opposing="true"; fi
+_log_debug "H4 pre-check: pair=${PAIR} h4_dir=${h4_dir_cached} m15_dir=${m15_dir} h4_opposing=${h4_opposing}"
+
 if [[ "${h1_filter_rejected}" == "true" ]]; then
   _log_debug "H1 rejected by quality filter; neutral for fusion."
   m15_score_int="$(printf '%s\n' "${m15_score:-0}" | awk '{printf("%d", $1)}')"
   h1_override_score="${H1_VETO_OVERRIDE_SCORE:-85}"
-  if (( m15_score_int >= h1_override_score )); then
+  if (( m15_score_int >= h1_override_score )) && [[ "${h4_opposing}" != "true" ]]; then
     trend_tag="H1_trend_neutral_overridden"
     veto="false"
-    _log_debug "H1 neutral veto OVERRIDDEN by high score: ${m15_score_int}>=${h1_override_score}"
+    _log_debug "H1 neutral veto OVERRIDDEN by high score: ${m15_score_int}>=${h1_override_score} (H4 aligned)"
+  elif (( m15_score_int >= h1_override_score )) && [[ "${h4_opposing}" == "true" ]]; then
+    trend_tag="H1_trend_neutral"
+    veto="true"
+    _log_debug "H1 neutral override BLOCKED by H4 opposition: h4=${h4_dir_cached} m15=${m15_dir}"
   else
     veto="true"
   fi
@@ -250,10 +272,14 @@ else
   else
     m15_score_int="$(printf '%s\n' "${m15_score:-0}" | awk '{printf("%d", $1)}')"
     h1_override_score="${H1_VETO_OVERRIDE_SCORE:-85}"
-    if (( m15_score_int >= h1_override_score )); then
+    if (( m15_score_int >= h1_override_score )) && [[ "${h4_opposing}" != "true" ]]; then
       trend_tag="H1_trend_neutral_overridden"
       veto="false"
-      _log_debug "H1 neutral veto OVERRIDDEN by high score: ${m15_score_int}>=${h1_override_score}"
+      _log_debug "H1 neutral veto OVERRIDDEN by high score: ${m15_score_int}>=${h1_override_score} (H4 aligned)"
+    elif (( m15_score_int >= h1_override_score )) && [[ "${h4_opposing}" == "true" ]]; then
+      trend_tag="H1_trend_neutral"
+      veto="true"
+      _log_debug "H1 neutral override BLOCKED by H4 opposition: h4=${h4_dir_cached} m15=${m15_dir}"
     else
       trend_tag="H1_trend_neutral"
       veto="true"
