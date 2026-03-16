@@ -207,3 +207,10 @@ The spaces cause arithmetic comparisons to silently fail — variable gets
 set to "85   " and (( 85    >= 85 )) evaluates false in bash.
 Always verify printf patterns after patching: grep -n "printf.*varname" file.sh
 Fix: always deliver full file via cat <<'EOF' instead of in-place python patches.
+
+## GEM-115: Session filtering added (2026-03-16)
+Restricted signal generation to London + NY sessions only (07:00-20:00 UTC).
+All logic moved to UTC to avoid DST/timezone confusion bugs.
+Previously signals fired during Asian session — low liquidity, range-bound.
+Override: SKIP_SESSION_FILTER=1 in strategy.env for testing.
+Expected improvement: +5-10% win rate.
