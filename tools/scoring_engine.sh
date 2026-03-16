@@ -431,8 +431,12 @@ reasons.extend([
 
 # GEM 53 FIX: Pip-capped SL/TP (max 20 SL / 40 TP pips)
 if direction in ("BUY", "SELL") and price > 0.0 and atr > 0.0:
-  sl_dist = min(atr * 1.5, 20 * 0.0001)
-  tp_dist = min(atr * 2.5, 40 * 0.0001)
+  _sl_mult = float(os.environ.get("SCALP_SL_ATR_MULT", "2.0"))
+  _tp_mult = float(os.environ.get("SCALP_TP_ATR_MULT", "4.0"))
+  _max_sl_pips = float(os.environ.get("MAX_SL_PIPS", "30"))
+  _max_tp_pips = float(os.environ.get("MAX_TP_PIPS", "60"))
+  sl_dist = min(atr * _sl_mult, _max_sl_pips * 0.0001)
+  tp_dist = min(atr * _tp_mult, _max_tp_pips * 0.0001)
   sl_price = float(price - sl_dist) if direction == "BUY" else float(price + sl_dist)
   tp_price = float(price + tp_dist) if direction == "BUY" else float(price - tp_dist)
   sl_price = round(sl_price, 5)
