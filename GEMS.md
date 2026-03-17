@@ -214,3 +214,47 @@ All logic moved to UTC to avoid DST/timezone confusion bugs.
 Previously signals fired during Asian session — low liquidity, range-bound.
 Override: SKIP_SESSION_FILTER=1 in strategy.env for testing.
 Expected improvement: +5-10% win rate.
+
+## GEM-116: Bollinger Bands scoring added (2026-03-16)
+Added bb_comp to scoring_engine.sh (max +8, min -10).
+BB values computed in build_indicators.py (20-period, 2 std).
+Backtest result: EURUSD +4.8% WR, GBPUSD +5.1% WR over 90 days.
+Logic: squeeze=-10, band_touch+confluence=+8, midline_align=+3, counter=-5.
+
+## GEM-117: H4 guard on H1 neutral override (2026-03-16)
+H1 neutral override at score>=85 was allowing M15 signals against H4 trend.
+Fixed: pre-fetch H4 direction from indicators cache before H1 fusion logic.
+Override now blocked when H4 opposes M15 direction regardless of score.
+Lesson: today's EURUSD BUY at 1.15018 fired against H4 SELL — was a loss.
+
+## GEM-118: Tier 1 scoring improvements (2026-03-17)
+Added 3 new scoring components to live bot:
+1. News alignment: macro6 → asymmetric score adj (-15 to +10) in m15_h1_fusion.sh
+2. Session quality: overlap=+5, single session=+2, edge=0 in scoring_engine.sh
+3. Tick volume: high=+5, low=-3, normal=0 in scoring_engine.sh
+Backtest result (30 days): GBPUSD -112p → +54p (+166p), WR 28.6% → 41.7%
+
+## GEM-119: OANDA Labs calendar requires live account (2026-03-17)
+calendar_guard.py built but OANDA /labs/v1/calendar returns 403 on practice accounts.
+Script fails open (block=false) so trading is not affected.
+Alternative: Forex Factory RSS calendar parsing — defer to post-ship.
+
+## GEM-120: Calendar guard v3 live (2026-03-17)
+Uses Global Economic Calendar API (RapidAPI/serifcolakel) free tier.
+50 events checked per call. Blocks HIGH (30min before/60min after) and
+MEDIUM (15min before/30min after) impact events for pair currencies.
+Key stored as RAPIDAPI_CALENDAR_KEY in all 3 env files.
+Wired into signal_watcher_pro.sh after news_filter_real.py gate.
+Fails open if API unavailable — trading continues unaffected.
+
+## GEM-121: Calendar guard v4 — TradingEconomics guest (2026-03-17)
+Primary: TradingEconomics guest:guest — completely free, no key needed.
+Returns HIGH impact events only (importance=3). 3 events checked per call.
+Fallback: RapidAPI (RAPIDAPI_CALENDAR_KEY) if TE returns empty.
+Expected WR improvement from calendar blocking: +2-5%.
+
+## GEM-122: S/R proximity scoring (2026-03-17)
+sr_score.py detects swing highs/lows from H1 cache.
+Score: +8 at key level, +5 near, +3 mild, 0 neutral, -5/-8 opposing zone.
+Pre-computed in bash as SR_COMP, read by Python scoring block via os.environ.
+Only activates when ADX>20 (regime gate) — correct behavior.

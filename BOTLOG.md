@@ -486,3 +486,13 @@ Credentials in .env: OANDA_API_TOKEN, OANDA_ACCOUNT_ID, OANDA_API_URL.
 - Fixed float rounding on Dashboard and History (Math.round * 10 / 10)
 - Admin dashboard live at /admin — protected by email check server-side
 - Lovable credits used: 3 of 5 (History fix, P&L rounding, Admin dashboard)
+
+## Session 2026-03-17
+- News alignment scoring: macro6 → asymmetric score adj (-15 to +10)
+- Session quality scoring: overlap=+5, London/NY=+2
+- Tick volume confirmation: high=+5, low=-3
+- Backtest v2: session+volume included. EURUSD 38.3% WR +147p, GBPUSD 35.7% WR +41p
+- Calendar guard v4: TradingEconomics (free) primary + RapidAPI fallback
+- S/R proximity scoring: sr_score.py wired, activates when ADX>20
+- TD credit warning: false alarm — counter tracks all fetches, reset to 0/800
+- Zero signals today: ADX<20 all day, ranging market — correct behavior
