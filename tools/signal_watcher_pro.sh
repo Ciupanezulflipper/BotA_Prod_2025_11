@@ -736,8 +736,8 @@ print(note)
     return 0
   fi
 
-  # Calendar guard — block around HIGH/MEDIUM impact events (RapidAPI)
-  if [[ -f "${TOOLS}/calendar_guard.py" && -n "${RAPIDAPI_CALENDAR_KEY:-}" ]]; then
+  # Calendar guard — DISABLED (RapidAPI free tier too limited, re-enable with paid plan)
+  if [[ "${CALENDAR_GUARD_ENABLED:-0}" == "1" ]]; then
     if ! RAPIDAPI_CALENDAR_KEY="${RAPIDAPI_CALENDAR_KEY}"          python3 "${TOOLS}/calendar_guard.py" --pair "${pair}" 2>/dev/null; then
       log "CALENDAR_BLOCK" "${pair} ${tf} blocked by news event"
       return 0
