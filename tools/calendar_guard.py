@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """
-BotA Calendar Guard v3
+BotA Calendar Guard v4
 ======================
-Uses Global Economic Calendar API (RapidAPI / serifcolakel) — free tier.
-Blocks signals around HIGH/MEDIUM impact events for relevant currencies.
-Fails open if API unavailable — trading continues unaffected.
+PRIMARY:  TradingEconomics guest access (free, no key needed)
+FALLBACK: RapidAPI Global Economic Calendar (RAPIDAPI_CALENDAR_KEY)
+
+Blocks signals around HIGH/MEDIUM impact events for pair currencies.
+Fails open if both sources unavailable — trading continues unaffected.
 
 Exit codes:
   0 = safe to trade
@@ -13,52 +15,114 @@ Exit codes:
 Usage:
   python3 tools/calendar_guard.py --pair EURUSD
   python3 tools/calendar_guard.py --pair EURUSD --json
-
-Integration in signal_watcher_pro.sh:
-  Already wired via news_filter_real.py — this script is standalone/optional.
 """
 
 from __future__ import annotations
 import os, sys, json, urllib.request, urllib.parse, datetime, argparse
 
-RAPIDAPI_KEY = os.environ.get("RAPIDAPI_CALENDAR_KEY", "")
+# ── Config ────────────────────────────────────────────────────────────────────
+RAPIDAPI_KEY  = os.environ.get("RAPIDAPI_CALENDAR_KEY", "")
 RAPIDAPI_HOST = "global-economic-calendar-api-multi-language.p.rapidapi.com"
 RAPIDAPI_URL  = f"https://{RAPIDAPI_HOST}/api/v1/economic-calendar/events"
 
+TE_URL = "https://api.tradingeconomics.com/calendar"
+TE_CREDS = "guest:guest"
+
+# Country → currency mapping
+COUNTRY_CURRENCY = {
+    "United States": "USD", "Euro Area": "EUR", "Eurozone": "EUR",
+    "European Union": "EUR", "Germany": "EUR", "France": "EUR",
+    "Italy": "EUR", "Spain": "EUR", "Netherlands": "EUR",
+    "United Kingdom": "GBP", "Japan": "JPY", "Australia": "AUD",
+    "Canada": "CAD", "Switzerland": "CHF", "New Zealand": "NZD",
+    "China": "CNY",
+}
+
+# Pair → currencies to watch
 PAIR_CURRENCIES = {
-    "EURUSD": ("USD", "EU"),
-    "GBPUSD": ("USD", "GB"),
-    "USDJPY": ("USD", "JP"),
-    "AUDUSD": ("USD", "AU"),
-    "USDCAD": ("USD", "CA"),
-    "USDCHF": ("USD", "CH"),
-    "EURJPY": ("EU", "JP"),
-    "GBPJPY": ("GB", "JP"),
+    "EURUSD": {"EUR", "USD"}, "GBPUSD": {"GBP", "USD"},
+    "USDJPY": {"USD", "JPY"}, "AUDUSD": {"AUD", "USD"},
+    "USDCAD": {"USD", "CAD"}, "USDCHF": {"USD", "CHF"},
+    "EURJPY": {"EUR", "JPY"}, "GBPJPY": {"GBP", "JPY"},
 }
 
-# Currency code mapping from country_code to currency
-COUNTRY_TO_CURRENCY = {
-    "US": "USD", "EU": "EUR", "GB": "GBP", "JP": "JPY",
-    "AU": "AUD", "CA": "CAD", "CH": "CHF", "NZ": "NZD",
-}
-
+# Block windows (minutes before/after event)
 HARD_BLOCK = {
-    "HIGH":   {"before": 30, "after": 60},
-    "MEDIUM": {"before": 15, "after": 30},
+    "high":   {"before": 30, "after": 60},
+    "medium": {"before": 15, "after": 30},
 }
 
+# Keywords that always force high impact treatment
 HIGH_KEYWORDS = [
     "non-farm", "nfp", "payroll", "fomc", "federal reserve",
     "fed interest rate", "interest rate decision",
-    "cpi", "inflation", "gdp",
+    "inflation rate", "cpi", "gdp",
     "bank of england", "boe", "ecb rate",
-    "unemployment",
+    "unemployment rate", "housing starts",
 ]
 
 
-def fetch_events(country_codes: list) -> list:
+# ── Provider 1: TradingEconomics ──────────────────────────────────────────────
+def fetch_te_events() -> list:
+    """Fetch HIGH impact events from TradingEconomics guest API."""
+    try:
+        params = urllib.parse.urlencode({
+            "c": TE_CREDS,
+            "importance": "3",  # HIGH only — reduces payload
+        })
+        req = urllib.request.Request(
+            f"{TE_URL}?{params}",
+            headers={"User-Agent": "Mozilla/5.0 (Linux; Android 13; Termux)"}
+        )
+        with urllib.request.urlopen(req, timeout=10) as r:
+            data = json.loads(r.read())
+
+        if not isinstance(data, list):
+            return []
+
+        normalized = []
+        for ev in data:
+            country = ev.get("Country", "")
+            currency = ev.get("Currency", "") or COUNTRY_CURRENCY.get(country, "")
+            if not currency:
+                continue
+
+            date_str = ev.get("Date", "")
+            try:
+                dt = datetime.datetime.strptime(date_str[:19], "%Y-%m-%dT%H:%M:%S")
+                dt = dt.replace(tzinfo=datetime.timezone.utc)
+                ts = dt.timestamp()
+            except Exception:
+                continue
+
+            normalized.append({
+                "title": ev.get("Event", ""),
+                "currency": currency,
+                "importance": "high",  # TE importance=3 = HIGH
+                "timestamp": ts,
+                "source": "tradingeconomics",
+            })
+        return normalized
+
+    except Exception as e:
+        sys.stderr.write(f"[CALENDAR] TE error: {e}\n")
+        return []
+
+
+# ── Provider 2: RapidAPI fallback ─────────────────────────────────────────────
+def fetch_rapidapi_events(currencies: set) -> list:
+    """Fetch events from RapidAPI as fallback."""
     if not RAPIDAPI_KEY:
         return []
+
+    # Map currencies to country codes
+    currency_to_country = {
+        "USD": "US", "EUR": "EU", "GBP": "GB", "JPY": "JP",
+        "AUD": "AU", "CAD": "CA", "CHF": "CH", "NZD": "NZ",
+    }
+    country_to_currency = {v: k for k, v in currency_to_country.items()}
+    country_codes = [currency_to_country[c] for c in currencies if c in currency_to_country]
+
     try:
         params = urllib.parse.urlencode({
             "country_codes": ",".join(country_codes),
@@ -74,13 +138,39 @@ def fetch_events(country_codes: list) -> list:
         )
         with urllib.request.urlopen(req, timeout=10) as r:
             data = json.loads(r.read())
-        return data.get("data", [])
+
+        normalized = []
+        for ev in data.get("data", []):
+            currency = ev.get("currency", "") or \
+                country_to_currency.get(ev.get("country_code", ""), "")
+            if not currency:
+                continue
+
+            occ_time = ev.get("occurrence_time", "")
+            try:
+                dt = datetime.datetime.strptime(occ_time[:19], "%Y-%m-%dT%H:%M:%S")
+                dt = dt.replace(tzinfo=datetime.timezone.utc)
+                ts = dt.timestamp()
+            except Exception:
+                continue
+
+            importance = ev.get("importance", "LOW").lower()
+            normalized.append({
+                "title": ev.get("localization", {}).get("long_name", ""),
+                "currency": currency,
+                "importance": importance,
+                "timestamp": ts,
+                "source": "rapidapi",
+            })
+        return normalized
+
     except Exception as e:
-        sys.stderr.write(f"[CALENDAR] fetch error: {e}\n")
+        sys.stderr.write(f"[CALENDAR] RapidAPI error: {e}\n")
         return []
 
 
-def check_events(events: list, currencies: tuple, now_ts: float) -> dict:
+# ── Event checker ─────────────────────────────────────────────────────────────
+def check_events(events: list, currencies: set, now_ts: float) -> dict:
     result = {
         "block": False,
         "soft_warning": False,
@@ -90,40 +180,26 @@ def check_events(events: list, currencies: tuple, now_ts: float) -> dict:
         "minutes_away": 9999.0,
     }
 
-    pair_currencies_set = set(currencies)
-
     for event in events:
         currency = event.get("currency", "")
-        # Also check via country_code
-        country_code = event.get("country_code", "")
-        mapped_currency = COUNTRY_TO_CURRENCY.get(country_code, "")
-
-        if currency not in pair_currencies_set and mapped_currency not in pair_currencies_set:
+        if currency not in currencies:
             continue
 
-        importance = event.get("importance", "LOW")
-        occ_time   = event.get("occurrence_time", "")
-        name       = event.get("localization", {}).get("long_name", "")
-        name_lower = name.lower()
-
-        # Parse occurrence time
-        try:
-            dt = datetime.datetime.strptime(occ_time[:19], "%Y-%m-%dT%H:%M:%S")
-            dt = dt.replace(tzinfo=datetime.timezone.utc)
-            ts = dt.timestamp()
-        except Exception:
-            continue
+        ts         = event.get("timestamp", 0)
+        importance = event.get("importance", "low")
+        title      = event.get("title", "")
+        title_lower = title.lower()
 
         minutes_away = (ts - now_ts) / 60.0
 
-        # Track nearest
+        # Track nearest event
         if abs(minutes_away) < abs(result["minutes_away"]):
             result["minutes_away"] = round(minutes_away, 1)
-            result["nearest_event"] = f"{currency} '{name}' ({minutes_away:+.0f}m)"
+            result["nearest_event"] = f"{currency} '{title}' ({minutes_away:+.0f}m)"
 
-        # Keyword override → HIGH
-        is_high_kw = any(kw in name_lower for kw in HIGH_KEYWORDS)
-        effective = "HIGH" if is_high_kw else importance
+        # Keyword override → high
+        is_high_kw = any(kw in title_lower for kw in HIGH_KEYWORDS)
+        effective = "high" if is_high_kw else importance.lower()
 
         if effective in HARD_BLOCK:
             rules = HARD_BLOCK[effective]
@@ -133,7 +209,7 @@ def check_events(events: list, currencies: tuple, now_ts: float) -> dict:
                 direction = "before" if minutes_away < 0 else "after"
                 result["block"] = True
                 result["reason"] = (
-                    f"{effective} {currency} '{name}' "
+                    f"{effective.upper()} {currency} '{title}' "
                     f"{abs(minutes_away):.0f}min {direction}"
                 )
                 return result
@@ -141,36 +217,36 @@ def check_events(events: list, currencies: tuple, now_ts: float) -> dict:
     return result
 
 
+# ── Main ──────────────────────────────────────────────────────────────────────
 def main():
-    ap = argparse.ArgumentParser(description="BotA Calendar Guard v3")
+    ap = argparse.ArgumentParser(description="BotA Calendar Guard v4")
     ap.add_argument("--pair", required=True)
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args()
 
     pair = args.pair.upper().replace("/", "").replace("_", "")
-    country_codes = list(PAIR_CURRENCIES.get(pair, ()))
+    currencies = PAIR_CURRENCIES.get(pair)
 
-    if not country_codes:
+    if not currencies:
         out = {"block": False, "reason": f"unknown_pair_{pair}", "pair": pair}
         if args.json: print(json.dumps(out))
         sys.exit(0)
 
-    if not RAPIDAPI_KEY:
-        out = {"block": False, "reason": "no_api_key_fail_open", "pair": pair}
-        if args.json: print(json.dumps(out))
-        sys.exit(0)
-
-    # Map country codes to currency codes for matching
-    currencies = tuple(
-        COUNTRY_TO_CURRENCY.get(cc, cc) for cc in country_codes
-    )
-
     now_ts = datetime.datetime.now(datetime.timezone.utc).timestamp()
-    events = fetch_events(country_codes)
-    result = check_events(events, currencies, now_ts)
 
+    # Try PRIMARY: TradingEconomics
+    events = fetch_te_events()
+    source_used = "tradingeconomics"
+
+    # FALLBACK: RapidAPI if TE returned nothing
+    if not events:
+        events = fetch_rapidapi_events(currencies)
+        source_used = "rapidapi" if events else "none"
+
+    result = check_events(events, currencies, now_ts)
     result["pair"] = pair
     result["events_checked"] = len(events)
+    result["source"] = source_used
     result["checked_at"] = datetime.datetime.now(
         datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
@@ -183,7 +259,8 @@ def main():
             print(f"WARN: {result['reason']}")
         else:
             near = result["nearest_event"] or "none"
-            print(f"CLEAR: {pair} safe ({result['events_checked']} events, nearest: {near})")
+            print(f"CLEAR: {pair} safe via {source_used} "
+                  f"({result['events_checked']} events, nearest: {near})")
 
     sys.exit(1 if result["block"] else 0)
 
