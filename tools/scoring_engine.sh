@@ -214,6 +214,18 @@ export SCORING_MODE="${ENGINE_MODE}"
 export SCORING_INDIC_PATH="${INDICATORS_PATH}"
 export SCORING_MARKET_PHASE="${PHASE}"
 
+# Pre-compute S/R score in bash before Python block
+SR_COMP="0"
+if [[ -f "${TOOLS}/sr_score.py" ]]; then
+  _sr_price="$(python3 -c "import json; d=json.load(open('${INDICATORS_PATH}')); print(d.get('price',0))" 2>/dev/null || echo "0")"
+  _sr_atr="$(python3 -c "import json; d=json.load(open('${INDICATORS_PATH}')); print(d.get('atr',0))" 2>/dev/null || echo "0")"
+  _sr_dir="$(python3 -c "import json; d=json.load(open('${INDICATORS_PATH}')); e9=float(d.get('ema9',0)); e21=float(d.get('ema21',0)); r=float(d.get('rsi',50)); print('BUY' if e9>e21 and r>50 else ('SELL' if e9<e21 and r<50 else 'HOLD'))" 2>/dev/null || echo "HOLD")"
+  if [[ "${_sr_dir}" != "HOLD" ]]; then
+    SR_COMP="$(python3 "${TOOLS}/sr_score.py"       --pair "${PAIR}" --direction "${_sr_dir}"       --price "${_sr_price}" --atr "${_sr_atr}" 2>/dev/null || echo "0")"
+  fi
+fi
+export SR_COMP
+
 python3 - <<'PY'
 import os, json, math, sys
 
@@ -450,7 +462,9 @@ except Exception:
     vol_tag = "vol_unavailable"
 
 base = 40.0
-score = base + ema_comp + rsi_comp + macd_comp + adx_comp + bb_comp + session_comp + vol_comp
+sr_comp = float(os.environ.get("SR_COMP", "0") or "0")
+sr_tag = f"sr_{int(sr_comp):+d}" if sr_comp != 0 else "sr_neutral"
+score = base + ema_comp + rsi_comp + macd_comp + adx_comp + bb_comp + session_comp + vol_comp + sr_comp
 
 # Penalty if market phase unknown
 if phase not in ("Open", "Closed"):
@@ -476,6 +490,8 @@ reasons.extend([
     f"session={session_tag}",
     f"vol_comp={vol_comp:.1f}",
     f"vol={vol_tag}",
+    f"sr_comp={sr_comp:.1f}",
+    f"sr={sr_tag}",
     f"phase={phase}"
 ])
 
