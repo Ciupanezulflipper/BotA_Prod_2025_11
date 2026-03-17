@@ -184,6 +184,45 @@ m15_score="$(jq_field "${m15_json}" '.score // 0')"
 m15_filter_rejected="$(jq_field "${m15_json}" '.filter_rejected // false')"
 m15_adx="$(jq_field "${m15_json}" '.adx // 0')"
 
+# ── NEWS ALIGNMENT SCORING (Tier 1 Phase 5) ──────────────────────────────
+# Convert macro6 (0-6, neutral=3) into direction-aware score adjustment
+# Asymmetric: opposing news penalized 1.5x more than confirming news rewards
+# BUY + bullish macro = +3 to +10 | BUY + bearish macro = -5 to -15
+# SELL + bearish macro = +3 to +10 | SELL + bullish macro = -5 to -15
+news_adj="0"
+news_tag="news_neutral"
+if [[ "${m15_dir}" == "BUY" || "${m15_dir}" == "SELL" ]]; then
+  news_adj="$(python3 -c "
+m6 = int('${MACRO6}' or 3)
+d = '${m15_dir}'
+bias = m6 - 3  # -3 to +3
+if d == 'SELL':
+    bias = -bias
+if bias >= 0:
+    pts = round(bias * 3.33)
+else:
+    pts = round(bias * 5.0)
+print(int(pts))
+" 2>/dev/null || echo "0")"
+  if (( news_adj > 0 )); then
+    news_tag="news_confirms_+${news_adj}"
+  elif (( news_adj < 0 )); then
+    news_tag="news_opposes_${news_adj}"
+  fi
+  # Apply news adjustment to score
+  if [[ "${news_adj}" != "0" ]]; then
+    m15_json="$(printf '%s
+' "${m15_json}" | jq       --argjson adj "${news_adj}"       --arg tag "${news_tag}"       '
+      .score = ([(.score + $adj), 0] | max | if . > 100 then 100 else . end)
+      | .confidence = ([(.confidence + $adj), 0] | max | if . > 100 then 100 else . end)
+      | .filter_reasons = ((.filter_reasons // []) + [$tag])
+      ')"
+    m15_score="$(jq_field "${m15_json}" '.score // 0')"
+    _log_debug "NEWS adj: pair=${PAIR} macro6=${MACRO6} dir=${m15_dir} adj=${news_adj} tag=${news_tag} new_score=${m15_score}"
+  fi
+fi
+# ─────────────────────────────────────────────────────────────────────────
+
 _log_debug "M15 base: pair=${PAIR} dir=${m15_dir} score=${m15_score} rejected=${m15_filter_rejected}"
 
 # If M15 rejected or not BUY/SELL, return unchanged.

@@ -403,8 +403,54 @@ if bb_upper > 0 and bb_lower > 0 and bb_middle > 0:
         bb_comp = -5.0
         bb_tag = "bb_counter"
 
+# 6. Session quality component (pure datetime, zero API calls)
+# London+NY overlap (12:00-16:00 UTC) = +5 (highest quality)
+# London only (07:00-12:00 UTC) or NY only (16:00-20:00 UTC) = +2
+# Edges (07:00 open, 19:00-20:00 close) = 0
+import datetime as _dt
+_now_utc = _dt.datetime.now(_dt.timezone.utc)
+_h = _now_utc.hour + _now_utc.minute / 60.0
+if 12.0 <= _h < 16.0:
+    session_comp = 5.0
+    session_tag = "session_overlap"
+elif 7.0 <= _h < 12.0:
+    session_comp = 2.0
+    session_tag = "session_london"
+elif 16.0 <= _h < 20.0:
+    session_comp = 2.0
+    session_tag = "session_ny"
+else:
+    session_comp = 0.0
+    session_tag = "session_edge"
+
+# 7. Tick volume confirmation (uses OANDA candle volume field)
+# Current candle volume vs 20-period average
+# Above 1.5x avg = +5 (strong conviction)
+# 0.8-1.5x avg = 0 (normal)
+# Below 0.8x avg = -3 (low conviction, unreliable signal)
+vol_comp = 0.0
+vol_tag = "vol_normal"
+try:
+    volumes = [float(c.get("volume", 0)) for c in ind.get("candles", [])]
+    if len(volumes) >= 21:
+        avg_vol = sum(volumes[-21:-1]) / 20
+        cur_vol = volumes[-1]
+        if avg_vol > 0:
+            vol_ratio = cur_vol / avg_vol
+            if vol_ratio >= 1.5:
+                vol_comp = 5.0
+                vol_tag = f"vol_high_{vol_ratio:.1f}x"
+            elif vol_ratio < 0.8:
+                vol_comp = -3.0
+                vol_tag = f"vol_low_{vol_ratio:.1f}x"
+            else:
+                vol_tag = f"vol_normal_{vol_ratio:.1f}x"
+except Exception:
+    vol_comp = 0.0
+    vol_tag = "vol_unavailable"
+
 base = 40.0
-score = base + ema_comp + rsi_comp + macd_comp + adx_comp + bb_comp
+score = base + ema_comp + rsi_comp + macd_comp + adx_comp + bb_comp + session_comp + vol_comp
 
 # Penalty if market phase unknown
 if phase not in ("Open", "Closed"):
@@ -426,6 +472,10 @@ reasons.extend([
     f"adx_comp={adx_comp:.1f}",
     f"bb_comp={bb_comp:.1f}",
     f"bb={bb_tag}",
+    f"session_comp={session_comp:.1f}",
+    f"session={session_tag}",
+    f"vol_comp={vol_comp:.1f}",
+    f"vol={vol_tag}",
     f"phase={phase}"
 ])
 
