@@ -736,6 +736,14 @@ print(note)
     return 0
   fi
 
+  # Calendar guard — block around HIGH/MEDIUM impact events (RapidAPI)
+  if [[ -f "${TOOLS}/calendar_guard.py" && -n "${RAPIDAPI_CALENDAR_KEY:-}" ]]; then
+    if ! RAPIDAPI_CALENDAR_KEY="${RAPIDAPI_CALENDAR_KEY}"          python3 "${TOOLS}/calendar_guard.py" --pair "${pair}" 2>/dev/null; then
+      log "CALENDAR_BLOCK" "${pair} ${tf} blocked by news event"
+      return 0
+    fi
+  fi
+
   # Optional lag warning: indicators file mtime age (non-blocking).
   if [[ "${INDICATOR_LAG_WARN_SECS:-0}" =~ ^[0-9]+$ ]] && (( INDICATOR_LAG_WARN_SECS > 0 )); then
     local ind_age
