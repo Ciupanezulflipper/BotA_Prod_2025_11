@@ -181,6 +181,7 @@ m15_json="$(printf '%s\n' "${m15_json}" | jq \
 
 m15_dir="$(jq_field "${m15_json}" '.direction // "HOLD"')"
 m15_score="$(jq_field "${m15_json}" '.score // 0')"
+m15_price="$(jq_field "${m15_json}" '.price // 0')"
 m15_filter_rejected="$(jq_field "${m15_json}" '.filter_rejected // false')"
 m15_adx="$(jq_field "${m15_json}" '.adx // 0')"
 
@@ -264,6 +265,37 @@ fi
 h4_opposing="false"
 if [[ "${m15_dir}" == "BUY" && "${h4_dir_cached}" == "SELL" ]]; then h4_opposing="true"; fi
 if [[ "${m15_dir}" == "SELL" && "${h4_dir_cached}" == "BUY" ]]; then h4_opposing="true"; fi
+
+# Option B: score>=90 AND price breaks H4 EMA21 by 10+ pips -> override H4 veto
+if [[ "${h4_opposing}" == "true" ]]; then
+  _m15_score_b="$(printf '%s
+' "${m15_score:-0}" | awk '{printf("%d", $1)}')"
+  if (( _m15_score_b >= 90 )); then
+    _h4_ema21="$(python3 -c "
+import json
+try:
+    d=json.load(open('${ROOT}/cache/indicators_${PAIR}_H4.json'))
+    print(d.get('ema21',0))
+except: print(0)
+" 2>/dev/null || echo "0")"
+    _price_break="$(python3 -c "
+price=float('${m15_price:-0}' or 0)
+ema21=float('${_h4_ema21}' or 0)
+pip=0.01 if 'JPY' in '${PAIR}' else 0.0001
+if ema21<=0 or price<=0: print('false')
+elif '${m15_dir}'=='BUY' and (price-ema21)>=10*pip: print('true')
+elif '${m15_dir}'=='SELL' and (ema21-price)>=10*pip: print('true')
+else: print('false')
+" 2>/dev/null || echo "false")"
+    if [[ "${_price_break}" == "true" ]]; then
+      h4_opposing="false"
+      _log_debug "OPTION_B: H4 veto overridden score=${_m15_score_b}>=90 price broke H4 EMA21 by 10+ pips"
+    else
+      _log_debug "OPTION_B: H4 veto held score=${_m15_score_b}>=90 but price NOT 10+ pips past H4 EMA21"
+    fi
+  fi
+fi
+
 _log_debug "H4 pre-check: pair=${PAIR} h4_dir=${h4_dir_cached} m15_dir=${m15_dir} h4_opposing=${h4_opposing}"
 
 if [[ "${h1_filter_rejected}" == "true" ]]; then
