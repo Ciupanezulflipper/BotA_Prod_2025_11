@@ -258,3 +258,16 @@ sr_score.py detects swing highs/lows from H1 cache.
 Score: +8 at key level, +5 near, +3 mild, 0 neutral, -5/-8 opposing zone.
 Pre-computed in bash as SR_COMP, read by Python scoring block via os.environ.
 Only activates when ADX>20 (regime gate) — correct behavior.
+
+## GEM-123: CANDLE_MAX_AGE_SECS raised to 3600 (2026-03-19)
+Was 2700s (45min) — too tight for 15min cron causing false stale warnings.
+Raised to 3600s (60min) — gives full hour buffer before flagging stale.
+Updated in crontab directly (hardcoded value).
+
+## GEM-124: Option B H4 override (2026-03-19)
+When score>=90 AND M15 price has broken H4 EMA21 by 10+ pips in signal direction,
+H4 opposing veto is bypassed. Recommended by Grok for high-conviction news reversals.
+Protects against: missing ECB/FOMC regime changes that score 90+.
+Keeps protection: score<90 or price hasn't confirmed break = H4 veto still active.
+March 19 ECB test: score=100 but price was BELOW H4 EMA21 (not above by 10 pips).
+Would need price at 1.331+0.001=1.332 to trigger for BUY — confirms correct calibration.
