@@ -47,7 +47,7 @@ provider_record() {
     --status "${status}" \
     --credits 0 \
     --note "${note}" \
-    >/dev/null 2>>"${LOG_DIR}/error.log" || true
+    >/dev/null 2>>"${LOG_DIR}/error.log"
 }
 
 PAIR_RAW="${1:-}"
@@ -140,7 +140,7 @@ yahoo_range_for_tf() {
     M1|M2|M5) echo "1d" ;;
     M15|M30) echo "5d" ;;
     H1|H2|H4) echo "5d" ;;
-    D1|1D) echo "1mo" ;;
+    D1|1D) echo "6mo" ;;
     *) echo "2d" ;;
   esac
 }
@@ -298,7 +298,7 @@ if [[ "${PROVIDER_USED}" != "oanda" ]]; then
   log "[FETCH] Yahoo OK"
 fi
 
-PY_OUT="$(python3 - "${TMP_JSON}" "${expected_min}" "${PAIR}" "${TF}" "${TMP_CSV}" <<'PY' 2>>"${LOG_DIR}/error.log" || true
+PY_OUT="$(python3 - "${TMP_JSON}" "${expected_min}" "${PAIR}" "${TF}" "${TMP_CSV}" "${PROVIDER_USED}" <<'PY' 2>>"${LOG_DIR}/error.log" || true
 import datetime
 import json
 import math
@@ -308,6 +308,7 @@ import sys
 p_json = sys.argv[1]
 expected_min = float(sys.argv[2])
 p_csv = sys.argv[5]
+provider = sys.argv[6]
 
 def norm_ts(value):
     try:
@@ -336,6 +337,8 @@ def safe_float(value):
 try:
     data = json.loads(open(p_json, encoding="utf-8").read())
     result = data["chart"]["result"][0]
+    if provider:
+        result.setdefault("meta", {})["_provider"] = provider
     granularity = result.get("meta", {}).get("dataGranularity", "")
     timestamps = result.get("timestamp", [])
     quote = result.get("indicators", {}).get("quote", [{}])[0]
@@ -359,6 +362,9 @@ try:
         else None
     )
     valid = median is not None and abs(median - expected_min) <= max(1.0, expected_min * 0.05)
+    if provider:
+        with open(p_json, "w", encoding="utf-8") as handle:
+            json.dump(data, handle, separators=(",", ":"))
     if candles:
         with open(p_csv, "w", encoding="utf-8") as handle:
             handle.write("time,open,high,low,close\n")

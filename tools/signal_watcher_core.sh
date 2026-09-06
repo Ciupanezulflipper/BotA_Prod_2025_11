@@ -879,8 +879,12 @@ print(note)
   fi
 
   # Calendar guard — DISABLED (RapidAPI free tier too limited, re-enable with paid plan)
-  if [[ -f "${TOOLS}/calendar_guard.py" && -n "${RAPIDAPI_CALENDAR_KEY:-}" ]] || [[ -f "${TOOLS}/calendar_guard.py" ]]; then
-    if ! RAPIDAPI_CALENDAR_KEY="${RAPIDAPI_CALENDAR_KEY}"          python3 "${TOOLS}/calendar_guard.py" --pair "${pair}" 2>/dev/null; then
+  # Calendar guard is optional.
+  # Run it only when both the guard exists and an explicit API key is configured.
+  # With set -u enabled, the key may legitimately be unset.
+  if [[ -f "${TOOLS}/calendar_guard.py" && -n "${RAPIDAPI_CALENDAR_KEY:-}" ]]; then
+    if ! RAPIDAPI_CALENDAR_KEY="${RAPIDAPI_CALENDAR_KEY:-}" \
+      python3 "${TOOLS}/calendar_guard.py" --pair "${pair}" 2>/dev/null; then
       log "CALENDAR_BLOCK" "${pair} ${tf} blocked by news event"
       return 0
     fi

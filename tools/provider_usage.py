@@ -35,8 +35,11 @@ def utc_day() -> str:
 
 
 def root_dir() -> Path:
-    """Resolve the BotA root, allowing isolated tests through BOTA_ROOT."""
-    configured = os.environ.get("BOTA_ROOT", "").strip()
+    """Resolve the writable BotA runtime root, preserving isolated-test support."""
+    configured = (
+        os.environ.get("BOTA_MUTABLE_ROOT", "").strip()
+        or os.environ.get("BOTA_ROOT", "").strip()
+    )
     if configured:
         return Path(configured).expanduser()
     return Path(__file__).resolve().parent.parent
