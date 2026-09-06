@@ -1,275 +1,404 @@
 #!/usr/bin/env bash
 ###############################################################################
 # FILE: tools/data_fetch_candles.sh
-# ROLE: R5 measurement-hardening compatibility wrapper.
-#
-# - preserves the historical fetcher verbatim as data_fetch_candles_r5_legacy.sh
-# - keeps non-D1 behavior unchanged, then stamps Yahoo provider identity
-# - fetches enough D1 history (6mo) to satisfy the existing >=60-bar indicator
-#   contract without lowering that contract
-# - records provider requests through the mutable-root provider accounting shim
+# ROLE: OANDA primary + Yahoo fallback with provider-specific request evidence.
 ###############################################################################
 set -euo pipefail
 shopt -s inherit_errexit 2>/dev/null || true
 
 CODE_ROOT="${BOTA_CODE_ROOT:-${BOTA_ROOT:-${HOME}/BotA}}"
 MUTABLE_ROOT="${BOTA_MUTABLE_ROOT:-${CODE_ROOT}}"
-TOOLS_DIR="${CODE_ROOT}/tools"
+ROOT="${CODE_ROOT}"
 CACHE_DIR="${MUTABLE_ROOT}/cache"
 DATA_DIR="${MUTABLE_ROOT}/data/candles"
+TOOLS_DIR="${CODE_ROOT}/tools"
 LOG_DIR="${MUTABLE_ROOT}/logs"
-LEGACY_FETCHER="${TOOLS_DIR}/data_fetch_candles_r5_legacy.sh"
 PROVIDER_USAGE="${TOOLS_DIR}/provider_usage.py"
 
 if [[ "${BOTA_PATH_CONTRACT_CHECK:-0}" == 1 ]]; then
-  exec bash "${LEGACY_FETCHER}" "$@"
+  printf 'CODE_ROOT=%s\nMUTABLE_ROOT=%s\nTOOLS=%s\nCACHE=%s\nDATA=%s\nLOGS=%s\n' \
+    "${CODE_ROOT}" "${MUTABLE_ROOT}" "${TOOLS_DIR}" "${CACHE_DIR}" "${DATA_DIR}" "${LOG_DIR}"
+  exit 0
 fi
+
+if [[ -f "${ROOT}/.env" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "${ROOT}/.env"
+  set +a
+fi
+
+LEGACY_PAIR_CACHE_TF="${LEGACY_PAIR_CACHE_TF:-H1}"
+UA="${UA:-Mozilla/5.0 (Linux; Android 13; Termux) AppleWebKit/537.36}"
+OANDA_API_TOKEN="${OANDA_API_TOKEN:-}"
+OANDA_API_URL="${OANDA_API_URL:-https://api-fxpractice.oanda.com}"
+
+log() { printf '%s\n' "$*" >&2; }
+die() { log "[FETCH] ERROR: $*"; exit 1; }
+
+provider_record() {
+  local provider="$1" status="$2" note="${3:-}"
+  [[ -f "${PROVIDER_USAGE}" ]] || return 0
+  python3 "${PROVIDER_USAGE}" record \
+    --provider "${provider}" \
+    --caller data_fetch_candles \
+    --pair "${PAIR:-}" \
+    --timeframe "${TF:-}" \
+    --status "${status}" \
+    --credits 0 \
+    --note "${note}" \
+    >/dev/null 2>>"${LOG_DIR}/error.log"
+}
 
 PAIR_RAW="${1:-}"
 TF_RAW="${2:-}"
 [[ -z "${PAIR_RAW}" || -z "${TF_RAW}" ]] && {
-  printf 'Usage: %s <PAIR> <TF>\n' "$0" >&2
+  log "Usage: $0 <PAIR> <TF>"
   exit 1
 }
 
 PAIR="$(printf '%s' "${PAIR_RAW}" | tr -d '/ ' | tr '[:lower:]' '[:upper:]')"
 TF="$(printf '%s' "${TF_RAW}" | tr -d ' ' | tr '[:lower:]' '[:upper:]')"
 
-mkdir -p "${CACHE_DIR}" "${DATA_DIR}" "${LOG_DIR}"
+mkdir -p "${CACHE_DIR}" "${DATA_DIR}" "${LOG_DIR}" >/dev/null 2>&1 || true
 
-# Preserve the historical environment-loading behavior for the D1 path.
-if [[ -f "${CODE_ROOT}/.env" ]]; then
-  set -a
-  # shellcheck disable=SC1090
-  source "${CODE_ROOT}/.env"
-  set +a
-fi
+tf_minutes() {
+  local tf="${1:-}" digits=""
+  tf="$(printf '%s' "${tf}" | tr '[:lower:]' '[:upper:]')"
+  case "${tf}" in
+    M*)
+      digits="${tf#M}"
+      case "${digits}" in
+        ""|*[!0-9]*) ;;
+        *) echo "${digits}"; return ;;
+      esac
+      ;;
+    H*)
+      digits="${tf#H}"
+      case "${digits}" in
+        ""|*[!0-9]*) ;;
+        *) echo "$(( digits * 60 ))"; return ;;
+      esac
+      ;;
+    D1|1D)
+      echo "1440"
+      return
+      ;;
+  esac
+  echo "0"
+}
 
-if [[ "${TF}" != "D1" && "${TF}" != "1D" ]]; then
-  set +e
-  bash "${LEGACY_FETCHER}" "$@"
-  rc=$?
-  set -e
-  [[ "${rc}" -eq 0 ]] || exit "${rc}"
+expected_min="$(tf_minutes "${TF}")"
+[[ "${expected_min}" -le 0 ]] && die "unsupported TF='${TF}'"
 
-  # Historical Yahoo payloads do not include _provider, while historical OANDA
-  # payloads do. Stamp only the missing case so updater decision evidence can
-  # identify Yahoo rather than "unknown".
-  CACHE_PATH="${CACHE_DIR}/${PAIR}_${TF}.json" python3 <<'PY'
+oanda_granularity_for_tf() {
+  case "${1:-}" in
+    M1) echo "M1" ;;
+    M5) echo "M5" ;;
+    M15) echo "M15" ;;
+    M30) echo "M30" ;;
+    H1) echo "H1" ;;
+    H2) echo "H2" ;;
+    H4) echo "H4" ;;
+    H6) echo "H6" ;;
+    H8) echo "H8" ;;
+    H12) echo "H12" ;;
+    D1|1D) echo "D" ;;
+    *) echo "" ;;
+  esac
+}
+
+yahoo_symbol_for_pair() {
+  case "${1:-}" in
+    EURUSD) echo "EURUSD=X" ;;
+    GBPUSD) echo "GBPUSD=X" ;;
+    USDJPY) echo "USDJPY=X" ;;
+    AUDUSD) echo "AUDUSD=X" ;;
+    USDCAD) echo "USDCAD=X" ;;
+    USDCHF) echo "USDCHF=X" ;;
+    NZDUSD) echo "NZDUSD=X" ;;
+    XAUUSD) echo "XAUUSD=X" ;;
+    *) [[ "${#1}" -eq 6 ]] && echo "${1}=X" || echo "${1}" ;;
+  esac
+}
+
+yahoo_interval_for_tf() {
+  case "${1:-}" in
+    M1) echo "1m" ;;
+    M5) echo "5m" ;;
+    M15) echo "15m" ;;
+    M30) echo "30m" ;;
+    H1) echo "1h" ;;
+    H4) echo "4h" ;;
+    D1|1D) echo "1d" ;;
+    *) echo "" ;;
+  esac
+}
+
+yahoo_range_for_tf() {
+  case "${1:-}" in
+    M1|M2|M5) echo "1d" ;;
+    M15|M30) echo "5d" ;;
+    H1|H2|H4) echo "5d" ;;
+    D1|1D) echo "6mo" ;;
+    *) echo "2d" ;;
+  esac
+}
+
+OUT_JSON="${CACHE_DIR}/${PAIR}_${TF}.json"
+OUT_CSV="${DATA_DIR}/${PAIR}_${TF}.csv"
+LEGACY_JSON="${CACHE_DIR}/${PAIR}.json"
+
+TMP_JSON="$(mktemp 2>/dev/null || echo "${CACHE_DIR}/.tmp_fetch_${PAIR}_${TF}_$$.json")"
+TMP_CSV="$(mktemp 2>/dev/null || echo "${DATA_DIR}/.tmp_fetch_${PAIR}_${TF}_$$.csv")"
+cleanup() { rm -f "${TMP_JSON}" "${TMP_CSV}" >/dev/null 2>&1 || true; }
+trap cleanup EXIT
+
+PROVIDER_USED=""
+OANDA_GRAN="$(oanda_granularity_for_tf "${TF}")"
+OANDA_INSTRUMENT="${PAIR:0:3}_${PAIR:3:3}"
+
+if [[ -n "${OANDA_API_TOKEN}" && -n "${OANDA_GRAN}" ]]; then
+  log "[FETCH] trying OANDA: instrument=${OANDA_INSTRUMENT} gran=${OANDA_GRAN}"
+  OANDA_OK="$(
+    OANDA_API_TOKEN="${OANDA_API_TOKEN}" OANDA_API_URL="${OANDA_API_URL}" \
+    OANDA_INSTRUMENT="${OANDA_INSTRUMENT}" OANDA_GRAN="${OANDA_GRAN}" \
+    TMP_JSON="${TMP_JSON}" python3 <<'PY' 2>>"${LOG_DIR}/error.log"
+import datetime
 import json
 import os
-from pathlib import Path
+import sys
+import urllib.request
 
-path = Path(os.environ["CACHE_PATH"])
-data = json.loads(path.read_text(encoding="utf-8"))
-result = data.get("chart", {}).get("result", [])
-if result and isinstance(result[0], dict):
-    meta = result[0].setdefault("meta", {})
-    if not str(meta.get("_provider") or "").strip():
-        meta["_provider"] = "yahoo"
-        tmp = path.with_name(f".{path.name}.provider.tmp")
-        tmp.write_text(json.dumps(data, separators=(",", ":")), encoding="utf-8")
-        os.replace(tmp, path)
+token = os.environ["OANDA_API_TOKEN"]
+base = os.environ["OANDA_API_URL"].rstrip("/")
+inst = os.environ["OANDA_INSTRUMENT"]
+gran = os.environ["OANDA_GRAN"]
+tmp = os.environ["TMP_JSON"]
+url = f"{base}/v3/instruments/{inst}/candles?count=500&granularity={gran}&price=M"
+request = urllib.request.Request(
+    url,
+    headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+)
+try:
+    with urllib.request.urlopen(request, timeout=15) as response:
+        raw = json.loads(response.read())
+except Exception as exc:
+    sys.stderr.write(f"[OANDA] {type(exc).__name__}\n")
+    print("0")
+    raise SystemExit(0)
+
+candles = raw.get("candles", [])
+if not candles:
+    sys.stderr.write("[OANDA] empty\n")
+    print("0")
+    raise SystemExit(0)
+
+timestamps, opens, highs, lows, closes = [], [], [], [], []
+for candle in candles:
+    if not candle.get("complete", True):
+        continue
+    try:
+        dt = datetime.datetime.strptime(candle["time"][:19] + "Z", "%Y-%m-%dT%H:%M:%SZ")
+        timestamps.append(int(dt.replace(tzinfo=datetime.timezone.utc).timestamp()))
+        mid = candle["mid"]
+        opens.append(float(mid["o"]))
+        highs.append(float(mid["h"]))
+        lows.append(float(mid["l"]))
+        closes.append(float(mid["c"]))
+    except Exception:
+        continue
+
+if not timestamps:
+    sys.stderr.write("[OANDA] no valid candles\n")
+    print("0")
+    raise SystemExit(0)
+
+output = {
+    "chart": {
+        "result": [
+            {
+                "meta": {"dataGranularity": gran, "_provider": "oanda"},
+                "timestamp": timestamps,
+                "indicators": {
+                    "quote": [
+                        {
+                            "open": opens,
+                            "high": highs,
+                            "low": lows,
+                            "close": closes,
+                        }
+                    ]
+                },
+            }
+        ],
+        "error": None,
+    }
+}
+json.dump(output, open(tmp, "w", encoding="utf-8"))
+print("1")
 PY
-  exit 0
+  )" || OANDA_OK="0"
+
+  if [[ "${OANDA_OK}" = "1" ]]; then
+    provider_record oanda success "granularity=${OANDA_GRAN}"
+    PROVIDER_USED="oanda"
+    log "[FETCH] OANDA OK"
+  else
+    provider_record oanda failure "granularity=${OANDA_GRAN}"
+    log "[FETCH] OANDA FAILED — falling back to Yahoo"
+  fi
+else
+  log "[FETCH] OANDA skipped (token missing or no gran mapping for ${TF})"
 fi
 
-export PAIR TF CODE_ROOT MUTABLE_ROOT CACHE_DIR DATA_DIR LOG_DIR PROVIDER_USAGE
-export OANDA_API_TOKEN="${OANDA_API_TOKEN:-}"
-export OANDA_API_URL="${OANDA_API_URL:-https://api-fxpractice.oanda.com}"
-export UA="${UA:-Mozilla/5.0 (Linux; Android 13; Termux) AppleWebKit/537.36}"
+if [[ "${PROVIDER_USED}" != "oanda" ]]; then
+  Y_SYMBOL="$(yahoo_symbol_for_pair "${PAIR}")"
+  Y_INTERVAL="$(yahoo_interval_for_tf "${TF}")"
+  Y_RANGE="$(yahoo_range_for_tf "${TF}")"
+  [[ -z "${Y_INTERVAL}" ]] && die "no interval mapping for TF='${TF}'"
 
-python3 <<'PY'
-from __future__ import annotations
+  URL="https://query1.finance.yahoo.com/v8/finance/chart/${Y_SYMBOL}?range=${Y_RANGE}&interval=${Y_INTERVAL}&includePrePost=false&events=div%7Csplit"
+  log "[FETCH] Yahoo fallback: ${Y_SYMBOL} ${Y_INTERVAL} ${Y_RANGE}"
 
+  if command -v curl >/dev/null 2>&1; then
+    YAHOO_HTTP="$(
+      curl -sSL -A "${UA}" "${URL}" -o "${TMP_JSON}" \
+        -w "%{http_code}" --max-time 15 2>>"${LOG_DIR}/error.log" || echo "000"
+    )"
+    if [[ "${YAHOO_HTTP}" = "429" ]]; then
+      provider_record yahoo blocked "http=429"
+      log "[FETCH] Yahoo 429 rate-limited — skipping fallback"
+      exit 3
+    fi
+    if [[ "${YAHOO_HTTP}" != "200" || ! -s "${TMP_JSON}" ]]; then
+      provider_record yahoo failure "http=${YAHOO_HTTP}"
+      die "curl failed (http=${YAHOO_HTTP})"
+    fi
+  else
+    TMP_WGET_HDR="$(mktemp 2>/dev/null || echo "${CACHE_DIR}/.tmp_whdr_${PAIR}_${TF}_$$.txt")"
+    wget -qO "${TMP_JSON}" --server-response --timeout=15 \
+      --user-agent="${UA}" "${URL}" 2>"${TMP_WGET_HDR}" || true
+    if grep -q "HTTP.*429" "${TMP_WGET_HDR}" 2>/dev/null; then
+      rm -f "${TMP_WGET_HDR}" 2>/dev/null || true
+      provider_record yahoo blocked "http=429"
+      log "[FETCH] Yahoo 429 rate-limited — skipping fallback"
+      exit 3
+    fi
+    if [[ ! -s "${TMP_JSON}" ]]; then
+      rm -f "${TMP_WGET_HDR}" 2>/dev/null || true
+      provider_record yahoo failure "wget_empty_response"
+      die "wget failed"
+    fi
+    rm -f "${TMP_WGET_HDR}" 2>/dev/null || true
+  fi
+
+  provider_record yahoo success "interval=${Y_INTERVAL};range=${Y_RANGE}"
+  PROVIDER_USED="yahoo"
+  log "[FETCH] Yahoo OK"
+fi
+
+PY_OUT="$(python3 - "${TMP_JSON}" "${expected_min}" "${PAIR}" "${TF}" "${TMP_CSV}" "${PROVIDER_USED}" <<'PY' 2>>"${LOG_DIR}/error.log" || true
 import datetime
 import json
 import math
-import os
 import statistics
-import subprocess
 import sys
-import urllib.parse
-import urllib.request
-from pathlib import Path
 
-pair = os.environ["PAIR"]
-tf = os.environ["TF"]
-cache_dir = Path(os.environ["CACHE_DIR"])
-data_dir = Path(os.environ["DATA_DIR"])
-provider_usage = Path(os.environ["PROVIDER_USAGE"])
-token = os.environ.get("OANDA_API_TOKEN", "").strip()
-base = os.environ.get("OANDA_API_URL", "https://api-fxpractice.oanda.com").rstrip("/")
-ua = os.environ.get("UA", "Mozilla/5.0")
+p_json = sys.argv[1]
+expected_min = float(sys.argv[2])
+p_csv = sys.argv[5]
+provider = sys.argv[6]
 
-out_json = cache_dir / f"{pair}_D1.json"
-out_csv = data_dir / f"{pair}_D1.csv"
-
-
-def record(provider: str, status: str, note: str = "") -> None:
-    result = subprocess.run(
-        [
-            sys.executable,
-            str(provider_usage),
-            "record",
-            "--provider", provider,
-            "--caller", "data_fetch_candles",
-            "--pair", pair,
-            "--timeframe", "D1",
-            "--status", status,
-            "--credits", "0",
-            "--note", note[:500],
-        ],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.PIPE,
-        text=True,
-        check=False,
-        env=os.environ.copy(),
-    )
-    if result.returncode != 0:
-        message = (result.stderr or "").strip()[:500]
-        raise RuntimeError(f"provider_accounting_failed:{provider}:{message}")
-
-
-def valid_candles_from_chart(data: dict):
-    result = data.get("chart", {}).get("result", [])
-    if not result or not isinstance(result[0], dict):
-        return []
-    quote = (result[0].get("indicators", {}) or {}).get("quote", [{}])[0] or {}
-    stamps = result[0].get("timestamp", []) or []
-    opens = quote.get("open", []) or []
-    highs = quote.get("high", []) or []
-    lows = quote.get("low", []) or []
-    closes = quote.get("close", []) or []
-    rows = []
-    for values in zip(stamps, opens, highs, lows, closes):
-        try:
-            stamp = int(values[0])
-            o, h, l, c = map(float, values[1:])
-        except (TypeError, ValueError):
-            continue
-        if not all(math.isfinite(x) for x in (o, h, l, c)) or c <= 0:
-            continue
-        rows.append((stamp, o, h, l, c))
-    rows.sort()
-    return rows
-
-
-def validate_daily(rows) -> None:
-    if len(rows) < 60:
-        raise RuntimeError(f"d1_history_insufficient:{len(rows)}")
-    deltas = [
-        (rows[i][0] - rows[i - 1][0]) / 60.0
-        for i in range(1, len(rows))
-        if rows[i][0] > rows[i - 1][0]
-    ]
-    if not deltas:
-        raise RuntimeError("d1_history_no_positive_deltas")
-    median = statistics.median(deltas)
-    if abs(median - 1440.0) > 72.0:
-        raise RuntimeError(f"d1_timeframe_mismatch:median_min={median}")
-
-
-def write_outputs(data: dict, rows) -> None:
-    cache_dir.mkdir(parents=True, exist_ok=True)
-    data_dir.mkdir(parents=True, exist_ok=True)
-    tmp_json = out_json.with_name(f".{out_json.name}.tmp.{os.getpid()}")
-    tmp_csv = out_csv.with_name(f".{out_csv.name}.tmp.{os.getpid()}")
-    tmp_json.write_text(json.dumps(data, separators=(",", ":")), encoding="utf-8")
-    with tmp_csv.open("w", encoding="utf-8") as handle:
-        handle.write("time,open,high,low,close\n")
-        for stamp, o, h, l, c in rows[-500:]:
-            text = datetime.datetime.fromtimestamp(
-                stamp, tz=datetime.timezone.utc
-            ).strftime("%Y-%m-%d %H:%M:%S")
-            handle.write(f"{text},{o:.8f},{h:.8f},{l:.8f},{c:.8f}\n")
-    os.replace(tmp_json, out_json)
-    os.replace(tmp_csv, out_csv)
-
-
-def fetch_oanda() -> dict | None:
-    if not token:
-        return None
-    instrument = f"{pair[:3]}_{pair[3:6]}"
-    url = f"{base}/v3/instruments/{instrument}/candles?count=500&granularity=D&price=M"
-    request = urllib.request.Request(
-        url,
-        headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
-    )
+def norm_ts(value):
     try:
-        with urllib.request.urlopen(request, timeout=15) as response:
-            raw = json.loads(response.read())
-        candles = [c for c in raw.get("candles", []) if c.get("complete", True)]
-        stamps, opens, highs, lows, closes = [], [], [], [], []
-        for candle in candles:
-            try:
-                dt = datetime.datetime.fromisoformat(candle["time"].replace("Z", "+00:00"))
-                mid = candle["mid"]
-                stamps.append(int(dt.timestamp()))
-                opens.append(float(mid["o"]))
-                highs.append(float(mid["h"]))
-                lows.append(float(mid["l"]))
-                closes.append(float(mid["c"]))
-            except Exception:
-                continue
-        data = {
-            "chart": {
-                "result": [{
-                    "meta": {"dataGranularity": "D", "_provider": "oanda"},
-                    "timestamp": stamps,
-                    "indicators": {"quote": [{
-                        "open": opens, "high": highs, "low": lows, "close": closes,
-                    }]},
-                }],
-                "error": None,
-            }
-        }
-        rows = valid_candles_from_chart(data)
-        validate_daily(rows)
-        record("oanda", "success", "granularity=D")
-        write_outputs(data, rows)
-        print(f"[FETCH-HARDEN] D1 provider=oanda rows={len(rows)}", file=sys.stderr)
-        return data
-    except Exception as exc:
-        try:
-            record("oanda", "failure", type(exc).__name__)
-        except Exception:
-            raise
-        print(f"[FETCH-HARDEN] OANDA D1 failed: {type(exc).__name__}; fallback=yahoo", file=sys.stderr)
+        if isinstance(value, (int, float)):
+            number = int(value)
+            number = number // 1000 if number > 100_000_000_000 else number
+            return number if number > 0 else None
+        text = str(value).strip()
+        if text.isdigit():
+            return int(text)
+        return int(
+            datetime.datetime.strptime(text, "%Y-%m-%d %H:%M:%S")
+            .replace(tzinfo=datetime.timezone.utc)
+            .timestamp()
+        )
+    except Exception:
         return None
 
-
-def fetch_yahoo() -> None:
-    symbol = f"{pair}=X" if len(pair) == 6 else pair
-    query = urllib.parse.urlencode({
-        "range": "6mo",
-        "interval": "1d",
-        "includePrePost": "false",
-        "events": "div|split",
-    })
-    url = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?{query}"
-    request = urllib.request.Request(url, headers={"User-Agent": ua})
+def safe_float(value):
     try:
-        with urllib.request.urlopen(request, timeout=15) as response:
-            data = json.loads(response.read())
-        result = data.get("chart", {}).get("result", [])
-        if not result or not isinstance(result[0], dict):
-            raise RuntimeError("yahoo_d1_missing_result")
-        meta = result[0].setdefault("meta", {})
-        meta["_provider"] = "yahoo"
-        rows = valid_candles_from_chart(data)
-        validate_daily(rows)
-        record("yahoo", "success", "interval=1d;range=6mo")
-        write_outputs(data, rows)
-        print(f"[FETCH-HARDEN] D1 provider=yahoo rows={len(rows)} range=6mo", file=sys.stderr)
-    except Exception as exc:
-        try:
-            record("yahoo", "failure", type(exc).__name__)
-        except Exception:
-            raise
-        raise
+        number = float(value)
+        return None if math.isnan(number) or math.isinf(number) else number
+    except Exception:
+        return None
 
-
-if fetch_oanda() is None:
-    fetch_yahoo()
+try:
+    data = json.loads(open(p_json, encoding="utf-8").read())
+    result = data["chart"]["result"][0]
+    if provider:
+        result.setdefault("meta", {})["_provider"] = provider
+    granularity = result.get("meta", {}).get("dataGranularity", "")
+    timestamps = result.get("timestamp", [])
+    quote = result.get("indicators", {}).get("quote", [{}])[0]
+    count = min(len(timestamps), len(quote.get("open", [])), len(quote.get("close", [])))
+    candles = []
+    for index in range(count):
+        timestamp = norm_ts(timestamps[index])
+        opened = safe_float(quote["open"][index])
+        high = safe_float(quote["high"][index])
+        low = safe_float(quote["low"][index])
+        close = safe_float(quote["close"][index])
+        if None not in (timestamp, opened, high, low, close) and close > 0:
+            candles.append((timestamp, opened, high, low, close))
+    candles.sort()
+    normalized = [item[0] for item in candles]
+    median = (
+        statistics.median(
+            [(normalized[index] - normalized[index - 1]) / 60 for index in range(1, len(normalized))]
+        )
+        if len(normalized) > 1
+        else None
+    )
+    valid = median is not None and abs(median - expected_min) <= max(1.0, expected_min * 0.05)
+    if provider:
+        with open(p_json, "w", encoding="utf-8") as handle:
+            json.dump(data, handle, separators=(",", ":"))
+    if candles:
+        with open(p_csv, "w", encoding="utf-8") as handle:
+            handle.write("time,open,high,low,close\n")
+            for timestamp, opened, high, low, close in candles[-500:]:
+                stamp = datetime.datetime.fromtimestamp(
+                    timestamp, tz=datetime.timezone.utc
+                ).strftime("%Y-%m-%d %H:%M:%S")
+                handle.write(f"{stamp},{opened:.8f},{high:.8f},{low:.8f},{close:.8f}\n")
+    print(f"{'0' if valid else '2'} {-1.0 if median is None else float(median)} {granularity}")
+except Exception:
+    print("1 -1.0")
 PY
+)"
+
+parts=(${PY_OUT})
+rc_gate="${parts[0]:-1}"
+med_gate="${parts[1]:--1}"
+dg_gate="${parts[2]:-}"
+
+if [[ "${rc_gate}" != "0" ]]; then
+  log "[FETCH] FAIL integrity: provider=${PROVIDER_USED} expected=${expected_min} median=${med_gate} granularity=${dg_gate}"
+  exit 2
+fi
+
+mv -f "${TMP_JSON}" "${OUT_JSON}"
+[[ -s "${TMP_CSV}" ]] && mv -f "${TMP_CSV}" "${OUT_CSV}"
+
+if [[ "${TF}" = "${LEGACY_PAIR_CACHE_TF}" ]]; then
+  cp -f "${OUT_JSON}" "${LEGACY_JSON}" >/dev/null 2>&1 || true
+  log "[FETCH] legacy cache updated: ${LEGACY_JSON}"
+else
+  log "[FETCH] legacy cache NOT updated (tf=${TF})"
+fi
+
+log "[FETCH] OK provider=${PROVIDER_USED} wrote: ${OUT_JSON}"
+[[ -f "${OUT_CSV}" ]] && log "[FETCH] OK wrote: ${OUT_CSV}"
+exit 0
