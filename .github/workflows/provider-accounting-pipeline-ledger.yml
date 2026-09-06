@@ -94,5 +94,5 @@ jobs:
             tests.test_heartbeat_runtime_policy \
             tests.test_bota_supervisor_service_policy \
             tests.test_telegram_ops_ux \
-            tests.test_r5_calendar_env_contract \
+            tests.test_signal_watcher_calendar_guard \
             tests.test_r5_measurement_hardening
