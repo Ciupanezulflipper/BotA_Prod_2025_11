@@ -53,21 +53,25 @@ class R5MeasurementHardeningTests(unittest.TestCase):
             data = json.loads(state.read_text(encoding="utf-8"))
             self.assertEqual(data["providers"]["yahoo"]["successes"], 1)
 
-    def test_fetcher_preserves_historical_implementation_behind_wrapper(self) -> None:
-        wrapper = (TOOLS / "data_fetch_candles.sh").read_text(encoding="utf-8")
-        legacy = TOOLS / "data_fetch_candles_r5_legacy.sh"
-        self.assertTrue(legacy.is_file())
-        self.assertIn("data_fetch_candles_r5_legacy.sh", wrapper)
-        self.assertIn('"range": "6mo"', wrapper)
-        self.assertIn('meta["_provider"] = "yahoo"', wrapper)
-        self.assertIn("d1_history_insufficient", wrapper)
+    def test_provider_usage_prefers_mutable_root_in_source_contract(self) -> None:
+        source = (TOOLS / "provider_usage.py").read_text(encoding="utf-8")
+        self.assertIn('os.environ.get("BOTA_MUTABLE_ROOT", "").strip()', source)
+        self.assertIn('or os.environ.get("BOTA_ROOT", "").strip()', source)
 
-    def test_provider_usage_preserves_historical_implementation_behind_shim(self) -> None:
-        wrapper = (TOOLS / "provider_usage.py").read_text(encoding="utf-8")
-        legacy = TOOLS / "provider_usage_r5_legacy.py"
-        self.assertTrue(legacy.is_file())
-        self.assertIn("BOTA_MUTABLE_ROOT", wrapper)
-        self.assertIn("provider_usage_r5_legacy.py", wrapper)
+    def test_yahoo_d1_history_window_satisfies_existing_indicator_minimum(self) -> None:
+        source = (TOOLS / "data_fetch_candles.sh").read_text(encoding="utf-8")
+        self.assertIn('D1|1D) echo "6mo"', source)
+        self.assertNotIn('D1|1D) echo "1mo"', source)
+
+    def test_fetcher_persists_actual_provider_marker(self) -> None:
+        source = (TOOLS / "data_fetch_candles.sh").read_text(encoding="utf-8")
+        self.assertIn('result.setdefault("meta", {})["_provider"] = provider', source)
+        self.assertIn('"${PROVIDER_USED}" <<\'PY\'', source)
+
+    def test_provider_accounting_is_not_silently_ignored_at_fetch_boundary(self) -> None:
+        source = (TOOLS / "data_fetch_candles.sh").read_text(encoding="utf-8")
+        provider_function = source.split("provider_record() {", 1)[1].split("}\n\nPAIR_RAW", 1)[0]
+        self.assertNotIn("|| true", provider_function)
 
 
 if __name__ == "__main__":
