@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import io
 import json
 import os
 import shlex
@@ -341,13 +342,34 @@ class OrchestratorTests(unittest.TestCase):
                          ("TIMED_OUT", "indicators_updater"))
         self.assertFalse(timed_marker.exists())
 
-        slow_d1 = vps.Job("updater2", ((sys.executable, "-c", "import time; time.sleep(.08)"),
-                                       (sys.executable, "-c", "import time; time.sleep(.08)")),
-                          vps.UPDATER_MINUTES, 0.1, (0.1, 0.1))
-        result = self.launch_wait(self.orch(), slow_d1)
+        independent = vps.Job("updater2", (("stage-one",), ("stage-two",)),
+                              vps.UPDATER_MINUTES, 0.1, (0.1, 0.2))
+        seen_timeouts = []
+
+        class PopenSpy:
+            next_pid = 50000
+
+            def __init__(self, *args, **kwargs):
+                self.stdout = io.BytesIO()
+                self.returncode = None
+                self.pid = PopenSpy.next_pid
+                PopenSpy.next_pid += 1
+
+            def wait(self, timeout=None):
+                seen_timeouts.append(timeout)
+                self.returncode = 0
+                return 0
+
+            def poll(self):
+                return self.returncode
+
+        with mock.patch.object(vps.subprocess, "Popen", PopenSpy):
+            result = self.launch_wait(self.orch(), independent)
+
         self.assertEqual(result["status"], "PASS")
+        self.assertEqual(seen_timeouts, [0.1, 0.2])
         self.assertEqual([stage["deadline_seconds"] for stage in result["stage_results"]],
-                         [0.1, 0.1])
+                         [0.1, 0.2])
 
         d1_failure = vps.Job("updater3", ((sys.executable, "-c", "pass"),
                                           (sys.executable, "-c", "raise SystemExit(9)")),
