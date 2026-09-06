@@ -664,23 +664,42 @@ class Orchestrator:
         finally:
             stream.close()
 
+    @staticmethod
+    def _process_group_exists(pgid: int) -> bool:
+        try:
+            os.killpg(pgid, 0)
+        except ProcessLookupError:
+            return False
+        except PermissionError:
+            return True
+        return True
+
     def _terminate_group(self, process: subprocess.Popen[bytes]) -> None:
-        if process.poll() is not None:
+        pgid = process.pid
+        try:
+            os.killpg(pgid, signal.SIGTERM)
+        except ProcessLookupError:
             process.wait()
             return
-        try:
-            os.killpg(process.pid, signal.SIGTERM)
-        except ProcessLookupError:
-            pass
-        try:
-            process.wait(timeout=self.term_grace)
-            return
-        except subprocess.TimeoutExpired:
-            pass
-        try:
-            os.killpg(process.pid, signal.SIGKILL)
-        except ProcessLookupError:
-            pass
+
+        deadline = time.monotonic() + self.term_grace
+        while self._process_group_exists(pgid):
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                break
+            if process.poll() is None:
+                try:
+                    process.wait(timeout=min(0.05, remaining))
+                except subprocess.TimeoutExpired:
+                    pass
+            else:
+                time.sleep(min(0.05, remaining))
+
+        if self._process_group_exists(pgid):
+            try:
+                os.killpg(pgid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
         process.wait()
 
     def shutdown(self) -> None:
