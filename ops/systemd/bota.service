@@ -9,8 +9,8 @@ User=bota
 Group=bota
 WorkingDirectory=/opt/bota/current
 EnvironmentFile=/etc/bota/runtime.env
-ExecStartPre=/usr/bin/env RAPIDAPI_CALENDAR_KEY= BOTA_CODE_ROOT=/opt/bota/current BOTA_ROOT=/opt/bota/current BOTA_MUTABLE_ROOT=/var/lib/bota PYTHONPATH=/opt/bota/current/r5_bootstrap /opt/bota/current/.venv/bin/python /opt/bota/current/tools/r5_no_side_effect_preflight.py
-ExecStart=/usr/bin/env RAPIDAPI_CALENDAR_KEY= BOTA_CODE_ROOT=/opt/bota/current BOTA_ROOT=/opt/bota/current BOTA_MUTABLE_ROOT=/var/lib/bota PYTHONPATH=/opt/bota/current/r5_bootstrap /opt/bota/current/.venv/bin/python /opt/bota/current/tools/vps_orchestrator.py
+ExecStartPre=/usr/bin/env BOTA_CODE_ROOT=/opt/bota/current BOTA_ROOT=/opt/bota/current BOTA_MUTABLE_ROOT=/var/lib/bota PYTHONPATH=/opt/bota/current/r5_bootstrap /opt/bota/current/.venv/bin/python /opt/bota/current/tools/r5_no_side_effect_preflight.py
+ExecStart=/usr/bin/env BOTA_CODE_ROOT=/opt/bota/current BOTA_ROOT=/opt/bota/current BOTA_MUTABLE_ROOT=/var/lib/bota PYTHONPATH=/opt/bota/current/r5_bootstrap /opt/bota/current/.venv/bin/python /opt/bota/current/tools/vps_orchestrator.py
 Restart=always
 RestartSec=5s
 KillMode=control-group
