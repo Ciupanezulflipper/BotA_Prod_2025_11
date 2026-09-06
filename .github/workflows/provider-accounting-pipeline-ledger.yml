@@ -25,9 +25,7 @@ on:
       - "tools/signal_watcher_pro.sh"
       - "tools/signal_watcher_core.sh"
       - "tools/data_fetch_candles.sh"
-      - "tools/data_fetch_candles_r5_legacy.sh"
       - "tools/indicators_updater.sh"
-      - "tools/provider_usage_r5_legacy.py"
       - "tools/run_shadow_manager.sh"
       - "tools/bota_supervisor.sh"
       - "tools/heartbeat.sh"
@@ -53,7 +51,6 @@ jobs:
           python -m py_compile \
             tools/api_credit_tracker.py \
             tools/provider_usage.py \
-            tools/provider_usage_r5_legacy.py \
             tools/pipeline_ledger.py \
             tools/pipeline_health.py \
             tools/control_plane_status.py \
@@ -72,7 +69,6 @@ jobs:
       - name: Check shell syntax
         run: |
           bash -n tools/data_fetch_candles.sh
-          bash -n tools/data_fetch_candles_r5_legacy.sh
           bash -n tools/indicators_updater.sh
           bash -n tools/run_signal_watcher_with_ledger.sh
           bash -n tools/telegram_send.sh
