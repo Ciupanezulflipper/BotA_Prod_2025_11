@@ -156,7 +156,7 @@ No strategy threshold, score, pair policy, SL/TP, or confirmatory methodology is
 
 ## Repository verification
 
-The focused hardening head has passed:
+The runtime-affecting hardening change set has passed:
 
 - Provider accounting and pipeline ledger workflow: PASS
 - focused regression tests: PASS
@@ -164,7 +164,7 @@ The focused hardening head has passed:
 - Python compile checks: PASS
 - Security Scan: PASS
 
-Subsequent documentation-only commits may advance the branch head; the runtime-affecting change set remains subject to the same PR checks before deployment.
+Documentation-only commits may advance the branch head. Before deployment, current-head checks must remain green.
 
 These are repository-level proofs only. They do not prove deployment or market-open runtime validity.
 
