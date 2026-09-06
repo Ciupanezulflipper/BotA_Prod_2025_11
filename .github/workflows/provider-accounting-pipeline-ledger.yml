@@ -29,6 +29,7 @@ on:
       - "tools/run_shadow_manager.sh"
       - "tools/bota_supervisor.sh"
       - "tools/heartbeat.sh"
+      - "ops/systemd/bota.service"
       - "tests/**"
       - ".github/workflows/provider-accounting-pipeline-ledger.yml"
   workflow_dispatch:
@@ -92,4 +93,5 @@ jobs:
             tests.test_market_pulse_v2 \
             tests.test_heartbeat_runtime_policy \
             tests.test_bota_supervisor_service_policy \
-            tests.test_telegram_ops_ux
+            tests.test_telegram_ops_ux \
+            tests.test_r5_calendar_env_contract
