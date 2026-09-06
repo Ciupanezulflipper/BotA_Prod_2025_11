@@ -156,7 +156,7 @@ No strategy threshold, score, pair policy, SL/TP, or confirmatory methodology is
 
 ## Repository verification
 
-On hardening head `a471d3b4f267ed508e00783c790f6b1d3c23842b`:
+The focused hardening head has passed:
 
 - Provider accounting and pipeline ledger workflow: PASS
 - focused regression tests: PASS
@@ -164,7 +164,9 @@ On hardening head `a471d3b4f267ed508e00783c790f6b1d3c23842b`:
 - Python compile checks: PASS
 - Security Scan: PASS
 
-These prove repository-level contracts only. They do not prove deployment or market-open runtime validity.
+Subsequent documentation-only commits may advance the branch head; the runtime-affecting change set remains subject to the same PR checks before deployment.
+
+These are repository-level proofs only. They do not prove deployment or market-open runtime validity.
 
 ## Remaining blockers before Stage 0
 
