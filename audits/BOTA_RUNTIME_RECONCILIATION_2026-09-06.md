@@ -77,33 +77,61 @@ The earlier indicator-update stage reports 12 fetch/build successes but records 
 
 The exact local D1 bundle defect is not yet proven. Do not assign a cause until the actual bundle fields are inspected.
 
-## Android runtime — direct contradiction to intended topology
+## Android runtime — control/observation-only transition PASS
 
-Android currently has live runit service processes for:
+Earlier direct inspection proved Android was an active execution authority with live runit services and advancing BotA pipeline artifacts. That pre-stop evidence is preserved.
 
+On 2026-09-06 the Android BotA execution plane was deliberately disabled after the evidence snapshot.
+
+Persistent resurrection controls:
+
+- one active Termux:Boot BotA watchdog launcher was disabled;
+- backup created at `/data/data/com.termux/files/home/.termux/boot/00-termux-services.sh.pre_control_only_20260906_130441`;
+- no BotA watchdog cron entry was present.
+
+Watchdog transition:
+
+- live `native_service_daemon_watchdog.py` PID `29976` received SIGTERM;
+- watchdog target count: `1`;
+- watchdog remaining count: `0`;
+- `WATCHDOG_STOP=PASS`.
+
+The following BotA runit services were taken down and independently rechecked as `down`:
+
+- bota-supervisor
 - bota-watcher
 - bota-updater
 - bota-closer
 - bota-shadow
 - bota-heartbeat
-- bota-supervisor
 
-Android BotA pipeline and closer artifacts are also advancing.
+Separate `crond` remained active and was intentionally not changed.
 
-Therefore the durable current classification is:
+A 90-second no-progress proof was then performed:
 
-- ANDROID_EXECUTION_AUTHORITY=ACTIVE
-- ANDROID_CURRENT_ROLE_MATCH=NO
+- `pipeline_events.jsonl` SHA-256 before/after: `c0c6380dc393dd4aa02d0c2612b14b3b5d85b84eb33ee8ef7fd0e531a933fbf9` / unchanged;
+- `pipeline_progress.json` SHA-256 before/after: `8cd0bfd66a5422b82322d6ff0dc4c66ca786e8b3f5b03309cd5e780c4d7fae91` / unchanged;
+- `ANDROID_BOTA_PIPELINE_ADVANCING=NO`;
+- final `ANDROID_BOTA_WATCHDOG_COUNT=0`.
+
+Current observed classification:
+
+- ANDROID_EXECUTION_AUTHORITY=DISABLED
+- ANDROID_ROLE=CONTROL_AND_OBSERVATION_ONLY
+- ANDROID_CONTROL_ONLY_TRANSITION=PASS
 - HETZNER_EXECUTION_AUTHORITY=ACTIVE
 - HETZNER_LOCAL_SINGLETON=PASS
-- GLOBAL_SINGLETON=FAIL
-- STAGE_0_BLOCKED=YES
+- GLOBAL_SINGLETON=PASS_AT_CURRENT_OBSERVED_TOPOLOGY
 
-The intended topology remains:
+This does not by itself prove persistence across every future Android reboot. The known Termux:Boot resurrection path is disabled and no watchdog cron path was present; future reboot persistence may be verified separately if required by the Stage 0 gate.
 
-- Hetzner = authoritative scanner/runtime
-- Android = control and observation only
-- laptop = administration/development
+## Historical Android ledger ordering caution
+
+The preserved Android ledger contains events from multiple boot IDs whose displayed UTC windows can overlap. `pipeline_ledger.py` records the kernel boot ID on each event, while event display time may be either a supplied trusted `server_epoch` or local UTC display-only time.
+
+Therefore overlapping cross-boot displayed timestamps must not be interpreted as proof of simultaneous Android kernels or as a globally ordered measurement stream without reconciling `time_source` and `server_epoch`.
+
+The historical Android ledger remains engineering evidence only.
 
 ## Staged hardening lane
 
@@ -115,24 +143,28 @@ A separate R5 lineage branch was created from the exact active Hetzner release r
 
 PR #129 currently stages a no-secret process-boundary containment for the `RAPIDAPI_CALENDAR_KEY` unbound-variable crash and records the remaining blockers. It is not deployed and must not be merged into `main` as a substitute for proper lineage reconciliation.
 
+The PR's Security Scan and Provider accounting / pipeline ledger checks passed on the staged head after the R5 systemd path was added to the workflow trigger and the new regression test was included in the focused test run.
+
 ## Current blocking gates
+
+Android authority is no longer an active blocker at the current observed topology.
 
 Before Stage 0 can begin:
 
-1. Android execution authority must be disabled and verified observation-only.
-2. The R5 calendar crash containment must pass review/CI and then be deployed through the exact R5 release process, not by `git pull`.
-3. D1 sync failure must be diagnosed from real local bundle fields.
-4. Provider identity must be non-unknown for market-open decisions.
-5. A complete market-open R5 shadow lifecycle must succeed end-to-end.
-6. Health must not report a false green while required measurement jobs are failing.
-7. No historical R5 observation may be silently counted as confirmatory evidence.
+1. D1 sync failure must be diagnosed from real local bundle fields.
+2. Provider identity must be captured and proven rather than remaining `unknown`.
+3. The R5 calendar crash containment must remain reviewed/green and, if deployment is authorized, be deployed through the exact R5 release process rather than by `git pull`.
+4. A complete market-open R5 shadow lifecycle must succeed end-to-end after hardening.
+5. Health must not report a false green while required measurement jobs are failing.
+6. No unexplained lifecycle gaps may remain.
+7. No historical R5 or pre-transition Android observation may be silently counted as confirmatory evidence.
 
 ## Review status
 
 A bounded Claude red-team review was completed before this reconciliation. Its useful blocking conclusions were retained, while unsupported overstatements were corrected using P4 cycle correlation.
 
-An independent Codex replay remains optional review evidence and must not replace direct runtime proof or CI.
+Codex Replay was not connected for this pass; GitHub CI/security checks and direct runtime evidence remain the available automated cross-checks. No Codex review is claimed.
 
 ## Stop condition
 
-Do not declare BotA 24/7 operational merely because the VPS or `bota.service` is continuously running. The correct current statement is: the Hetzner scheduler is persistent, but measurement-valid market-open scanning is not yet proven and global singleton currently fails.
+Do not declare BotA measurement-ready merely because the VPS or `bota.service` is continuously running. The correct current statement is: Hetzner is the sole observed BotA execution authority after the Android control-only transition, but measurement-valid market-open scanning is not yet proven.
